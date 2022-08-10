@@ -214,6 +214,13 @@ function houzez_get_agent_info_top($args, $type, $is_single = true)
     $id_number = get_user_meta( $author_id, 'aqar_author_id_number', true );
     $ad_number = get_user_meta( $author_id, 'aqar_author_ad_number', true);
     $type_id   = get_user_meta( $author_id, 'aqar_author_type_id', true);
+    $user_role = houzez_user_role_by_user_id( $author_id );
+    if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "مفوض";}
+    elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "مفوض"; }
+    elseif( $user_role == "houzez_owner"  ) { $Advertiser_character =  "مالك"; } 
+    elseif( $user_role == "houzez_buyer"  ) { $Advertiser_character =  "مفوض"; } 
+    elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مفوض" ; }
+    elseif( $user_role == "houzez_manager") { $Advertiser_character = "مفوض"; }
 
     if ($type == 'for_grid_list') {
         return '<a href="' . $args['link'] . '">' . $args['agent_name'] . '</a> ';
@@ -222,15 +229,15 @@ function houzez_get_agent_info_top($args, $type, $is_single = true)
         $output = '';
 
         $output .= '<div class="agent-details cc">';
-            $output .= '<div class="d-flex align-items-center">';
+            $output .= '<div class="d-flex flex-column align-items-center">';
                 
-                $output .= '<div class="agent-image">';
+                $output .= '<div class="agent-image" style="margin-bottom: 20px;">';
                     
                     if ( $is_single == false ) {
                         $output .= '<input type="checkbox" class="houzez-hidden" checked="checked" class="multiple-agent-check" name="target_email[]" value="' . $args['agent_email'] . '" >';
                     }
 
-                    $output .= '<img class="rounded" src="' . $args['picture'] . '" alt="' . $args['agent_name'] . '" width="70" height="70">';
+                    $output .= '<img class="rounded" src="' . $args['picture'] . '" alt="' . $args['agent_name'] . '">';
 
                 $output .= '</div>';
 
@@ -243,7 +250,13 @@ function houzez_get_agent_info_top($args, $type, $is_single = true)
                     }
                     if( $author_id  && !empty( $ad_number ) ) {
                         $output .= '<li class="agent-ad-number">';
-                          $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i> رقم المعلن  [ ' . esc_attr( $ad_number ). ' ] ';
+                          $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i> رقم المعلن :  ' . esc_attr( $ad_number );
+                        $output .= '</li>';
+                    }
+
+                    if( $author_id  && !empty( $Advertiser_character ) ) {
+                        $output .= '<li class="Advertiser_character">';
+                          $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i>  صفه المعلن :  ' . esc_attr( $Advertiser_character );
                         $output .= '</li>';
                     }
                     

@@ -129,7 +129,7 @@ function get_prop_data( $prop_id , $data_collection )
         //Custom Fields
         if(class_exists('Houzez_Fields_Builder')) {
             $fields_array = Houzez_Fields_Builder::get_form_fields(); 
-            // $data['custom'] = $fields_array;
+            $properity_info = [];
             if(!empty($fields_array)) {
                 foreach ( $fields_array as $value ) {
                     $field_type = $value->type;
@@ -154,16 +154,23 @@ function get_prop_data( $prop_id , $data_collection )
                     if( $field_type == "url" ) {
 
                         if(!empty($data_value) && $hide_fields[$field_id] != 1) {
-                            $data[$field_title] = $data_value ;
+                            $properity_info[] = [
+                                'title' => $field_title ,
+                                'value' =>  $data_value
+                                ] ;
                         } 
 
                     } else {
                         if(!empty($data_value) && $hide_fields[$field_id] != 1) {
-                            $data[$field_title] = $data_value ;
+                            $properity_info[] = [
+                                'title' => $field_title ,
+                                'value' =>  $data_value
+                                ] ;
                         }    
                     }
                 }
             }
+            $data['properity_info'] = $properity_info;
         }
 
          $data['description'] = get_the_content();
@@ -181,6 +188,11 @@ function get_prop_data( $prop_id , $data_collection )
 
         $new_property = [];
         $_POST = $request ;
+
+        global $current_user;
+        wp_get_current_user();
+        $userID  = $current_user->ID;
+        
         if ( isset( $_POST['author'] ) ){
             $userID = $_POST['author'];
         }

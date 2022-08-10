@@ -129,7 +129,7 @@ function ag_register( $request )
     }
     
     
-    houzez_google_recaptcha_callback();
+    // houzez_google_recaptcha_callback();
     
     if($enable_password == 'yes' ) {
         $user_password = $user_pass;
@@ -181,22 +181,26 @@ function ag_register( $request )
     
     
             if( !empty($firstname) && !empty($lastname) ) {
-                $usermane = $firstname.' '.$lastname;
+                $user_mane = $firstname.' '.$lastname;
             }
     
             if ($user_role == 'houzez_agent' || $user_role == 'author') {
-                houzez_register_as_agent($usermane, $email, $user_id, $phone_number);
+                houzez_register_as_agent($user_mane, $email, $user_id, $phone_number);
     
             } else if ($user_role == 'houzez_agency') {
-                houzez_register_as_agency($usermane, $email, $user_id, $phone_number);
+                houzez_register_as_agency($user_mane, $email, $user_id, $phone_number);
             }
         }
         houzez_wp_new_user_notification( $user_id, $user_password, $phone_number );
-    
+
+        
+
         do_action('houzez_after_register', $user_id);
+
+        $user_token = aqargate_token_after_register( $usermane, $user_password );
     }
 
-    return array( 'user_id' =>  $user_id );
+    return $user_token;
 }
 
 /**
@@ -216,7 +220,7 @@ function api_update_profile( $data ){
     if( isset( $_POST['user_id'] ) && !empty( $_POST['user_id'] ) ) {
         $userID = $_POST['user_id'];
     }
-      
+    
     $user_company = $userlangs = $latitude = $longitude = $tax_number = $user_location = $license = $user_address = $fax_number = $firstname = $lastname = $title = $about = $userphone = $usermobile = $userskype = $facebook = $twitter = $linkedin = $instagram = $pinterest = $profile_pic = $profile_pic_id = $website = $useremail = $service_areas = $specialties = $whatsapp = '';
     
     if( isset( $_POST['firstname'] ) ) {
@@ -569,4 +573,31 @@ function api_update_profile( $data ){
     wp_update_user( array ('ID' => $userID, 'display_name' => $_POST['display_name'] ) );
     return  array( 'success' => true, 'msg' => __('تم تحديث الملف الشخصي', 'houzez') );
 
+}
+
+
+
+/**
+ * aqargate_token_after_register
+ *
+ * @param  mixed $var
+ * @return void
+ */
+
+function aqargate_token_after_register( $username , $password ){
+
+        $_request = new WP_REST_Request( 'POST', '/jwt-auth/v1/token' );
+        $_request->set_header( 'content-type', 'application/json' );
+        $_request->set_body(
+            json_encode(
+                [
+                    'username' => $username,
+                    'password' => $password,
+                ]
+            )
+        );
+        $response = rest_do_request( $_request );
+
+        return $response->data; // this will return a token
+   
 }

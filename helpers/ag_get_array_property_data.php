@@ -75,8 +75,8 @@ function get_array_property_data(){
                 $property_area = '0';
             }
             $property_label =  wp_get_post_terms( $prop_id, 'property_label', array("fields" => "all"));
-            if (!is_wp_error($property_label) && $property_area) {
-                $property_label = $property_label[0]->name;
+            if ( !is_wp_error($property_label) && $property_area ) {
+                $property_label = isset( $property_label[0] ) ? $property_label[0]->name : '0';
             }else{
                 $property_label = '0';
             }
@@ -90,7 +90,7 @@ function get_array_property_data(){
                     $Using_For = get_term($property_type[0]->term_id, 'property_type');
                     $Using_For = $Using_For->name;
                     $property_type = get_term($property_type[0]->parent, 'property_type');
-                    $property_type = $property_type->name;
+                    $property_type = isset($property_type->name) ? $property_type->name : '0';
                 }
                 
             }else{
@@ -112,8 +112,10 @@ function get_array_property_data(){
             }
             $prop_size = houzez_get_listing_area_size( $prop_id );
             $Rooms_Number = get_post_meta( $prop_id, 'fave_property_rooms', true );
-            $Construction_Date = get_post_meta( $prop_id, 'fave_prop_year_built', true );
-            if(empty($Construction_Date)){$Construction_Date = 0 ;}
+            $Construction_Date = get_post_meta( $prop_id, 'fave_property_year', true );
+            if( empty( $Construction_Date ) ){
+                $Construction_Date = 0 ;
+            }
             $Street_Width = get_post_meta($prop_id, 'fave_d8b9d8b1d8b6-d8a7d984d8b4d8a7d8b1d8b9', true); 
             if(empty($Street_Width)){$Street_Width = 0 ;}
             $Property_limits_and_lenghts = get_post_meta($prop_id, 'fave_d8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1', true);  
@@ -160,12 +162,13 @@ function get_array_property_data(){
             $total_views = intval( get_post_meta($prop_id, 'houzez_total_property_views', true) );
             $user = new WP_User($userID); 
             $user_role = houzez_user_role_by_user_id($userID);
-            if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "وكيل";}
-            elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "شركة"; }
+            $Advertiser_character =  "مفوض";
+            if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "مفوض";}
+            elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "مفوض"; }
             elseif( $user_role == "houzez_owner"  ) { $Advertiser_character =  "مالك"; } 
-            elseif( $user_role == "houzez_buyer"  ) { $Advertiser_character =  "مشتري"; } 
-            elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مسوق" ; }
-            elseif( $user_role == "houzez_manager") { $Advertiser_character = "مدير أملاك"; }
+            elseif( $user_role == "houzez_buyer"  ) { $Advertiser_character =  "مفوض"; } 
+            elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مفوض" ; }
+            elseif( $user_role == "houzez_manager") { $Advertiser_character = "مفوض"; }
 
             $property_data[] = array(
                  'Ad_Id' => $prop_id,

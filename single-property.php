@@ -1,6 +1,19 @@
 <?php 
 global $post, $hide_fields, $top_area, $property_layout, $map_street_view;
 
+        $_request = new WP_REST_Request( 'POST', '/jwt-auth/v1/token' );
+        $_request->set_header( 'content-type', 'application/json' );
+        $_request->set_body(
+            json_encode(
+                [
+                    'username' => 'admin',
+                    'password' => 'medo0107722394',
+                ]
+            )
+        );
+        $response = rest_do_request( $_request );
+        // return $response->data['data']; // this will return a token
+        var_dump($response->data['token']) ;
 $single_top_area = get_post_meta( get_the_ID(), 'fave_single_top_area', true );
 $single_content_area = get_post_meta( get_the_ID(), 'fave_single_content_area', true );
 $map_street_view = get_post_meta( get_the_ID(), 'fave_property_map_street_view', true );

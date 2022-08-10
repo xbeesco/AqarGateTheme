@@ -47,9 +47,18 @@ class AG_CF
 	            ->set_type( array( 'image' ) )->set_value_type( 'url' ),
                 Field::make( 'file', 'ag_json', __( 'app json' ) )
 	            ->set_type( array( 'json' ) )->set_value_type( 'url' ),
+                
                
             )
         );
+
+             // Display container on Book Category taxonomy
+            Container::make( 'term_meta', __( 'Icon Font' ) )
+            ->where( 'term_taxonomy', '=', 'property_type' )
+            ->add_fields( array( 
+                Field::make( 'icon', 'property_type_icon', __( 'Property Icon', 'crb' ) ),
+             ) );
+
     }
 
    
