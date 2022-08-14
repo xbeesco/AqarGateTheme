@@ -9,8 +9,8 @@ function ag_register( $request )
     $usermane          = trim( sanitize_text_field( wp_kses( $_POST['username'], $allowed_html ) ));
     $email             = trim( sanitize_text_field( wp_kses( $_POST['useremail'], $allowed_html ) ));
     $term_condition    = wp_kses( $_POST['term_condition'], $allowed_html );
-    $enable_password = houzez_option('enable_password');
-    $response = isset($_POST["g-recaptcha-response"]) ? $_POST["g-recaptcha-response"] : '';
+    $enable_password   = houzez_option('enable_password');
+    $response          = isset($_POST["g-recaptcha-response"]) ? $_POST["g-recaptcha-response"] : '';
     
     do_action('houzez_before_register');
     
@@ -198,6 +198,11 @@ function ag_register( $request )
         do_action('houzez_after_register', $user_id);
 
         $user_token = aqargate_token_after_register( $usermane, $user_password );
+
+        $author_id = ['user_id' => $user_id];
+
+        $user_token = array_merge( $user_token, $author_id );
+
     }
 
     return $user_token;
@@ -214,8 +219,8 @@ function api_update_profile( $data ){
     $_POST = $data ;
 
     global $current_user;
-    wp_get_current_user();
-    $userID  = $current_user->ID;
+    $user = wp_get_current_user();
+    $userID  = $user->ID;
     
     if( isset( $_POST['user_id'] ) && !empty( $_POST['user_id'] ) ) {
         $userID = $_POST['user_id'];

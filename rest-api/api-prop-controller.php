@@ -7,8 +7,8 @@
  * @param  mixed $data_collection
  * @return array/prop/data
  */
-function get_prop_data( $prop_id , $data_collection )
-{
+function get_prop_data( $prop_id , $data_collection ){
+    
     global $post;   
     $post = $prop_id;
     setup_postdata( $post ); 
@@ -66,6 +66,8 @@ function get_prop_data( $prop_id , $data_collection )
 
         $data['city'] = houzez_taxonomy_simple('property_city');
         $data['area'] = houzez_taxonomy_simple('property_area');
+        $data['status'] = houzez_taxonomy_simple('property_status');
+        $data['label'] = houzez_taxonomy_simple('property_label');
 
     }
 

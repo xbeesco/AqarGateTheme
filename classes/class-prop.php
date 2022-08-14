@@ -15,7 +15,7 @@ class AG_Prop
         if( REGA::is_valid_ad( $prop_id, get_current_user_id()) !== true  ){
             $post = array( 'ID' => $prop_id, 'post_status' => 'draft' );
             wp_update_post($post);
-        }else {
+        } else {
             $post = array( 'ID' => $prop_id, 'post_status' => 'publish' );
             wp_update_post($post);
         }

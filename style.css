@@ -21,3 +21,9 @@ Version:        2.5.0
     position: absolute;
     left: 0;
 }
+#houzez-single-listing-map{
+    height: auto !important;
+}
+.agent-image img{
+    max-width: 265px;
+}

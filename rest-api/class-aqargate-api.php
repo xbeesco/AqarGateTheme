@@ -23,7 +23,13 @@ class AqarGateApi {
 			'permission_callback' => 'allow_access',
 			'methods'             => 'GET',
 		),
-        'property_search_pram' => array(
+        'property_taxonomy' => array(
+			'path'                => '/properties/taxonomy',
+			'callback'            => 'get_properties_taxonomy',
+			'permission_callback' => 'allow_access',
+			'methods'             => 'GET',
+		),
+        'property_user' => array(
 			'path'                => '/user-properties',
 			'callback'            => 'get_user_properties',
 			'permission_callback' => 'user_properties_allow_access',
@@ -161,6 +167,12 @@ class AqarGateApi {
 			'callback'            => 'profile_update',
 			'permission_callback' => 'allow_access',
 			'methods'             => 'POST',
+		),
+        'aqargate_author' => array(
+			'path'                => '/author',
+			'callback'            => 'author',
+			'permission_callback' => 'allow_access',
+			'methods'             => WP_REST_Server::READABLE,
 		),
         'aqargate_role' => array(
 			'path'                => '/user/role',
@@ -506,41 +518,41 @@ class AqarGateApi {
             );
            }
        }
-                
-        $_tax_query = Array();
 
-        $_tax_query['relation'] = 'OR';
+       $keyword_array = '';
 
-        if( !empty( $_GET['area'] ) && isset($_GET['area'])){
-            $_tax_query[] = array(
+       if (isset($_GET['keyword']) && $_GET['keyword'] != '') {                        
+           $search_qry['s']  = $_GET['keyword'];
+        }
+
+        if (isset($_GET['area']) && $_GET['area'] != '') {      
+            $tax_query[] = array(
                 'taxonomy' => 'property_area',
                 'field' => 'slug',
                 'terms' => $_GET['area']
             );
-        }       
-
-        if( !empty( $_GET['city'] ) && isset($_GET['city'])){
-            $_tax_query[] = array(
+        }
+        if (isset($_GET['city']) && $_GET['city'] != '') {
+            $tax_query[] = array(
                 'taxonomy' => 'property_city',
                 'field' => 'slug',
                 'terms' => $_GET['city']
             );
         }
-
-        if( !empty( $_GET['state'] ) && isset($_GET['state'])){
-            $_tax_query[] = array(
+        if (isset($_GET['state']) && $_GET['state'] != '') {
+            $tax_query[] = array(
                 'taxonomy' => 'property_state',
                 'field' => 'slug',
                 'terms' => $_GET['state']
             );
-        }     
-
-        $tax_query[] = $_tax_query;
+        }
+        $tax_query = apply_filters( 'houzez_taxonomy_search_filter', $tax_query );
         $tax_count = count($tax_query);
         $tax_query['relation'] = 'AND';
         if ($tax_count > 0) {
-            $search_qry['tax_query'] = $tax_query;
+            $search_qry['tax_query'] = array_values( $tax_query );
         }
+
         $meta_query = [];
         // $meta_query[] = houzez_search_min_max_price($meta_query);
         // $meta_query[] = houzez_search_min_max_area($meta_query);
@@ -588,7 +600,8 @@ class AqarGateApi {
        /**======================================================== */
        // Get pagination to work for get_posts() in WordPress .
        /**======================================================== */
-        $parsed_args = wp_parse_args( $search_qry, $defaults );
+        $parsed_args = wp_parse_args( $defaults, $search_qry );
+        // return var_export($parsed_args);
 	    $results = get_posts( $parsed_args );
 
         $published_prop_count = '';	
@@ -596,18 +609,48 @@ class AqarGateApi {
         if ( $count_prop ) {
            $published_prop_count = ceil( $count_prop / $number_of_prop );
         }
-        wp_reset_postdata();
+        // wp_reset_postdata();
        /**======================================================== */
 
 
         return $this->response( 
             [ 
-                'count_pages'     => $count_prop, 
+                'count_pages'     => $published_prop_count, 
                 'current_page'    => (int) $paged, 
                 'properties_data' => $properties_data  
             ]
         );
 	}
+    
+    /**
+     * get_properties_taxonomy
+     *
+     * @param  mixed $request
+     * @return void
+     */
+    public function get_properties_taxonomy( WP_REST_Request $request ){
+
+        $args = array(
+            'public'   => true,
+            '_builtin' => false
+             
+          ); 
+          $response = [];
+          $output = 'names'; // or objects
+          $operator = 'and'; // 'and' or 'or'
+          $taxonomies = get_taxonomies( $args, $output, $operator ); 
+          if ( $taxonomies ) {
+            unset($taxonomies['product_cat']);
+            unset($taxonomies['product_tag']);
+            unset($taxonomies['product_shipping_class']);
+              foreach ( $taxonomies  as $taxonomy ) {
+                  $response[] = $taxonomy;
+              }
+          }
+
+          return $this->response( $response );
+       
+    }
 
      /**
 	 * get_user_properties
@@ -623,12 +666,12 @@ class AqarGateApi {
        
         $properties_data = [];
 
-        $number_of_prop = isset($_GET['limit']) ? ( $_GET['limit'] ) : 8 ;
+        $number_of_prop = isset($data['limit']) ? ( $data['limit'] ) : 8 ;
 		if(!$number_of_prop){
 		    $number_of_prop = 8;
 		}
 
-        $paged = isset($_GET['paged']) ? ($_GET['paged']) : '1';
+        $paged = isset($data['paged']) ? ($data['paged']) : '1';
 
         $search_qry = array(
             'post_type' => 'property',
@@ -689,7 +732,7 @@ class AqarGateApi {
 
         return $this->response( 
             [ 
-                'count_pages'     => $count_prop, 
+                'count_pages'     => $published_prop_count, 
                 'current_page'    => (int) $paged, 
                 'properties_data' => $properties_data  
             ]
@@ -938,15 +981,45 @@ class AqarGateApi {
      * @param  mixed $request
      * @return void
      */
-    public function submit_property( WP_REST_Request $request )
-    {
-        
-        if( !isset( $request['prop_title'] ) ){
-            return $this->error_response ( '2000', 'missing parameter prop_title');
+    public function submit_property( WP_REST_Request $request ){
+
+        if( !isset( $request['action'] ) ){
+            return $this->error_response ( '2000', 'missing parameter [ action = add_property / update_property ] ');
         }
+
+        $required_property_parameters =[
+            'prop_title',
+            'prop_des',
+            'prop_labels',
+            'prop_status',
+            'prop_type',
+            'prop_price',
+            'geocomplete',
+            'locality',
+            'neighborhood',
+            'lat',
+            'lng',
+            'prop_featured',
+            'property_disclaimer',
+            'gdpr_agreement',
+            'prop_features',
+            'prop_year_built',
+            'prop_size',
+            'd8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1',
+            'd8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9',
+            'd988d8a7d8acd987d8a9-d8a7d984d8b9d982d8a7d8b1',
+            'd987d984-d98ad988d8acd8af-d8a7d984d8b1d987d986-d8a3d988-d8a7d984d982d98ad8af-d8a7d984d8b0d98a-d98ad985d986d8b9-d8a7d988-d98ad8add8af'   
+        ];
+        
+        foreach( $required_property_parameters as $required_parameter ){
+            if( !isset( $request[$required_parameter] ) || empty( $request[$required_parameter] )){
+                return $this->error_response ( 'rest_invalide_', 'Missing Or Empty Parameter [ '. $required_parameter .' ]');
+            }
+        }
+        
         $new_property = ag_submit_property( $request );
 
-        $new_prop_api_url = rest_url( $this->get_vendor() . '/v' . $this->get_version() . '/properties' . '/' . $new_property.'/?data_collection=property'  );
+        $new_prop_api_url = $new_property;
 
         return $this->response( $new_prop_api_url ); 
     }
@@ -1154,6 +1227,11 @@ class AqarGateApi {
         }
 
         $user_token = aqargate_token_after_register( $request["username"] ,  $request["password"] );
+        $author_id = [
+            'user_id' => $user->ID
+        ];
+
+        $user_token = array_merge( $user_token, $author_id );
 
         return $this->response( $user_token );
     }
@@ -1251,10 +1329,17 @@ class AqarGateApi {
             );
         }
 
-        if( isset( $_GET['user_id'] ) && !empty( $_GET['user_id'] ) && is_numeric( $_GET['user_id'] ) ){
-            $user_id = intval( $_GET['user_id'] );
-            $response = ag_user_membership( $user_id );
-        } else {
+        global $current_user;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
+
+        if( is_user_logged_in() )  {
+            if( isset( $_GET['user_id'] ) && !empty( $_GET['user_id'] ) && is_numeric( $_GET['user_id'] ) ){
+                $userID = intval( $_GET['user_id'] );  
+            }
+            $response = ag_user_membership( $userID );
+        }
+         else {
             $response = ag_membership_type();
         }
 
@@ -1271,18 +1356,26 @@ class AqarGateApi {
       */
      public function favorite_properties( WP_REST_Request $request ){
 
-        if( isset( $_GET['user_id'] ) && !is_numeric( $_GET['user_id'] ) ){
-            return $this->error_response(
-                'rest_invalid_data',
-                __( 'Invalid User ID data'  )
+        if( !is_user_logged_in() ){
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
             );
-        }
+        } 
+
+        global $current_user;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
 
         if( isset( $_GET['user_id'] ) && !empty( $_GET['user_id'] ) && is_numeric( $_GET['user_id'] ) ){
             $userID  = intval( $_GET['user_id'] );
-            $fav_ids = 'houzez_favorites-'.$userID;
-            $fav_ids = get_option( $fav_ids );
         } 
+
+        $fav_ids = 'houzez_favorites-'.$userID;
+        $fav_ids = get_option( $fav_ids );
 
         if( empty( $fav_ids ) ) {
             return $this->error_response(
@@ -1318,13 +1411,30 @@ class AqarGateApi {
       */
      public function favorite_properties_add( WP_REST_Request $request ){
 
-        if( isset( $_GET['user_id'] ) && !is_numeric( $_GET['user_id'] ) ){
+        
+       if( !is_user_logged_in() ){
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
+            );
+        } 
+
+        global $current_user;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
+        
+        if( isset( $_GET['user_id'] ) && !empty( $_GET['user_id'] ) && is_numeric( $_GET['user_id'] ) ){
+            $userID  =  $_GET['user_id'] ;
+        }
+        if( !isset( $_GET['prop_id'] ) ){
             return $this->error_response(
                 'rest_invalid_data',
-                __( 'Invalid User ID data'  )
+                __( 'Invalid Property ID data'  )
             );
         }
-
         if( isset( $_GET['prop_id'] ) && !is_numeric( $_GET['prop_id'] ) && $this->is_property( $_GET['prop_id'] )){
             return $this->error_response(
                 'rest_invalid_data',
@@ -1332,24 +1442,28 @@ class AqarGateApi {
             );
         }
 
-        if( isset( $_GET['user_id'] ) && !empty( $_GET['user_id'] ) && is_numeric( $_GET['user_id'] ) ){
-            $userID  = intval( $_GET['user_id'] );
             $fav_option = 'houzez_favorites-'.$userID;
-            $property_id = intval( $_GET['prop_id'] );
+            $property_id =  $_GET['prop_id'] ;
             $current_prop_fav = get_option( 'houzez_favorites-'.$userID );
 
             // Check if empty or not
             if( empty( $current_prop_fav ) ) {
                 $prop_fav = array();
                 $prop_fav['1'] = $property_id;
-                update_option( $fav_option, $prop_fav );
+                 update_option( $fav_option, $prop_fav );
             } else {
                 if(  ! in_array ( $property_id, $current_prop_fav )  ) {
                     $current_prop_fav[] = $property_id;
-                    update_option( $fav_option,  $current_prop_fav );
+                     update_option( $fav_option,  $current_prop_fav );
+                }else{
+                    return $this->error_response(
+                        'rest_invalid_data',
+                        __( 'Property ID is already in your favorites'  )
+                    );
                 } 
             }
-        } 
+        
+        $current_prop_fav = get_option( 'houzez_favorites-'.$userID, true );
 
         return $this->response( $current_prop_fav );
      }
@@ -1361,11 +1475,24 @@ class AqarGateApi {
       * @return void
       */
      public function favorite_properties_remove( $data ){
-        if( isset( $_GET['user_id'] ) && !is_numeric( $_GET['user_id'] ) ){
-            return $this->error_response(
-                'rest_invalid_data',
-                __( 'Invalid User ID data'  )
+
+
+       if( !is_user_logged_in() ){
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
             );
+        } 
+
+        global $current_user;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
+
+        if( isset( $_GET['user_id'] ) && !empty( $_GET['user_id'] ) && is_numeric( $_GET['user_id'] ) ){
+            $userID  =  $_GET['user_id'] ;
         }
 
         if( isset( $_GET['prop_id'] ) && !is_numeric( $_GET['prop_id'] ) && $this->is_property( $_GET['prop_id'] )){
@@ -1375,10 +1502,8 @@ class AqarGateApi {
             );
         }
 
-        if( isset( $_GET['user_id'] ) && !empty( $_GET['user_id'] ) && is_numeric( $_GET['user_id'] ) ){
-            $userID  = intval( $_GET['user_id'] );
             $fav_option = 'houzez_favorites-'.$userID;
-            $property_id = intval( $_GET['prop_id'] );
+            $property_id = $_GET['prop_id'];
             $current_prop_fav = get_option( 'houzez_favorites-'.$userID );
 
             // Check if empty or not
@@ -1393,11 +1518,10 @@ class AqarGateApi {
                 if( $key != false ) {
                     unset( $current_prop_fav[$key] );
                 }
-                update_option( $fav_option, $current_prop_fav );
-
-                
+                update_option( $fav_option, $current_prop_fav );   
             }
-        } 
+         
+        $current_prop_fav = get_option( 'houzez_favorites-'.$userID );
 
         return $this->response( $current_prop_fav );
         
@@ -1411,6 +1535,16 @@ class AqarGateApi {
       */
      public function conversations( $data ){
 
+        if( !is_user_logged_in() )  {
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
+            );
+        }
+
         if( isset( $data['user_id'] ) && !is_numeric( $data['user_id'] ) ){
             return $this->error_response(
                 'rest_invalid_data',
@@ -1419,8 +1553,8 @@ class AqarGateApi {
         }
 
         global $wpdb, $current_user;
-        wp_get_current_user();
-        $userID  = $current_user->ID;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
     
         if( isset( $data['user_id'] ) && !empty( $data['user_id'] ) ) {
             $userID = $data['user_id'];
@@ -1480,9 +1614,19 @@ class AqarGateApi {
             );
         }
 
+        if( !is_user_logged_in() )  {
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
+            );
+        }
+
         global $wpdb, $current_user;
-        wp_get_current_user();
-        $userID  = $current_user->ID;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
     
         if( isset( $data['user_id'] ) && !empty( $data['user_id'] ) ) {
             $userID = $data['user_id'];
@@ -1563,14 +1707,15 @@ class AqarGateApi {
 			if ( empty( $message_author_picture )) {
 				$message_author_picture = get_template_directory_uri().'/img/profile-avatar.png';
 			}
-
+             
             $messages_data[] = [
                 'id'                     => $message->id,
                 'message_author'         => $message_author,
                 'message_author_name'    => $message_author_name,
                 'message_author_picture' => $message_author_picture,
                 'message_content'        => $message->message,
-                'message_attachments'    => $message->attachments,    
+                'message_attachments'    => $message->attachments, 
+                'message_time'           => date( "h:i a", strtotime( $message->time ) ),   
             ];
         }
         $response['messages_data'] = $messages_data;
@@ -1585,6 +1730,16 @@ class AqarGateApi {
       * @return void
       */
      public function new_conversation( $data ){
+
+        if( !is_user_logged_in() )  {
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
+            );
+        }
         
         if( !isset( $_POST['prop_id'] ) ) {
             return $this->error_response(
@@ -1605,9 +1760,10 @@ class AqarGateApi {
                 __( 'Missing User ID data' )
             );
         }
+
         global $wpdb, $current_user;
-        wp_get_current_user();
-        $userID  = $current_user->ID;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
     
         if( isset( $data['user_id'] ) && !empty( $data['user_id'] ) ) {
             $userID = $data['user_id'];
@@ -1647,9 +1803,19 @@ class AqarGateApi {
       */
      public function add_new_conversation( $data ){
 
+        if( !is_user_logged_in() )  {
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
+            );
+        }
+
         global $wpdb, $current_user;
-        wp_get_current_user();
-        $userID  = $current_user->ID;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
     
         if( isset( $data['user_id'] ) && !empty( $data['user_id'] ) ) {
             $userID = $data['user_id'];
@@ -1752,6 +1918,13 @@ class AqarGateApi {
 			$receiver_id = $houzez_thread->receiver_id;
 		}
 
+        if( $houzez_thread === null ) {
+            return $this->error_response(
+                'rest_invalid_data',
+                __( 'Conversation ID data Not Found !'  )
+            );
+        }
+
 		$receiver_data = get_user_by( 'id', $receiver_id );
 
 		apply_filters( 'houzez_message_email_notification', $thread_id, $message, $receiver_data->user_email, $created_by );
@@ -1766,6 +1939,16 @@ class AqarGateApi {
       * @return void
       */
      public function new_conversation_message( $data ){
+
+        if( !is_user_logged_in() )  {
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
+            );
+        }
         
         if( !isset( $_POST['conversation_id'] ) ) {
             return $this->error_response(
@@ -1788,8 +1971,8 @@ class AqarGateApi {
         }
 
         global $wpdb, $current_user;
-        wp_get_current_user();
-        $userID  = $current_user->ID;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
     
         if( isset( $data['user_id'] ) && !empty( $data['user_id'] ) ) {
             $userID = $data['user_id'];
@@ -2116,19 +2299,22 @@ class AqarGateApi {
      */
     public function profile_update ( $data ){
 
-        // if( !isset( $data['user_id'] ) ) {
-        //     return $this->error_response(
-        //         'rest_invalid_data',
-        //         __( 'Missing User ID data' )
-        //     );
-        // }
+        if( !is_user_logged_in() )  {
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
+            );
+        }
 
-        // if( isset( $data['user_id'] )  && empty( $data['user_id'] )) {
-        //     return $this->error_response(
-        //         'rest_invalid_data',
-        //         __( 'Missing User ID data' )
-        //     );
-        // }
+        if( isset( $data['user_id'] )  && empty( $data['user_id'] )) {
+            return $this->error_response(
+                'rest_invalid_data',
+                __( 'Missing User ID data' )
+            );
+        }
         
         $update_profile = api_update_profile( $data );
 
@@ -2160,6 +2346,66 @@ class AqarGateApi {
         }
         
         return $this->response( $user_role );
+    }
+
+        
+    /**
+     * author
+     *
+     * @param  mixed $data
+     * @return void
+     */
+    public function author( $data ){
+
+
+       if( isset( $data['prop_id'] ) && !empty( $data['prop_id'] ) && $this->is_property( $data['prop_id'] ) ) {
+       
+        $author_id = get_post_field ('post_author', $post_id);
+        $id_number  = get_user_meta( $author_id, 'aqar_author_id_number', true );
+        $ad_number  = get_user_meta( $author_id, 'aqar_author_ad_number', true);
+        $type_id    = get_user_meta( $author_id, 'aqar_author_type_id', true);
+        $first_name = get_user_meta( $author_id, 'first_name', true);
+        $last_name  = get_user_meta( $author_id, 'last_name', true);
+        $author_phone = get_user_meta( $author_id, 'fave_author_phone', true);
+        $author_mobile = get_user_meta( $author_id, 'fave_author_mobile', true);
+        $author_whatsapp = get_user_meta( $author_id, 'fave_author_whatsapp', true);
+        $author_license = get_user_meta( $author_id, 'fave_author_license', true);
+        $author_custom_picture = get_user_meta( $author_id, 'fave_author_custom_picture', true);
+
+
+        $user_role  = houzez_user_role_by_user_id( $author_id );
+        if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "مفوض";}
+        elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "مفوض"; }
+        elseif( $user_role == "houzez_owner"  ) { $Advertiser_character =  "مالك"; } 
+        elseif( $user_role == "houzez_buyer"  ) { $Advertiser_character =  "مفوض"; } 
+        elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مفوض" ; }
+        elseif( $user_role == "houzez_manager") { $Advertiser_character = "مفوض"; }
+
+
+        $author_info['author_id'] = $author_id;
+        $author_info['author_id_number'] = $id_number;
+        $author_info['author_ad_number'] = $ad_number;
+        $author_info['author_role'] = $Advertiser_character;
+        $author_info['author_first_name']  = $first_name;
+        $author_info['author_last_name'] = $last_name;
+        $author_info['author_phone'] = $author_phone;
+        $author_info['author_mobile'] = $author_mobile;
+        $author_info['author_whatsapp'] = $author_whatsapp;
+        $author_info['author_license'] = $author_license;
+        $author_info['author_custom_picture'] = $author_custom_picture;
+
+
+       }
+       else{
+        
+        $author_info = $this->error_response(
+            'rest_error_data',
+            'Property ID Is wrong'
+        );
+       }
+       
+        
+        return $this->response( $author_info );
     }
     
     /**
