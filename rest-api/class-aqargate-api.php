@@ -186,6 +186,12 @@ class AqarGateApi {
 			'permission_callback' => 'allow_access',
 			'methods'             => WP_REST_Server::READABLE,
 		),
+        'aqargate_image' => array(
+			'path'                => '/images',
+			'callback'            => 'images',
+			'permission_callback' => 'allow_access',
+			'methods'             => 'POST',
+		),
         
 	);	
 
@@ -216,6 +222,7 @@ class AqarGateApi {
         add_action( 'rest_api_init', [ $this, 'register_routes'], 15 );
         add_action( 'rest_api_init', [ $this, 'load_controllers' ] ) ;
         add_action( 'saved_term', [ $this, 'tax_last_update' ], 20, 4);
+        
     }
     
         
@@ -367,7 +374,7 @@ class AqarGateApi {
      */
     public function prop_type_fields( WP_REST_Request $request )
     {
-        $fields = ag_get_property_fields();
+        $fields = ag_get_property_fields( $request );
 
         // $prop_type_enabled_fields = carbon_field_value(); 
 
@@ -395,7 +402,7 @@ class AqarGateApi {
                 __( 'Missing Parameter(s) tax_id'  )
             );
         }
-        $fields = ag_get_property_fields_builder();
+        $fields = ag_get_property_fields_builder( $request );
 
         $response_data = $fields;
 
@@ -520,7 +527,7 @@ class AqarGateApi {
        }
 
        $keyword_array = '';
-
+       $tax_query = [];
        if (isset($_GET['keyword']) && $_GET['keyword'] != '') {                        
            $search_qry['s']  = $_GET['keyword'];
         }
@@ -1010,12 +1017,21 @@ class AqarGateApi {
             'd988d8a7d8acd987d8a9-d8a7d984d8b9d982d8a7d8b1',
             'd987d984-d98ad988d8acd8af-d8a7d984d8b1d987d986-d8a3d988-d8a7d984d982d98ad8af-d8a7d984d8b0d98a-d98ad985d986d8b9-d8a7d988-d98ad8add8af'   
         ];
-        
-        foreach( $required_property_parameters as $required_parameter ){
-            if( !isset( $request[$required_parameter] ) || empty( $request[$required_parameter] )){
-                return $this->error_response ( 'rest_invalide_', 'Missing Or Empty Parameter [ '. $required_parameter .' ]');
+        if( isset( $request['action'] ) && $request['action'] === 'add_property' ){
+            foreach( $required_property_parameters as $required_parameter ){
+                if( !isset( $request[$required_parameter] ) || empty( $request[$required_parameter] )){
+                    return $this->error_response ( 'rest_invalide_', 'Missing Or Empty Parameter [ '. $required_parameter .' ]');
+                }
             }
         }
+
+        if( isset( $request['action'] ) && $request['action'] === 'update_property' ){
+            if( !isset( $request['prop_id'] ) || empty( $request['prop_id'] )  || ! $this->is_property( $request['prop_id'] ) ) {
+                return $this->error_response ( 'rest_invalide_', 'Missing Or Empty Or Error Parameter [ prop_id ]');
+            }
+
+        }
+
         
         $new_property = ag_submit_property( $request );
 
@@ -2485,6 +2501,107 @@ class AqarGateApi {
             return $this->response( $response );
         }
     }
+    
+    /**
+     * images
+     *
+     * @param  mixed $data
+     * @return void
+     */
+    public function images( $data ){
+
+        if( !is_user_logged_in() )  {
+            return new WP_Error(
+                'jwt_auth_no_auth_header',
+                'Authorization header not found.',
+                array(
+                    'status' => 403,
+                )
+            );
+        }
+
+        if( !isset( $_GET['apicall'] ) ) {
+            return $this->error_response(
+                'rest_invalid_data',
+                __( 'Missing Parameter(s) [ apicall = uploadpic ]' )
+            );
+        } 
+
+        if( !isset( $_POST['prop_id'] ) ) {
+            return $this->error_response(
+                'rest_invalid_data',
+                __( 'Missing Parameter(s) Body [ prop_id ]' )
+            );
+        }
+
+        if( !isset( $_FILES['pic'] ) ) {
+            return $this->error_response(
+                'rest_invalid_data',
+                __( 'Missing Parameter(s) Body [ pic ]' )
+            );
+        }
+
+        $upload_dir = wp_upload_dir();
+        $uploads_dir = trailingslashit( wp_upload_dir()['basedir'] ) . 'api-images';
+        wp_mkdir_p( $uploads_dir );
+        $UploadDirectory    =  WP_CONTENT_DIR.'/uploads/api-images/';
+        define('UPLOAD_PATH', $UploadDirectory);
+
+        if( isset( $_GET['apicall'] ) ) {
+             //switching the api call 
+            switch($_GET['apicall']){
+            
+                //if it is an upload call we will upload the image
+                case 'uploadpic':
+
+                //first confirming that we have the image and tags in the request parameter
+                if( isset( $_FILES['pic']['name'] ) && isset( $_POST['prop_id'] ) ){
+
+                     //uploading file and storing it to database as well 
+                    move_uploaded_file($_FILES['pic']['tmp_name'], $UploadDirectory . sanitize_file_name($_FILES['pic']['name']));
+                    $image_api = get_site_url();
+                    $getImageFile = $image_api .'/wp-content/uploads/api-images/' . $_FILES['pic']['name'];
+                    
+                    $wp_filetype = wp_check_filetype( $getImageFile, null );
+
+                    // attachment table
+                    $attachment_data = array(
+                        'post_mime_type' => $wp_filetype['type'],
+                        'post_title' => sanitize_file_name( $_FILES['pic']['name'] ),
+                        'post_content' => '',
+                        'post_status' => 'inherit'
+                    );
+
+                    $attach_id = wp_insert_attachment( $attachment_data, $getImageFile, $_POST['prop_id'] );
+                   
+                    // Custom table
+                    global $wpdb;     
+                    $table_name = $wpdb->prefix . 'api_images';  
+                    $tables = $wpdb->get_results( 'SHOW TABLES LIKE "' . $wpdb->prefix . 'api_images"' );
+
+                    if ( ! empty( $tables ) ) {
+                        $response = $wpdb->insert($table_name, array('image_api' => $attach_id, 'prop_id' => $_POST['prop_id'])); 
+                    }       
+
+                }
+                $attachment_image_data = wp_get_attachment_image_src( $attach_id );
+                $image_data = [
+                    'url' => $attachment_image_data[0],
+                    'id'  => $attach_id,
+                    'prop_id' => $_POST['prop_id']
+                ];
+
+                return $this->response( $image_data );
+
+             break;
+            
+        }
+        
+      }
+    }
+    	
+
+	
 }
 
 

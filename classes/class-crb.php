@@ -54,10 +54,28 @@ class AG_CF
 
              // Display container on Book Category taxonomy
             Container::make( 'term_meta', __( 'Icon Font' ) )
-            ->where( 'term_taxonomy', '=', 'property_type' )
+            ->where( 'term_taxonomy', '=', 'property_type')
             ->add_fields( array( 
                 Field::make( 'icon', 'property_type_icon', __( 'Property Icon', 'crb' ) ),
-             ) );
+            ) );
+
+            Container::make( 'term_meta', __( 'Icon Font' ) )
+            ->where( 'term_taxonomy', '=', 'property_status' )
+            ->add_fields( array( 
+                Field::make( 'icon', 'property_type_icon', __( 'Property Icon', 'crb' ) ),
+            ) );
+
+            Container::make( 'term_meta', __( 'Icon Font' ) )
+             ->where( 'term_taxonomy', '=', 'property_feature' )
+             ->add_fields( array( 
+                 Field::make( 'icon', 'property_type_icon', __( 'Property Icon', 'crb' ) ),
+            ) );
+
+            Container::make( 'term_meta', __( 'Icon Font' ) )
+             ->where( 'term_taxonomy', '=', 'property_label' )
+             ->add_fields( array( 
+                 Field::make( 'icon', 'property_type_icon', __( 'Property Icon', 'crb' ) ),
+            ) );
 
     }
 

@@ -430,3 +430,36 @@ function houzez_get_localization() {
 
     return $localization;
 }
+
+/*-----------------------------------------------------------------------------------*/
+// Property edit taxonomy for multiple
+/*-----------------------------------------------------------------------------------*/
+    function ag_get_taxonomies_for_edit_listing_multivalue( $listing_id, $taxonomy ){
+
+        $taxonomy_terms_ids= array();
+        $taxonomy_terms = get_the_terms( $listing_id, $taxonomy );
+
+        if ( $taxonomy_terms && ! is_wp_error( $taxonomy_terms ) ) {
+            foreach( $taxonomy_terms as $term ) {
+                $taxonomy_terms_ids[] = intval( $term->term_id );
+            }
+        }
+
+        return $taxonomy_terms_ids;
+
+    }
+/*-----------------------------------------------------------------------------------*/
+// Property edit meta
+/*-----------------------------------------------------------------------------------*/
+    function ag_get_field_meta( $field_name, $prop_id = '' ) {
+        global $prop_meta_data;
+
+        $prefix = 'fave_';
+        $field_name = $prefix.$field_name;
+
+        if ( !empty( $field_name ) && !empty( $prop_id )) {
+                return get_post_meta( $prop_id, $field_name, true );
+        } else {
+            return;
+        }
+    }

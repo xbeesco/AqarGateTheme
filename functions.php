@@ -48,3 +48,35 @@ function csv_to_array($file) {
   
   }
 
+
+     /**
+	 * images_table
+	 *
+	 * @return void
+	 */
+	function images_table() {
+
+        global $wpdb;
+
+        $tables = $wpdb->get_results( 'SHOW TABLES LIKE "' . $wpdb->prefix . 'api_images"' );
+
+		if ( ! empty( $tables ) ) {
+			return;
+		}
+
+        $table_name         = $wpdb->prefix . 'api_images';
+        $charset_collate    = $wpdb->get_charset_collate();
+        $sql = "CREATE TABLE $table_name (
+            ID INT( 11 ) NOT NULL AUTO_INCREMENT,
+            image_api varchar(500) NOT NULL,
+            prop_id INT( 11 ) NOT NULL,
+            date_created timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  ( ID )
+        ) $charset_collate ;";
+
+        require_once( ABSPATH . 'wp-admin/includes/upgrade.php' );
+
+        dbDelta( $sql );
+
+    }
+    // add_action( 'init', 'images_table', 100 );
