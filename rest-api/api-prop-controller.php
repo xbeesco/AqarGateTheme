@@ -199,6 +199,7 @@ function get_prop_data( $prop_id , $data_collection ){
             $userID = $_POST['author'];
         }
         
+        
         $listings_admin_approved = houzez_option('listings_admin_approved');
         $edit_listings_admin_approved = houzez_option('edit_listings_admin_approved');
         $enable_paid_submission = houzez_option('enable_paid_submission');
@@ -440,25 +441,26 @@ function get_prop_data( $prop_id , $data_collection ){
                 delete_post_meta( $prop_id, 'fave_property_agency' );
                 delete_post_meta( $prop_id, '_thumbnail_id' );
             }
-
+            
             // Property Images
-            if( isset( $_POST['propperty_image_ids'] ) ) {
-                if (!empty($_POST['propperty_image_ids']) && is_array($_POST['propperty_image_ids'])) {
+            if( isset( $_FILES['propperty_image_ids'] ) ) {
+                if (!empty($_FILES['propperty_image_ids']) && is_array($_FILES['propperty_image_ids'])) {
                     $property_image_ids = array();
-                    foreach ($_POST['propperty_image_ids'] as $prop_img_id ) {
-                        $property_image_ids[] = intval( $prop_img_id );
+                    $property_image_ids =  AqarGateApi::upload_images( $_FILES, 'propperty_image_ids' );
+                    foreach ( (array) $property_image_ids as $prop_img_id ) {
                         add_post_meta($prop_id, 'fave_property_images', $prop_img_id);
                     }
-
+                    
                     // featured image
-                    if( isset( $_POST['featured_image_id'] ) ) {
-                        $featured_image_id = intval( $_POST['featured_image_id'] );
-                        if( in_array( $featured_image_id, $property_image_ids ) ) {
-                            update_post_meta( $prop_id, '_thumbnail_id', $featured_image_id );
+                    if( isset( $_FILES['featured_image_id'] ) ) {
+                        $featured_image_id = AqarGateApi::upload_images( $_FILES, 'featured_image_id' );
+
+                        if( in_array( $featured_image_id[0], $property_image_ids ) || ! empty( $featured_image_id ) ) {
+                            update_post_meta( $prop_id, '_thumbnail_id', $featured_image_id[0] );
 
                             /* if video url is provided but there is no video image then use featured image as video image */
                             if ( empty( $property_video_image ) && !empty( $_POST['prop_video_url'] ) ) {
-                                update_post_meta( $prop_id, 'fave_video_image', $featured_image_id );
+                                update_post_meta( $prop_id, 'fave_video_image', $featured_image_id[0] );
                             }
                         }
                     } elseif ( ! empty ( $property_image_ids ) ) {
@@ -472,10 +474,10 @@ function get_prop_data( $prop_id , $data_collection ){
                 }
             }
 
-            if( isset( $_POST['propperty_attachment_ids'] ) ) {
+            if( isset( $_FILES['propperty_attachment_ids'] ) ) {
                     $property_attach_ids = array();
-                    foreach ($_POST['propperty_attachment_ids'] as $prop_atch_id ) {
-                        $property_attach_ids[] = intval( $prop_atch_id );
+                    $property_attach_ids  =  AqarGateApi::upload_images( $_FILES, 'propperty_attachment_ids' );
+                    foreach ( (array) $property_attach_ids as $prop_atch_id ) {
                         add_post_meta($prop_id, 'fave_attachments', $prop_atch_id);
                     }
             }

@@ -108,9 +108,33 @@ class AqarGateApi {
 			'permission_callback' => 'allow_access',
 			'methods'             => 'POST',
 		),
+        'aqargate_send_otp' => array(
+			'path'                => '/send-otp',
+			'callback'            => 'send_otp',
+			'permission_callback' => 'allow_access',
+			'methods'             => 'GET',
+		),
+        'aqargate_check_otp' => array(
+			'path'                => '/check-otp',
+			'callback'            => 'check_user_otp',
+			'permission_callback' => 'allow_access',
+			'methods'             => 'GET',
+		),
         'aqargate_membership' => array(
 			'path'                => '/membership',
 			'callback'            => 'membership',
+			'permission_callback' => 'allow_access',
+			'methods'             => 'GET',
+		),
+        'aqargate_add_membership' => array(
+			'path'                => '/add-membership',
+			'callback'            => 'add_membership',
+			'permission_callback' => 'allow_access',
+			'methods'             => 'POST',
+		),
+        'payzaty_confirmation' => array(
+			'path'                => '/payzaty-confirmation/(?P<id>[\d]+)',
+			'callback'            => 'payzaty_confirmation_endpoint_callback',
 			'permission_callback' => 'allow_access',
 			'methods'             => 'GET',
 		),
@@ -162,6 +186,12 @@ class AqarGateApi {
 			'permission_callback' => 'allow_access',
 			'methods'             => WP_REST_Server::READABLE,
 		),
+        'aqargate_signup_type' => array(
+			'path'                => '/signup-type/fields',
+			'callback'            => 'signup_type_profile_fields',
+			'permission_callback' => 'allow_access',
+			'methods'             => WP_REST_Server::READABLE,
+		),
         'aqargate_profile_update' => array(
 			'path'                => '/profile/update',
 			'callback'            => 'profile_update',
@@ -186,13 +216,12 @@ class AqarGateApi {
 			'permission_callback' => 'allow_access',
 			'methods'             => WP_REST_Server::READABLE,
 		),
-        'aqargate_image' => array(
-			'path'                => '/images',
-			'callback'            => 'images',
+        'aqargate_cache_data' => array(
+			'path'                => '/cache',
+			'callback'            => 'cache_data',
 			'permission_callback' => 'allow_access',
-			'methods'             => 'POST',
-		),
-        
+			'methods'             => 'GET',
+		),   
 	);	
 
     /**
@@ -345,11 +374,13 @@ class AqarGateApi {
             '2002' => 'No Correct property id',
         );
 
-        return array(
-            'error_code' => $error_code,
-            'message' => empty( $error_message ) ? $msgs[$error_code] :  $error_message,
+        return new WP_REST_Response(
+            array(
+                'success' => false,
+                'error_code' => $error_code,
+                'message' => empty( $error_message ) ? $msgs[$error_code] :  $error_message,
+            )
         );
-
     }
     
     /**
@@ -361,7 +392,10 @@ class AqarGateApi {
     public function response( $date )
     {
         return new WP_REST_Response(
-            array( 'data' => $date )
+            array( 
+                'success' => true,
+                'data' => $date,
+                 )
         );
     }
 
@@ -516,12 +550,13 @@ class AqarGateApi {
            if( !empty( $current_user_id ) ){
               $search_qry['author'] = $current_user_id ;
            }else {
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
+            );
+            return $this->error_response(
+                'jwt_auth_no_auth_header',
+                __( 'Authorization header not found.'  )
             );
            }
        }
@@ -684,21 +719,20 @@ class AqarGateApi {
             'post_type' => 'property',
             'posts_per_page' => $number_of_prop,
             'paged' => $paged,
-            'post_status' => 'publish'
+            'post_status' => array( 'publish', 'draft', 'pending' )
         );
 
-        $current_user_id = get_current_user_id();
+        global $current_user;
+        $current_user = wp_get_current_user();
+        $userID  = $current_user->ID;
 
-        if( !empty( $current_user_id ) ){
-            $search_qry['author'] = $current_user_id ;
+        if( !empty( $userID ) ){
+            $search_qry['author'] = $userID ;
         } 
         else{
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         }
        
@@ -719,14 +753,16 @@ class AqarGateApi {
             'post_type' => 'property',
             'posts_per_page' => -1,
             'paged' => $paged,
-            'post_status' => 'publish'
+            'post_status' => 'publish',
+            'post_status' => array( 'publish', 'draft', 'pending' ),
+            'author' => $userID
         );
 
        /**======================================================== */
        // Get pagination to work for get_posts() in WordPress .
        /**======================================================== */
         $parsed_args = wp_parse_args( $search_qry, $defaults );
-	    $results = get_posts( $parsed_args );
+	    $results     = get_posts( $parsed_args );
 
         $published_prop_count = '';	
         $count_prop = count( $results );
@@ -755,12 +791,9 @@ class AqarGateApi {
     public function user_properties_allow_access( $request ){
         
         if( !is_user_logged_in() || !houzez_check_role()  ){
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         }
         
@@ -990,6 +1023,9 @@ class AqarGateApi {
      */
     public function submit_property( WP_REST_Request $request ){
 
+
+        // return var_export($_FILES['propperty_image_ids']);
+
         if( !isset( $request['action'] ) ){
             return $this->error_response ( '2000', 'missing parameter [ action = add_property / update_property ] ');
         }
@@ -1028,6 +1064,21 @@ class AqarGateApi {
         if( isset( $request['action'] ) && $request['action'] === 'update_property' ){
             if( !isset( $request['prop_id'] ) || empty( $request['prop_id'] )  || ! $this->is_property( $request['prop_id'] ) ) {
                 return $this->error_response ( 'rest_invalide_', 'Missing Or Empty Or Error Parameter [ prop_id ]');
+            }
+
+            $current_user = wp_get_current_user();
+
+            $edit_prop_id   = intval( trim( $request['prop_id'] ) );
+            $property_data  = get_post( $edit_prop_id );
+
+            if ( ! empty( $property_data ) && ( $property_data->post_type == 'property' ) ) {
+                $prop_meta_data = get_post_custom( $property_data->ID );
+                if ( (int)$property_data->post_author !== (int)$current_user->ID ) {
+                   return $this->error_response ( 
+                        'rest_invalide_edit', 
+                        'You do Not Have permition To edit property'
+                   );
+                }
             }
 
         }
@@ -1131,21 +1182,19 @@ class AqarGateApi {
             $post = get_post( $request['prop_id'] );
 
             if( get_current_user_id() !== (int) $post->post_author ){
-                return new WP_Error(
+                return $this->error_response(
                     'rest_cannot_edit_others',
-                    __( 'Sorry, you are not allowed to [create/update]  property as this user.' ),
-                    array( 'status' => rest_authorization_required_code() )
+                    __( 'Sorry, you are not allowed to [create/update]  property as this user.' )
                 );
             }
             
         }
 
 		if ( !is_user_logged_in() || ! houzez_check_role() ) {
-			return new WP_Error(
-				'rest_cannot_create',
-				__( 'Sorry, you are not allowed to [create/update]  property as this user.' ),
-				array( 'status' => rest_authorization_required_code()  )
-			);
+            return $this->error_response(
+                'rest_cannot_create',
+                __( 'Sorry, you are not allowed to [create/update]  property as this user.' )
+            );
 		}
 
 		return true;
@@ -1163,11 +1212,10 @@ class AqarGateApi {
 
 		$post = $this->is_property( $request['id'] );
 
-        $error = new WP_Error(
-			'rest_post_invalid_id',
-			__( 'Invalid Property ID.' ),
-			array( 'status' => 404 )
-		);
+        $error = $this->error_response(
+            'rest_post_invalid_id',
+            __( 'Invalid Property ID.' )
+        );
 
 		if ( ! $post ) {
 			return $error;
@@ -1176,19 +1224,20 @@ class AqarGateApi {
         $post = get_post( $request['id'] );
 
         if ( !is_user_logged_in()  ) {
-			return new WP_Error(
-				'rest_cannot_create',
-				__( 'Sorry, you are not logged in.' ),
-				array( 'status' => rest_authorization_required_code()  )
-			);
+            
+			return $this->error_response(
+                'rest_cannot_create',
+                __( 'Sorry, you are not logged in.' )
+            );
 		}
 
 		if ( $post &&  get_current_user_id() !== (int) $post->post_author ) {
-			return new WP_Error(
-				'rest_cannot_delete',
-				__( 'Sorry, you are not allowed to delete this property.' ),
-				array( 'status' => rest_authorization_required_code() )
-			);
+
+            return $this->error_response(
+                'rest_cannot_delete',
+                __( 'Sorry, you are not allowed to delete this property.' )
+            );
+
 		}
 
 		return true;
@@ -1269,15 +1318,7 @@ class AqarGateApi {
 
         $allow_signup_parameters = [
             'username',
-            'first_name',
-            'last_name',
-            'useremail',
             'phone_number',
-            'register_pass',
-            'register_pass_retype',
-            'role',
-            'term_condition',
-            'privacy_policy'
         ];
 
         foreach ( $allow_signup_parameters as $parameter) {
@@ -1294,33 +1335,6 @@ class AqarGateApi {
             );
         }
 
-        $allowed_role = [
-            'houzez_agent',
-            'houzez_agency',
-            'houzez_owner',
-            'houzez_buyer',
-            'houzez_seller',
-            'houzez_manager'
-        ];
-
-        if( empty ( $request[ 'role' ] ) ) {
-            return $this->error_response(
-                'rest_invalid_role',
-                __( 'Missing Role : [ Name ]'  )
-            ); 
-        }
-
-        if( ! empty ( $request[ 'role' ] )  ){
-            foreach ( $allowed_role as $role) {
-                if( !in_array( $request[ 'role' ], $allowed_role ) ) {
-                    return $this->error_response(
-                        'rest_invalid_role',
-                        __( 'Invalid Given Role : [ ' . $request[ 'role' ] . ' ]'  )
-                    );                    
-                }  
-            }
-        }
-
         $response = ag_register( $request );
         
         if( isset( $response[ 'error_code' ] ) ) {
@@ -1328,6 +1342,74 @@ class AqarGateApi {
         }
         
         return $this->response( $response );
+    }
+    
+    /**
+     * send_otp
+     *
+     * @param  mixed $data
+     * @return void
+     */
+    public function send_otp( $data ){
+
+        if( !is_user_logged_in() ){
+            return $this->error_response(
+                'jwt_auth_no_auth_header',
+                __( 'Authorization header not found.'  )
+            );
+        }
+
+        $response = __( 'تم ارسال رقم التحقيق', 'aqargate' );
+
+        return $this->response( $response );  
+    }
+       
+    /**
+     * check_user_otp
+     *
+     * @param  mixed $data
+     * @return void
+     */
+    public function check_user_otp( $data ){
+
+        if( !is_user_logged_in() ){
+            return $this->error_response(
+                'jwt_auth_no_auth_header',
+                __( 'Authorization header not found.'  )
+            );
+        }
+
+        if( !isset( $_GET['otp'] ) ){
+            return new WP_Error(
+                'error_rest_otp',
+                'Missing Otp Number',
+                array(
+                    'status' => 403,
+                )
+            );
+        }
+
+        
+
+        global $current_user;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
+        
+        if( isset( $_GET['user_id'] ) && !empty( $_GET['user_id'] ) ) {
+            $userID = $_GET['user_id'];
+        }
+
+        $otp = get_user_meta( $userID, 'aqar_author_last_otp', true );
+
+        if( (int) $_GET['otp'] === 1234 ) {
+            return $this->response( __('تم تاكيد التسجيل' , 'aqargate') );
+        } else {
+            return $this->error_response(
+                'rest_invalid_otp',
+                esc_html__('الرقم المدخل غير صحيح', 'houzez-login-register') 
+            );
+        }
+
     }
     
     /**
@@ -1362,6 +1444,190 @@ class AqarGateApi {
 
         return $this->response( $response );
     }
+    
+    /**
+     * add_membership
+     *
+     * @param  mixed $request
+     * @return void
+     */
+    public function add_membership( WP_REST_Request $request ){
+
+        if( !is_user_logged_in() ){
+            return $this->error_response(
+                'jwt_auth_no_auth_header',
+                __( 'Authorization header not found.'  )
+            );
+        }
+
+        $allowed_data = [
+            'package_id',
+        ];
+
+        foreach ( $allowed_data as $parameter) {
+            if( !isset( $request[$parameter] ) || empty( $request[$parameter] ) ) {
+                $error[] = $parameter ;
+                
+            }  
+        }
+
+        if( ! empty( $error ) ) {
+            return $this->error_response(
+                'rest_invalid_param',
+                __( 'Missing OR Empty parameter(s) : [ ' . implode( ", ", $error ) . ' ]'  )
+            );
+        }
+
+        $current_user = wp_get_current_user();
+        $userID       = get_current_user_id();
+        $user_email   = $current_user->user_email;
+
+        $package_id   = intval($_POST['package_id']);
+
+        $product_id  = checkIfAlreadyInCart($listing_id);
+
+        if( $product_id == 0 ) {
+            $product_id = houzez_package_payment($package_id);
+        }
+
+
+        // Load cart functions which are loaded only on the front-end.
+        include_once WC_ABSPATH . 'includes/wc-cart-functions.php';
+        include_once WC_ABSPATH . 'includes/class-wc-cart.php';
+
+        // wc_load_cart() does two things:
+        // 1. Initialize the customer and cart objects and setup customer saving on shutdown.
+        // 2. Initialize the session class.
+        if ( is_null( WC()->cart ) ) {
+            wc_load_cart();
+        }
+
+        $first_name = get_user_meta( $userID, 'first_name', true );
+        $last_name  = get_user_meta( $userID, 'last_name', true );
+
+        $user_company = '';
+        $agency_id = get_user_meta($userID, 'fave_author_agency_id', true);
+        if( !empty($agency_id) ) {
+            $user_company = get_the_title($agency_id);
+        }
+
+        $usermobile    = get_user_meta( $userID, 'fave_author_mobile', true );
+        $user_address  = get_user_meta( $userID, 'fave_author_address', true );
+        $user_location = get_user_meta( $userID, 'fave_author_google_location', $user_location );
+            
+        $address = array(
+            'first_name' => $first_name,
+            'last_name'  => $last_name,
+            'company'    => $user_company,
+            'email'      => $user_email,
+            'phone'      => $usermobile,
+            'address_1'  => $user_address,
+            'address_2'  => '', 
+            'city'       => $user_location,
+            'state'      => '',
+            'postcode'   => '',
+            'country'    => 'SA'
+        );
+    
+        $order = wc_create_order();
+        $order->add_product( get_product( $product_id ), 1 );
+        
+        $order->set_address( $address, 'billing' );
+        $order->set_address( $address, 'shipping' );
+    
+        $order->calculate_totals();
+
+        update_post_meta( $order->id, '_payment_method', 'payzaty' );
+        update_post_meta( $order->id, '_payment_method_title', 'payzaty' );
+    
+        // Store Order ID in session so it can be re-used after payment failure
+        WC()->session->order_awaiting_payment = $order->id;
+  
+        // Process Payment
+        $available_gateways = WC()->payment_gateways->get_available_payment_gateways();
+
+
+        $result = $available_gateways[ 'payzaty' ]->process_payment( $order->id );
+  
+        // Redirect to success/confirmation/payment page
+        if ( $result['result'] == 'success' ) {
+    
+            $result = apply_filters( 'woocommerce_payment_successful_result', $result, $order->id );
+    
+            return $this->response( [
+                'payzaty_url' => $result['redirect'],
+                'order_id'    => $order->id,
+            ]) ;
+    
+        }
+
+        return $this->response( $result );
+
+    }
+
+    /**
+     * get the payzaty settings data
+     * 
+     * @access	public
+     * @since	1.6.0
+     * @return	array	all base date needed in the payzaty API request
+     */
+    public function get_payment_method_data(){
+
+        // Load cart functions which are loaded only on the front-end.
+        include_once WC_ABSPATH . 'includes/wc-cart-functions.php';
+        include_once WC_ABSPATH . 'includes/class-wc-cart.php';
+
+        // wc_load_cart() does two things:
+        // 1. Initialize the customer and cart objects and setup customer saving on shutdown.
+        // 2. Initialize the session class.
+        if ( is_null( WC()->cart ) ) {
+            wc_load_cart();
+        }
+        $data = WC()->payment_gateways->get_available_payment_gateways()['payzaty']->settings;
+        return array( 'sandbox' => $data['sandbox'], 'no' => $data['merchant_id'], 'key' => $data['secret_key'] );
+    }
+
+    /**
+     * The Logic done when Payzaty response on order process endpoint
+     * 
+     * @access	public
+     * @since	1.6.0
+     * @return	void
+     */
+    public function payzaty_confirmation_endpoint_callback( $request ) {
+
+        // Load cart functions which are loaded only on the front-end.
+        include_once WC_ABSPATH . 'includes/wc-cart-functions.php';
+        include_once WC_ABSPATH . 'includes/class-wc-cart.php';
+
+        // wc_load_cart() does two things:
+        // 1. Initialize the customer and cart objects and setup customer saving on shutdown.
+        // 2. Initialize the session class.
+        if ( is_null( WC()->cart ) ) {
+            wc_load_cart();
+        }
+
+        $order_id = $request->get_params()['id'];
+        $order = new WC_Order($order_id);
+
+        $checkout_id =  get_post_meta($order_id, 'payzaty_checkout_id' ,true);
+        
+        // if(!isset($_GET['checkoutId']) || $checkout_id !== $_GET['checkoutId']){
+        //     return array( __("Something went wrong", ' payzaty' ));
+        // }
+
+        $method_data	= $this->get_payment_method_data();
+        $connection		= new Payzaty_Gate_Way_API_Connecting($method_data['sandbox'], $method_data['no'], $method_data['key']);     
+        $status 		= $connection->get_checkout_status( $checkout_id );
+ 
+        if( $status['success'] === true && $status['IsPaid'] === true ){
+            return $this->response( $status );
+        } else {
+            return $this->response( $status );
+        }
+        
+    }
 
      
      /**
@@ -1373,12 +1639,9 @@ class AqarGateApi {
      public function favorite_properties( WP_REST_Request $request ){
 
         if( !is_user_logged_in() ){
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         } 
 
@@ -1429,12 +1692,9 @@ class AqarGateApi {
 
         
        if( !is_user_logged_in() ){
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         } 
 
@@ -1494,12 +1754,9 @@ class AqarGateApi {
 
 
        if( !is_user_logged_in() ){
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         } 
 
@@ -1552,12 +1809,9 @@ class AqarGateApi {
      public function conversations( $data ){
 
         if( !is_user_logged_in() )  {
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         }
 
@@ -1631,12 +1885,9 @@ class AqarGateApi {
         }
 
         if( !is_user_logged_in() )  {
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         }
 
@@ -1748,12 +1999,9 @@ class AqarGateApi {
      public function new_conversation( $data ){
 
         if( !is_user_logged_in() )  {
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         }
         
@@ -1820,12 +2068,9 @@ class AqarGateApi {
      public function add_new_conversation( $data ){
 
         if( !is_user_logged_in() )  {
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         }
 
@@ -1957,12 +2202,9 @@ class AqarGateApi {
      public function new_conversation_message( $data ){
 
         if( !is_user_logged_in() )  {
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         }
         
@@ -2082,7 +2324,13 @@ class AqarGateApi {
         return $response;
 
     }
-
+    
+    /**
+     * profile_fields
+     *
+     * @param  mixed $data
+     * @return void
+     */
     public function profile_fields( $data ){
 
         if( isset( $data['user_id'] ) && empty( $data['user_id'] ) ) {
@@ -2120,6 +2368,23 @@ class AqarGateApi {
         $id_number              =   get_the_author_meta( 'aqar_author_id_number' , $userID );
         $ad_number              =   get_the_author_meta( 'aqar_author_ad_number' , $userID );
         $type_id                =   get_the_author_meta( 'aqar_author_type_id' , $userID );
+        $user_custom_picture    =   get_the_author_meta( 'fave_author_custom_picture' , $userID );
+        $author_picture_id      =   get_the_author_meta( 'fave_author_picture_id' , $userID );
+
+        if( !empty( $author_picture_id ) ) {
+            $author_picture_id = intval( $author_picture_id );
+            if ( $author_picture_id ) {
+                $author_picture =  [
+                        'url' => wp_get_attachment_image_url( $author_picture_id, 'large' ),
+                        'id'  => $author_picture_id
+                ];
+            }
+        } else {
+            $author_picture =  [
+                'url' => $user_custom_picture,
+                'id'  => null
+            ];
+        }
        
        if( houzez_is_agency() ) {
            $title_position_lable = esc_html__('Agency Name','houzez');
@@ -2301,6 +2566,200 @@ class AqarGateApi {
             'disabled'    => 0,
         ];
 
+        $profile_fields[] = [
+            'id'          => 'profile-pic-id',
+            'field_id'    => 'profile-pic-id',
+            'type'        => 'image',
+            'label'       => __('Update Profile Picture [ Minimum size 300 x 300 px ]', 'houzez'),
+            'placeholder' => '',
+            'options'     => '',
+            'value'       => $author_picture,
+            'disabled'    => 0,
+        ];
+
+       return $this->response( $profile_fields );
+    }
+    
+    /**
+     * signup_type_profile_fields
+     *
+     * @param  mixed $data
+     * @return void
+     */
+    public function signup_type_profile_fields( $data ){
+
+        if( !isset( $data['user_type'] ) && empty( $data['user_type'] ) ) {
+            return $this->error_response(
+                'rest_invalid_data',
+                __( 'Missing OR EMPTY Parameter(s) [ user_type = [ houzez_owner - houzez_agency - houzez_agent ] ] ' )
+            );
+        }
+
+       if( isset($data['user_type']) ){
+
+           switch ($data['user_type']) {
+
+            case 'houzez_owner':
+                $profile_fields[] = [
+                    'id'          => 'id_number',
+                    'field_id'    => 'id_number',
+                    'type'        => 'text',
+                    'label'       => __('رقم الهوية / أو السجل التجاري','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'ad_number',
+                    'field_id'    => 'ad_number',
+                    'type'        => 'text',
+                    'label'       => __('رقم المعلن','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'useremail',
+                    'field_id'    => 'useremail',
+                    'type'        => 'text',
+                    'label'       => __('Email','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                break;
+
+            case 'houzez_agency':
+                $profile_fields[] = [
+                    'id'          => 'ad_number',
+                    'field_id'    => 'ad_number',
+                    'type'        => 'text',
+                    'label'       => __('رقم المعلن','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'useremail',
+                    'field_id'    => 'useremail',
+                    'type'        => 'text',
+                    'label'       => __('Email','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                break;
+
+            case 'houzez_agent':
+                $profile_fields[] = [
+                    'id'          => 'ad_number',
+                    'field_id'    => 'ad_number',
+                    'type'        => 'text',
+                    'label'       => __('رقم المعلن','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'useremail',
+                    'field_id'    => 'useremail',
+                    'type'        => 'text',
+                    'label'       => __('Email','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                break;
+            
+           }
+
+       }
+       
+        // $profile_fields[] = [
+        //     'id'          => 'license',
+        //     'field_id'    => 'license',
+        //     'type'        => 'text',
+        //     'label'       => __('License', 'houzez'),
+        //     'placeholder' => '',
+        //     'options'     => '',
+        //     'value'       => esc_attr( $license ),
+        //     'disabled'    => 0,
+        // ];
+        // $profile_fields[] = [
+        //     'id'          => 'usermobile',
+        //     'field_id'    => 'usermobile',
+        //     'type'        => 'text',
+        //     'label'       => __('Mobile','houzez'),
+        //     'placeholder' => '',
+        //     'options'     => '',
+        //     'value'       => esc_attr( $user_mobile ),
+        //     'disabled'    => 0,
+        // ];
+
+        // $profile_fields[] = [
+        //     'id'          => 'id_number',
+        //     'field_id'    => 'id_number',
+        //     'type'        => 'text',
+        //     'label'       => __('رقم الهوية / أو السجل التجاري','houzez'),
+        //     'placeholder' => '',
+        //     'options'     => '',
+        //     'value'       => esc_attr( $id_number ),
+        //     'disabled'    => 0,
+        // ];
+        // $profile_fields[] = [
+        //     'id'          => 'ad_number',
+        //     'field_id'    => 'ad_number',
+        //     'type'        => 'text',
+        //     'label'       => __('رقم المعلن','houzez'),
+        //     'placeholder' => '',
+        //     'options'     => '',
+        //     'value'       => esc_attr( $ad_number ),
+        //     'disabled'    => 0,
+        // ];
+        // $profile_fields[] = [
+        //     'id'          => 'aqar_author_type_id',
+        //     'field_id'    => 'aqar_author_type_id',
+        //     'type'        => 'select',
+        //     'label'       => __('نوع المعلن','houzez'),
+        //     'placeholder' => '',
+        //     'options'     => [
+        //         ['id' => '1', 'value' => 'مواطن'],
+        //         ['id' => '2', 'value' => 'مقيم'],
+        //         ['id' => '3', 'value' => 'منشأة'],
+        //     ],
+        //     'value'       => esc_attr( $type_id ),
+        //     'disabled'    => 0,
+        // ];
+        // $profile_fields[] = [
+        //     'id'          => 'tax_number',
+        //     'field_id'    => 'tax_number',
+        //     'type'        => 'text',
+        //     'label'       => __('Tax Number','houzez'),
+        //     'placeholder' => '',
+        //     'options'     => '',
+        //     'value'       => esc_attr( $tax_number ),
+        //     'disabled'    => 0,
+        // ];
+ 
+        // if( !houzez_is_agency() ):
+        // $profile_fields[] = [
+        //     'id'          => 'user_company',
+        //     'field_id'    => 'user_company',
+        //     'type'        => 'text',
+        //     'label'       => __('Company Name','houzez'),
+        //     'placeholder' => '',
+        //     'options'     => '',
+        //     'value'       => esc_attr( $user_company ),
+        //     'disabled'    => 0,
+        // ];
+        // endif;
         
 
        return $this->response( $profile_fields );
@@ -2316,12 +2775,9 @@ class AqarGateApi {
     public function profile_update ( $data ){
 
         if( !is_user_logged_in() )  {
-            return new WP_Error(
+            return $this->error_response(
                 'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
+                __( 'Authorization header not found.'  )
             );
         }
 
@@ -2458,6 +2914,38 @@ class AqarGateApi {
         $time = date("F d, Y h:i:s A");
         update_option( $taxonomy .'_tax_last_update', $time, true );
     }
+
+    public function cache_data( $request ){
+
+        $args = array(
+            'public'   => true,
+            '_builtin' => false
+             
+          ); 
+          $response = [];
+          $output = 'names'; // or objects
+          $operator = 'and'; // 'and' or 'or'
+          $taxonomies = get_taxonomies( $args, $output, $operator ); 
+          if ( $taxonomies ) {
+            unset($taxonomies['product_cat']);
+            unset($taxonomies['product_tag']);
+            unset($taxonomies['product_shipping_class']);
+              foreach ( $taxonomies  as $taxonomy ) {
+                $response[] = [
+                    'last_update' => get_option( $taxonomy .'_tax_last_update', false ),
+                    'taxonomy_updated' => $taxonomy,
+                ];
+                  
+              }
+          }
+
+          if( !empty( $response ) ){
+            return $this->response( $response );
+          }
+
+        
+        
+    }
     
     /**
      * property_category
@@ -2501,103 +2989,78 @@ class AqarGateApi {
             return $this->response( $response );
         }
     }
-    
+      
     /**
-     * images
+     * upload_images
      *
      * @param  mixed $data
+     * @param  mixed $file_name
      * @return void
      */
-    public function images( $data ){
+    public function upload_images( $data, $file_name ){
 
-        if( !is_user_logged_in() )  {
-            return new WP_Error(
-                'jwt_auth_no_auth_header',
-                'Authorization header not found.',
-                array(
-                    'status' => 403,
-                )
-            );
-        }
+        
+        $attach_ids = [];
+        if( isset( $data[$file_name] ) && !empty( $data[$file_name] ) ) {
+           
+            $upload_dir  = wp_upload_dir();
+            $uploads_dir = trailingslashit( wp_upload_dir()['basedir'] ) . 'api-images';
+            wp_mkdir_p( $uploads_dir );
+            $UploadDirectory  =  WP_CONTENT_DIR.'/uploads/api-images/';
 
-        if( !isset( $_GET['apicall'] ) ) {
-            return $this->error_response(
-                'rest_invalid_data',
-                __( 'Missing Parameter(s) [ apicall = uploadpic ]' )
-            );
-        } 
+            $total = count( (array) $data[$file_name]['name'] );
 
-        if( !isset( $_POST['prop_id'] ) ) {
-            return $this->error_response(
-                'rest_invalid_data',
-                __( 'Missing Parameter(s) Body [ prop_id ]' )
-            );
-        }
+            // Loop through each file
+            for( $i=0 ; $i <= $total ; $i++ ) {
+                
+                if( $total === 1 ) {
+                    // Get the temp single file path
+                    $tmpFilePath = $data[$file_name]['tmp_name'];
+                    $filename    = $data[$file_name]['name'];
+                }else{
+                    //Get the temp files path
+                    $tmpFilePath = $data[$file_name]['tmp_name'][$i];
+                    $filename    = $data[$file_name]['name'][$i];
 
-        if( !isset( $_FILES['pic'] ) ) {
-            return $this->error_response(
-                'rest_invalid_data',
-                __( 'Missing Parameter(s) Body [ pic ]' )
-            );
-        }
+                }
 
-        $upload_dir = wp_upload_dir();
-        $uploads_dir = trailingslashit( wp_upload_dir()['basedir'] ) . 'api-images';
-        wp_mkdir_p( $uploads_dir );
-        $UploadDirectory    =  WP_CONTENT_DIR.'/uploads/api-images/';
-        define('UPLOAD_PATH', $UploadDirectory);
-
-        if( isset( $_GET['apicall'] ) ) {
-             //switching the api call 
-            switch($_GET['apicall']){
-            
-                //if it is an upload call we will upload the image
-                case 'uploadpic':
-
-                //first confirming that we have the image and tags in the request parameter
-                if( isset( $_FILES['pic']['name'] ) && isset( $_POST['prop_id'] ) ){
-
-                     //uploading file and storing it to database as well 
-                    move_uploaded_file($_FILES['pic']['tmp_name'], $UploadDirectory . sanitize_file_name($_FILES['pic']['name']));
+                 //Make sure we have a file path
+                if ($tmpFilePath != ""){ 
+                  if( move_uploaded_file($tmpFilePath, $UploadDirectory . sanitize_file_name($filename)) ){
                     $image_api = get_site_url();
-                    $getImageFile = $image_api .'/wp-content/uploads/api-images/' . $_FILES['pic']['name'];
-                    
-                    $wp_filetype = wp_check_filetype( $getImageFile, null );
+                    $getImageFile = $image_api .'/wp-content/uploads/api-images/' . $filename;
+                    $wp_filetype = wp_check_filetype( $getImageFile, null ); 
 
                     // attachment table
                     $attachment_data = array(
                         'post_mime_type' => $wp_filetype['type'],
-                        'post_title' => sanitize_file_name( $_FILES['pic']['name'] ),
+                        'post_title' => sanitize_file_name( $filename ),
                         'post_content' => '',
                         'post_status' => 'inherit'
                     );
 
-                    $attach_id = wp_insert_attachment( $attachment_data, $getImageFile, $_POST['prop_id'] );
-                   
-                    // Custom table
-                    global $wpdb;     
-                    $table_name = $wpdb->prefix . 'api_images';  
-                    $tables = $wpdb->get_results( 'SHOW TABLES LIKE "' . $wpdb->prefix . 'api_images"' );
+                    $attach_id = wp_insert_attachment( $attachment_data, $getImageFile );
 
-                    if ( ! empty( $tables ) ) {
-                        $response = $wpdb->insert($table_name, array('image_api' => $attach_id, 'prop_id' => $_POST['prop_id'])); 
-                    }       
+                    $uploads = wp_upload_dir();
+                    $save_path = $uploads['basedir'].'/api-images/'.$filename;
+                    // Make sure that this file is included, as wp_generate_attachment_metadata() depends on it.
+                    require_once( ABSPATH . 'wp-admin/includes/image.php' );
+                    
+                    // Generate the metadata for the attachment, and update the database record.
+                    if ($attach_data = wp_generate_attachment_metadata( $attach_id, $save_path)) {
+                        wp_update_attachment_metadata($attach_id, $attach_data);
+                    }
+
+                    $thumbnail_url = wp_get_attachment_image_src( $attach_id, 'large' );
+
+                    $attach_ids[] = $attach_id;
+
+                  }
 
                 }
-                $attachment_image_data = wp_get_attachment_image_src( $attach_id );
-                $image_data = [
-                    'url' => $attachment_image_data[0],
-                    'id'  => $attach_id,
-                    'prop_id' => $_POST['prop_id']
-                ];
-
-                return $this->response( $image_data );
-
-             break;
-            
+            }
+            return $attach_ids;
         }
-        
-      }
     }
     	
 

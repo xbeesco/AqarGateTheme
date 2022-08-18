@@ -111,6 +111,7 @@ function ag_membership_type(){
     foreach ( $packages_qry as $key => $pack ) { 
     
     $response['packages'][]= [
+        'pack_id'                 => $pack->ID,
         'pack_title'              => get_the_title( $pack->ID ),
         'pack_price'              => get_post_meta( $pack->ID, 'fave_package_price', true ),
         'pack_listings'           => get_post_meta( $pack->ID, 'fave_package_listings', true ),
@@ -127,4 +128,95 @@ function ag_membership_type(){
     }
     wp_reset_query();
     return $response;
+}
+
+/**
+ * checkIfAlreadyInCart
+ *
+ * @param  mixed $invoice_no
+ * @return void
+ */
+function checkIfAlreadyInCart($invoice_no) {
+           
+   $product_id = 0;
+   if( !empty( $invoice_no ) ) :
+        $args = array(
+            'post_type'      => 'product',
+            'meta_key'       => '_invoice_id',
+            'meta_value'     => $invoice_no,
+            'posts_per_page' => 1
+        );
+    
+        $qry = new WP_Query( $args );
+
+        if ( $qry->have_posts() ):
+            while ( $qry->have_posts() ): $qry->the_post();
+                $product_id =  get_the_ID();
+            endwhile;
+        endif;
+     endif;
+     return $product_id;
+  }
+  
+  /**
+   * houzez_package_payment
+   *
+   * @param  mixed $package_id
+   * @return void
+   */
+  function houzez_package_payment( $package_id ) {
+
+    $current_user = wp_get_current_user();
+    $userID       = get_current_user_id();
+    $user_email   = $current_user->user_email;
+
+    $pack_price = get_post_meta( $package_id, 'fave_package_price', true );
+    
+    $product_title = sprintf( esc_html__('Payment for package "%s"', 'houzez-woo'), get_the_title($package_id));
+    
+    $args = array(
+        'post_content'   => '',
+        'post_status'    => "publish",
+        'post_title'     => $product_title,
+        'post_parent'    => '',
+        'post_type'      => "product",
+        'comment_status' => 'closed'
+    );
+
+    $product_id = wp_insert_post( $args );
+    
+    
+    update_post_meta( $product_id, '_is_houzez_woocommerce', true );
+    update_post_meta( $product_id, '_is_houzez_payment_mode', 'package' );
+    update_post_meta( $product_id, '_virtual', 'yes' );  //no
+    update_post_meta( $product_id, '_sold_individually', 'yes' ); //no
+    update_post_meta( $product_id, '_manage_stock', 'no' ); //no
+    update_post_meta( $product_id, '_featured', 'no' );
+    update_post_meta( $product_id, '_stock_status', 'instock' ); //instock
+    update_post_meta( $product_id, '_visibility', 'visible' );
+    update_post_meta( $product_id, '_downloadable', 'no' ); //no
+    update_post_meta( $product_id, '_invoice_id', $package_id );
+    update_post_meta( $product_id, '_backorders', 'no' ); //no
+    update_post_meta( $product_id, '_price', $pack_price ); //''
+    update_post_meta( $product_id, '_houzez_package_id', $package_id );
+    update_post_meta( $product_id, '_houzez_user_id', $userID );
+    update_post_meta( $product_id, '_houzez_user_email', $user_email );
+    
+    update_post_meta( $product_id, '_wc_min_qty_product', 1 );
+    update_post_meta( $product_id, '_wc_max_qty_product', 1 );
+    $data_variation = [
+        'types' => [
+            'name'         => 'types',
+            'value'        => 'service',
+            'position'     => 0,
+            'is_visible'   => 1,
+            'is_variation' => 1,
+            'is_taxonomy'  => 1
+        ]
+    ];
+    update_post_meta( $product_id, '_product_attributes', $data_variation );
+    update_post_meta( $product_id, '_product_version', '4.2.0' );
+    
+    return $product_id;
+    
 }

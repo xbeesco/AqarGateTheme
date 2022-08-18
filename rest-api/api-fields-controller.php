@@ -93,6 +93,24 @@ function ag_get_property_fields( $data )
             $lng = sanitize_text_field($location[1]);
         }
     }
+
+    $property_images   = get_post_meta( $data['prop_id'], 'fave_property_images', false );
+    $featured_image_id = get_post_thumbnail_id( $data['prop_id'] );
+    $featured_image = [
+        'url' => wp_get_attachment_image_url( $featured_image_id, 'large' ),
+        'id'  => $featured_image_id,
+    ];
+    $property_images[] = $featured_image_id;
+    $property_images   = array_unique($property_images);
+    $property_images_data = [];
+    if( is_array( $property_images ) && !empty( $property_images ) ) {
+        foreach( $property_images as $property_image ) {
+            $property_images_data[] = [
+                'url' => wp_get_attachment_image_url( $property_image, 'large' ),
+                'id'  => $property_image,
+            ];
+        }
+    }
     
     /**
      *  Theme field builder
@@ -271,6 +289,26 @@ function ag_get_property_fields( $data )
                 'value'       => ag_get_taxonomies_for_edit_listing_multivalue( $data['prop_id'], 'property_feature'),
                 'required'    => 0,
             ],
+            [
+                'id'          => 'propperty_image_ids',
+                'field_id'    => 'propperty_image_ids[]',
+                'type'        => 'image',
+                'label'       => houzez_option('cls_media', 'Property Media'),
+                'placeholder' => '',
+                'options'     => [],
+                'value'       => $property_images_data,
+                'required'    => 0,
+            ],
+            [
+                'id'          => 'featured_image_id',
+                'field_id'    => 'featured_image_id',
+                'type'        => 'image',
+                'label'       => houzez_option('cls_media', 'Property Media'),
+                'placeholder' => '',
+                'options'     => [],
+                'value'       => $featured_image,
+                'required'    => 0,
+            ]
             
         
     ];

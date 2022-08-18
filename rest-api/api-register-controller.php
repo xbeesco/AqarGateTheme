@@ -24,28 +24,28 @@ function ag_register( $request )
     
     $term_condition = ( $term_condition == 'on') ? true : false;
     
-    if( !$term_condition ) {
-        return AqarGateApi::error_response(
-            'rest_invalid_terms',
-            esc_html__('You need to agree with terms & conditions.', 'houzez-login-register') 
-        );
-    }
+    // if( !$term_condition ) {
+    //     return AqarGateApi::error_response(
+    //         'rest_invalid_terms',
+    //         esc_html__('You need to agree with terms & conditions.', 'houzez-login-register') 
+    //     );
+    // }
     
     $firstname = isset( $_POST['first_name'] ) ? $_POST['first_name'] : '';
-    if( empty($firstname) && houzez_option('register_first_name', 0) == 1 ) {
-        return AqarGateApi::error_response(
-            'rest_invalid_first_name',
-            esc_html__('The first name field is empty.', 'houzez-login-register') 
-        );
-    }
+    // if( empty($firstname) && houzez_option('register_first_name', 0) == 1 ) {
+    //     return AqarGateApi::error_response(
+    //         'rest_invalid_first_name',
+    //         esc_html__('The first name field is empty.', 'houzez-login-register') 
+    //     );
+    // }
     
     $lastname = isset( $_POST['last_name'] ) ? $_POST['last_name'] : '';
-    if( empty($lastname) && houzez_option('register_last_name', 0) == 1 ) {
-        return AqarGateApi::error_response(
-            'rest_invalid_last_name',
-            esc_html__('The last name field is empty.', 'houzez-login-register') 
-        );
-    }
+    // if( empty($lastname) && houzez_option('register_last_name', 0) == 1 ) {
+    //     return AqarGateApi::error_response(
+    //         'rest_invalid_last_name',
+    //         esc_html__('The last name field is empty.', 'houzez-login-register') 
+    //     );
+    // }
     
     $phone_number = isset( $_POST['phone_number'] ) ? $_POST['phone_number'] : '';
     if( empty($phone_number) && houzez_option('register_mobile', 0) == 1 ) {
@@ -54,16 +54,29 @@ function ag_register( $request )
             esc_html__('Please enter your number', 'houzez-login-register') 
         );
     }
+
+    $user_query = new WP_User_Query( array( 'number' => -1 ) );
+    $return = '';
+    // User Loop
+    if ( ! empty( $user_query->results ) ) {
+        foreach ( $user_query->results as $user ) {
+            $user_id = $user->ID;
+            $fave_author_phone = get_user_meta( $user_id, 'fave_author_phone', true);
+            $fave_author_mobile = get_user_meta( $user_id, 'fave_author_mobile', true);
+            
+            if( (int) $fave_author_phone === (int) $phone_number || (int) $fave_author_mobile === (int) $phone_number) {
+                return AqarGateApi::error_response(
+                    'rest_invalid_number',
+                    esc_html__('This phone number is already registered !', 'houzez-login-register') 
+                );
+            }
+        }
+    }
+
     $id_number = isset( $_POST['id_number'] ) ? $_POST['id_number'] : '';
     $ad_number = isset( $_POST['ad_number'] ) ? $_POST['ad_number'] : '';
     $type_id   = isset( $_POST['aqar_author_type_id'] ) ? $_POST['aqar_author_type_id'] : '';
     
-    if( empty($phone_number) && houzez_option('register_mobile', 0) == 1 ) {
-        return AqarGateApi::error_response(
-            'rest_invalid_number',
-            esc_html__('Please enter your number', 'houzez-login-register')
-        );
-    }
     if( empty( $usermane ) ) {
         return AqarGateApi::error_response(
             'rest_invalid_username',
@@ -88,50 +101,51 @@ function ag_register( $request )
             esc_html__('This username is already registered.', 'houzez-login-register')
         );
     }
-    if( empty( $email ) ) {
-        return AqarGateApi::error_response(
-            'rest_invalid_email',
-            esc_html__('The email field is empty.', 'houzez-login-register') 
-        );
-    }
+
+    // if( empty( $email ) ) {
+    //     return AqarGateApi::error_response(
+    //         'rest_invalid_email',
+    //         esc_html__('The email field is empty.', 'houzez-login-register') 
+    //     );
+    // }
     
-    if( email_exists( $email ) ) {
-        return AqarGateApi::error_response(
-            'rest_invalid_email',
-            esc_html__('This email address is already registered.', 'houzez-login-register') 
-        );
-    }
+    // if( email_exists( $email ) ) {
+    //     return AqarGateApi::error_response(
+    //         'rest_invalid_email',
+    //         esc_html__('This email address is already registered.', 'houzez-login-register') 
+    //     );
+    // }
     
-    if( !is_email( $email ) ) {
-        return AqarGateApi::error_response(
-            'rest_invalid_email',
-            esc_html__('Invalid email address.', 'houzez-login-register') 
-        );
-    }
+    // if( !is_email( $email ) ) {
+    //     return AqarGateApi::error_response(
+    //         'rest_invalid_email',
+    //         esc_html__('Invalid email address.', 'houzez-login-register') 
+    //     );
+    // }
     
-    if( $enable_password == 'yes' ){
-        $user_pass         = trim( sanitize_text_field(wp_kses( $_POST['register_pass'] ,$allowed_html) ) );
-        $user_pass_retype  = trim( sanitize_text_field(wp_kses( $_POST['register_pass_retype'] ,$allowed_html) ) );
+    // if( $enable_password == 'yes' ){
+    //     $user_pass         = trim( sanitize_text_field(wp_kses( $_POST['register_pass'] ,$allowed_html) ) );
+    //     $user_pass_retype  = trim( sanitize_text_field(wp_kses( $_POST['register_pass_retype'] ,$allowed_html) ) );
     
-        if ($user_pass == '' || $user_pass_retype == '' ) {
-            return AqarGateApi::error_response(
-                'rest_invalid_password',
-                esc_html__('One of the password field is empty!', 'houzez-login-register') 
-            );
-        }
+    //     if ($user_pass == '' || $user_pass_retype == '' ) {
+    //         return AqarGateApi::error_response(
+    //             'rest_invalid_password',
+    //             esc_html__('One of the password field is empty!', 'houzez-login-register') 
+    //         );
+    //     }
     
-        if ($user_pass !== $user_pass_retype ){
-            return AqarGateApi::error_response(
-                'rest_invalid_password',
-                esc_html__('Passwords do not match', 'houzez-login-register') 
-            );
-        }
-    }
+    //     if ($user_pass !== $user_pass_retype ){
+    //         return AqarGateApi::error_response(
+    //             'rest_invalid_password',
+    //             esc_html__('Passwords do not match', 'houzez-login-register') 
+    //         );
+    //     }
+    // }
     
     
     // houzez_google_recaptcha_callback();
-    
-    if($enable_password == 'yes' ) {
+    $enable_password = false;
+    if( $enable_password ) {
         $user_password = $user_pass;
     } else {
         $user_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
@@ -174,6 +188,10 @@ function ag_register( $request )
         }
     
         update_user_meta( $user_id, 'aqar_author_type_id', $type_id);
+
+        $static_otp = 1234;
+
+        update_user_meta( $user_id, 'aqar_author_last_otp', $static_otp );
     
         $user_as_agent = houzez_option('user_as_agent');
     
@@ -191,22 +209,24 @@ function ag_register( $request )
                 houzez_register_as_agency($user_mane, $email, $user_id, $phone_number);
             }
         }
-        houzez_wp_new_user_notification( $user_id, $user_password, $phone_number );
 
-        
+        //houzez_wp_new_user_notification( $user_id, $user_password, $phone_number );
 
         do_action('houzez_after_register', $user_id);
 
         $user_token = aqargate_token_after_register( $usermane, $user_password );
 
-        $author_id = ['user_id' => $user_id];
 
-        $user_token = array_merge( $user_token, $author_id );
+        $author_data = [ 'user_id' => $user_id ];
+
+        $user_token = array_merge( $user_token, $author_data );
 
     }
 
     return $user_token;
 }
+
+
 
 /**
  * api_update_profile
@@ -534,7 +554,15 @@ function api_update_profile( $data ){
             delete_user_meta( $userID, 'fave_author_google_location' );
         }
     }
-    
+
+    $profile_pic_id = isset($_FILES['profile-pic-id'] ) ? AqarGateApi::upload_images( (array)$_FILES, 'profile-pic-id' ) : '';
+
+    $thumbnail_url = wp_get_attachment_image_src( $profile_pic_id[0] );
+
+    if( !empty($profile_pic_id) ){
+        houzez_save_user_photo($userID, $profile_pic_id[0], $thumbnail_url);
+    }
+
     if( isset( $_POST['useremail'] ) ) { 
         // Update email
         if( !empty( $_POST['useremail'] ) ) {
@@ -559,9 +587,9 @@ function api_update_profile( $data ){
                     }
                 }
         
-                $profile_pic_id = isset($_POST['profile-pic-id'] ) ? intval( $_POST['profile-pic-id'] ) : '';
-        
-                $agent_id = get_user_meta( $userID, 'fave_author_agent_id', true );
+                
+
+                $agent_id  = get_user_meta( $userID, 'fave_author_agent_id', true );
                 $agency_id = get_user_meta( $userID, 'fave_author_agency_id', true );
                 $user_as_agent = houzez_option('user_as_agent');
         
@@ -574,8 +602,18 @@ function api_update_profile( $data ){
             }
         }
     }
-     
-    wp_update_user( array ('ID' => $userID, 'display_name' => $_POST['display_name'] ) );
+
+    $allowed_html = array();
+
+    $user_role = get_option( 'default_role' );
+    
+    if( isset( $_POST['role'] ) && $_POST['role'] != '' ){
+        $user_role = isset( $_POST['role'] ) ? sanitize_text_field( wp_kses( $_POST['role'], $allowed_html ) ) : $user_role;
+    } else {
+        $user_role = $user_role;
+    }
+    
+    wp_update_user( array ('ID' => $userID, 'role' => $user_role, 'display_name' => $_POST['display_name'] ) );
     return  array( 'success' => true, 'msg' => __('تم تحديث الملف الشخصي', 'houzez') );
 
 }
