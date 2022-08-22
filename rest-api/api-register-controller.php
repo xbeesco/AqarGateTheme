@@ -604,16 +604,14 @@ function api_update_profile( $data ){
     }
 
     $allowed_html = array();
-
-    $user_role = get_option( 'default_role' );
-    
+  
     if( isset( $_POST['role'] ) && $_POST['role'] != '' ){
-        $user_role = isset( $_POST['role'] ) ? sanitize_text_field( wp_kses( $_POST['role'], $allowed_html ) ) : $user_role;
-    } else {
-        $user_role = $user_role;
-    }
+        $user_role = isset( $_POST['role'] ) ? sanitize_text_field( wp_kses( $_POST['role'], $allowed_html ) ) : '';
+        wp_update_user( array ('ID' => $userID, 'role' => $user_role ) );
     
-    wp_update_user( array ('ID' => $userID, 'role' => $user_role, 'display_name' => $_POST['display_name'] ) );
+    } 
+    
+    wp_update_user( array ('ID' => $userID,  'display_name' => $_POST['display_name'] ) );
     return  array( 'success' => true, 'msg' => __('تم تحديث الملف الشخصي', 'houzez') );
 
 }

@@ -8,6 +8,7 @@ class AG_CF
         add_action( 'after_setup_theme', array ( $this , 'crb_load' ) );
         add_action( 'carbon_fields_register_fields', array( $this , 'ag_settings_panel' ) );
         add_action( 'carbon_fields_register_fields', array( $this , 'ag_tax_select' ) );
+        // add_action( 'carbon_fields_theme_options_container_saved', [ $this, 'fields_steps' ] );
     }
 
     public function crb_load() {
@@ -47,7 +48,17 @@ class AG_CF
 	            ->set_type( array( 'image' ) )->set_value_type( 'url' ),
                 Field::make( 'file', 'ag_json', __( 'app json' ) )
 	            ->set_type( array( 'json' ) )->set_value_type( 'url' ),
-                
+                Field::make( 'complex', 'app_available_fields', __( 'Add Property Steps' ) )
+                ->add_fields( array(
+                    Field::make( 'multiselect', 'fields', __( 'Select Fileds To Step' ) )
+                    ->add_options( $this->prop_multi_step_fileds() )
+                ) )
+                ->set_header_template( '
+                    <% if (fields) { %>
+                        Step: <%- $_index + 1 %>
+                    <% } %>
+                ' )
+                                
                
             )
         );
@@ -80,7 +91,12 @@ class AG_CF
     }
 
    
-
+    
+    /**
+     * ag_tax_select
+     *
+     * @return void
+     */
     public function ag_tax_select(){
         Container::make( 'term_meta', __( 'Select Fileds To Show' ) )
         ->where( 'term_taxonomy', '=', 'property_type' )
@@ -90,7 +106,12 @@ class AG_CF
         
     ) );
     }
-
+    
+    /**
+     * ag_fields_array
+     *
+     * @return void
+     */
     public function ag_fields_array(){
         //get Fields
         $fields_builder = array();
@@ -99,8 +120,24 @@ class AG_CF
             $fields_builder = $adp_details_fields['enabled'];
             unset($fields_builder['placebo']);
         }
-        
+          
          return $fields_builder;
     }
 
+    public function prop_multi_step_fileds(){      
+        $main_fields  = ag_get_property_fields();
+        $extra_fields = ag_get_property_fields_extra();
+        $all_fields   = array_merge($main_fields , (array)$extra_fields);
+        $prop_multi_step_fileds = [];
+        if( !empty( $all_fields ) && is_array( $all_fields ) ) {
+            foreach ($all_fields as $field) {
+                $field_key = $field['field_id'];
+                $prop_multi_step_fileds[$field_key] = $field['label'];
+            }
+        }
+
+        return $prop_multi_step_fileds;
+        
+    }
+    
 }

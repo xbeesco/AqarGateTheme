@@ -19,8 +19,9 @@ new AG_Prop;
 include_once ( AG_DIR . 'classes/aqargate-class.php' );
 new AqarGate();
 
-
 include_once ( AG_DIR . 'rest-api/class-aqargate-api.php' );
+
+require_once ( AG_DIR. 'rest-api/api-fields-controller.php' );
 
 include_once ( AG_DIR . 'classes/aqargate-export.php' );
 
@@ -47,3 +48,14 @@ function csv_to_array($file) {
     return $_data;
   
   }
+
+
+// add_action( 'init', 'add_File');
+ function add_File(){
+
+        $data = ag_get_property_fields(null);
+        $data = json_encode($data);
+        $folder = AG_DIR. 'rest-json/';
+        $file_name ='main-fields.json';
+        file_put_contents($folder.$file_name, $data);
+}

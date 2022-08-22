@@ -36,10 +36,10 @@ class AqarGateApi {
 			'methods'             => 'GET',
 		),
         'property_field' => array(
-			'path'                => '/properties/main-fields',
-			'callback'            => 'prop_type_fields',
+			'path'                => '/properties/step-fields',
+			'callback'            => 'fields_steps',
 			'permission_callback' => 'allow_access',
-			'methods'             => 'GET',
+			'methods'             => WP_REST_Server::READABLE,
 		),
         'property_field_builder' => array(
 			'path'                => '/properties/extra-fields',
@@ -406,20 +406,45 @@ class AqarGateApi {
      * @param  mixed $data
      * @return void
      */
-    public function prop_type_fields( WP_REST_Request $request )
-    {
-        $fields = ag_get_property_fields( $request );
+    public function prop_type_fields( $request ){
+        // $fields = ag_get_property_fields( $request );
+        $url = get_stylesheet_directory_uri(). '/rest-json/main-fields.json';
+        return $this->response( $url );
+    }
 
-        // $prop_type_enabled_fields = carbon_field_value(); 
-
-
-        // foreach ($prop_type_enabled_fields as $key => $value) {
-            
-        // }
-        $response_data = $fields;
-
-        return $this->response( $response_data );
-
+        /**
+     * fields_steps
+     *
+     * @param  mixed $user_data
+     * @return void
+     */
+    public function fields_steps( $data ){
+        $app_available_fields = carbon_get_theme_option( 'app_available_fields' );      
+        $step = [];
+        foreach ( $app_available_fields as $key => $value ) {            
+            $searchForId = $this->searchForId ( $value['fields'], $data );
+            $step['screen-'.$key] =  $searchForId;     
+        }
+        return $this->response( $step );
+    }
+    
+    /**
+     * searchForId
+     *
+     * @param  mixed $id
+     * @param  mixed $array
+     * @return void
+     */
+    public function searchForId( $keys, $data ) {
+        $main_fields  = ag_get_property_fields($data);
+        $extra_fields = ag_get_property_fields_builder($data);
+        $all_fields   = array_merge($main_fields , $extra_fields);
+        foreach ($all_fields as $key => $fields ) {
+            if( !in_array( $fields['field_id'], $keys ) ) {
+                 unset($all_fields[$key]);
+            }
+        }
+        return array_values($all_fields);
     }
 
     /**
@@ -1336,8 +1361,8 @@ class AqarGateApi {
         }
 
         $response = ag_register( $request );
-        
-        if( isset( $response[ 'error_code' ] ) ) {
+
+        if( isset( $response->data['success'] ) && false == $response->data['success'] ) {
             return $response;
         }
         
@@ -2604,7 +2629,7 @@ class AqarGateApi {
                     'id'          => 'id_number',
                     'field_id'    => 'id_number',
                     'type'        => 'text',
-                    'label'       => __('رقم الهوية / أو السجل التجاري','houzez'),
+                    'label'       => __('رقم الهوية / الاقامة','houzez'),
                     'placeholder' => '',
                     'options'     => '',
                     'value'       => '',
@@ -2624,30 +2649,7 @@ class AqarGateApi {
                     'id'          => 'useremail',
                     'field_id'    => 'useremail',
                     'type'        => 'text',
-                    'label'       => __('Email','houzez'),
-                    'placeholder' => '',
-                    'options'     => '',
-                    'value'       => '',
-                    'disabled'    => 0,
-                ];
-                break;
-
-            case 'houzez_agency':
-                $profile_fields[] = [
-                    'id'          => 'ad_number',
-                    'field_id'    => 'ad_number',
-                    'type'        => 'text',
-                    'label'       => __('رقم المعلن','houzez'),
-                    'placeholder' => '',
-                    'options'     => '',
-                    'value'       => '',
-                    'disabled'    => 0,
-                ];
-                $profile_fields[] = [
-                    'id'          => 'useremail',
-                    'field_id'    => 'useremail',
-                    'type'        => 'text',
-                    'label'       => __('Email','houzez'),
+                    'label'       => __('البريد الالكتروني','houzez'),
                     'placeholder' => '',
                     'options'     => '',
                     'value'       => '',
@@ -2657,6 +2659,26 @@ class AqarGateApi {
 
             case 'houzez_agent':
                 $profile_fields[] = [
+                    'id'          => 'license',
+                    'field_id'    => 'license',
+                    'type'        => 'text',
+                    'label'       => __('رقم الوكالة الفرعية', 'houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'id_number',
+                    'field_id'    => 'id_number',
+                    'type'        => 'text',
+                    'label'       => __('رقم الهوية / الاقامة','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
                     'id'          => 'ad_number',
                     'field_id'    => 'ad_number',
                     'type'        => 'text',
@@ -2670,13 +2692,101 @@ class AqarGateApi {
                     'id'          => 'useremail',
                     'field_id'    => 'useremail',
                     'type'        => 'text',
-                    'label'       => __('Email','houzez'),
+                    'label'       => __('البريد الالكتروني','houzez'),
                     'placeholder' => '',
                     'options'     => '',
                     'value'       => '',
                     'disabled'    => 0,
                 ];
                 break;
+
+            case 'houzez_seller':
+                $profile_fields[] = [
+                    'id'          => 'license',
+                    'field_id'    => 'license',
+                    'type'        => 'text',
+                    'label'       => __('رقم رخصة العمل الحر ', 'houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'id_number',
+                    'field_id'    => 'id_number',
+                    'type'        => 'text',
+                    'label'       => __('رقم الهوية / الاقامة  ','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'ad_number',
+                    'field_id'    => 'ad_number',
+                    'type'        => 'text',
+                    'label'       => __('رقم المعلن','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'useremail',
+                    'field_id'    => 'useremail',
+                    'type'        => 'text',
+                    'label'       => __('البريد الالكتروني','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                break;
+
+            case 'houzez_agency':
+                $profile_fields[] = [
+                    'id'          => 'license',
+                    'field_id'    => 'license',
+                    'type'        => 'text',
+                    'label'       => __('رقم السجل التجاري', 'houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'id_number',
+                    'field_id'    => 'id_number',
+                    'type'        => 'text',
+                    'label'       => __('رقم الرخصة  ','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'ad_number',
+                    'field_id'    => 'ad_number',
+                    'type'        => 'text',
+                    'label'       => __('رقم المعلن','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                $profile_fields[] = [
+                    'id'          => 'useremail',
+                    'field_id'    => 'useremail',
+                    'type'        => 'text',
+                    'label'       => __('البريد الالكتروني','houzez'),
+                    'placeholder' => '',
+                    'options'     => '',
+                    'value'       => '',
+                    'disabled'    => 0,
+                ];
+                break;
+
+
             
            }
 
@@ -2813,10 +2923,14 @@ class AqarGateApi {
         if( $show_hide_roles['owner'] != 1 ) {
             $user_role[] = [ 'id' => 'houzez_owner', 'name' => houzez_option('owner_role')];
         }
-        if( $show_hide_roles['buyer'] != 1 ) {
-            $user_role[] = [ 'id' => 'houzez_buyer', 'name' => houzez_option('buyer_role')];
+        // if( $show_hide_roles['buyer'] != 1 ) {
+        //     $user_role[] = [ 'id' => 'houzez_buyer', 'name' => houzez_option('buyer_role')];
+        // }
+        if( $show_hide_roles['seller'] != 1 ) {
+            $user_role[] = [ 'id' => 'houzez_seller', 'name' => houzez_option('seller_role')];
         }
-        
+
+    
         return $this->response( $user_role );
     }
 
