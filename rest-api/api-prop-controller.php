@@ -14,9 +14,27 @@ function get_prop_data( $prop_id , $data_collection ){
     setup_postdata( $post ); 
 
     $data['id'] = $prop_id;
+    $data['property_status'] = get_post_status ( $prop_id );
 
     if ( 'search' === $data_collection ){
-        $data['location'] = houzez_get_listing_data('property_location');
+        $data['title'] = get_the_title();
+        $data['description'] = get_the_content();
+        $data['pricePin'] = houzez_listing_price_map_pins();
+        $data['property_type'] = houzez_taxonomy_simple('property_type'); 
+        //Featured image
+        if ( has_post_thumbnail() ) {
+            $thumbnail_id         = get_post_thumbnail_id();
+            $thumbnail_array = wp_get_attachment_image_src( $thumbnail_id, 'houzez-item-image-1' );
+            if ( ! empty( $thumbnail_array[ 0 ] ) ) {
+                $data[ 'thumbnail' ] = $thumbnail_array[ 0 ];
+            }
+        }
+        $location = houzez_get_listing_data('property_location');
+        $location = explode(',', $location);
+        $data['coordinate'] = [
+            'latitude'   => isset($location[0]) ? $location[0] : '',
+            'longitude'  => isset($location[1]) ? $location[1] : ''
+        ];
     }
 
     if ( 'popup-search' === $data_collection || 'list' === $data_collection ){

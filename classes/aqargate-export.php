@@ -5,9 +5,7 @@ class AqarGate_Export {
         $this->init_actions();
     }
 
-    public function init_actions(){
-        
-    }
+    public function init_actions(){}
 
     public static function array_csv_download( array &$array, $filename = "export.csv", $delimiter=";" )
     {

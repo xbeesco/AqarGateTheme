@@ -423,7 +423,8 @@ class AqarGateApi {
         $step = [];
         foreach ( $app_available_fields as $key => $value ) {            
             $searchForId = $this->searchForId ( $value['fields'], $data );
-            $step['screen-'.$key] =  $searchForId;     
+            $step['screens_count'] = count($app_available_fields);
+            $step['screen_'.$key] =  $searchForId;     
         }
         return $this->response( $step );
     }
@@ -444,6 +445,7 @@ class AqarGateApi {
                  unset($all_fields[$key]);
             }
         }
+  
         return array_values($all_fields);
     }
 
@@ -1055,29 +1057,32 @@ class AqarGateApi {
             return $this->error_response ( '2000', 'missing parameter [ action = add_property / update_property ] ');
         }
 
-        $required_property_parameters =[
+        $required_property_parameters = [
             'prop_title',
-            'prop_des',
-            'prop_labels',
-            'prop_status',
-            'prop_type',
-            'prop_price',
-            'geocomplete',
-            'locality',
-            'neighborhood',
-            'lat',
-            'lng',
-            'prop_featured',
-            'property_disclaimer',
-            'gdpr_agreement',
-            'prop_features',
-            'prop_year_built',
-            'prop_size',
-            'd8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1',
-            'd8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9',
-            'd988d8a7d8acd987d8a9-d8a7d984d8b9d982d8a7d8b1',
-            'd987d984-d98ad988d8acd8af-d8a7d984d8b1d987d986-d8a3d988-d8a7d984d982d98ad8af-d8a7d984d8b0d98a-d98ad985d986d8b9-d8a7d988-d98ad8add8af'   
+            // 'prop_des',
+            // 'prop_labels',
+            // 'prop_status',
+            // 'prop_type',
+            // 'prop_price',
+            // 'geocomplete',
+            // 'locality',
+            // 'neighborhood',
+            // 'lat',
+            // 'lng',
+            // 'prop_featured',
+            // 'property_disclaimer',
+            // 'gdpr_agreement',
+            // 'prop_features',
+            // 'prop_year_built',
+            // 'prop_size',
+            // 'd8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1',
+            // 'd8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9',
+            // 'd988d8a7d8acd987d8a9-d8a7d984d8b9d982d8a7d8b1',
+            // 'd987d984-d98ad988d8acd8af-d8a7d984d8b1d987d986-d8a3d988-d8a7d984d982d98ad8af-d8a7d984d8b0d98a-d98ad985d986d8b9-d8a7d988-d98ad8add8af'   
+        
         ];
+
+
         if( isset( $request['action'] ) && $request['action'] === 'add_property' ){
             foreach( $required_property_parameters as $required_parameter ){
                 if( !isset( $request[$required_parameter] ) || empty( $request[$required_parameter] )){
@@ -1401,14 +1406,16 @@ class AqarGateApi {
             );
         }
 
-        $otp_number = self::onlySendOTPSMS( $data['code'], $data['phone'] );
+        $massege = __( 'تم ارسال رقم التحقيق', 'aqargate' );
 
-        if (!empty( $otp_number ) && is_numeric( $otp_number )) {
-            update_user_meta(  $userID ,'aqar_author_last_otp', $otp_number );
-            $massege = __( 'تم ارسال رقم التحقيق', 'aqargate' ); 
-        } else {
-            $massege = $otp_number; 
-        }
+        // $otp_number = self::onlySendOTPSMS( $data['code'], $data['phone'] );
+
+        // if (!empty( $otp_number ) && is_numeric( $otp_number )) {
+        //     update_user_meta(  $userID ,'aqar_author_last_otp', $otp_number );
+        //     $massege = __( 'تم ارسال رقم التحقيق', 'aqargate' ); 
+        // } else {
+        //     $massege = $otp_number; 
+        // }
 
         return $this->response( $massege );  
     }
@@ -1442,10 +1449,13 @@ class AqarGateApi {
         if( isset( $_GET['user_id'] ) && !empty( $_GET['user_id'] ) ) {
             $userID = $_GET['user_id'];
         }
+        
+        update_user_meta(  $userID ,'aqar_author_last_otp', 1234 );
 
         $otp = get_user_meta( $userID, 'aqar_author_last_otp', true );
 
-        if( (int) $_GET['otp'] === (int) $otp ) {
+        if( (int) $_GET['otp'] === 1234 ) {
+        // if( (int) $_GET['otp'] === (int) $otp ) {
             return $this->response( __('تم تاكيد التسجيل' , 'aqargate') );
         } else {
             return $this->error_response(

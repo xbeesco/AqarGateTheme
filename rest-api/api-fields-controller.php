@@ -183,6 +183,22 @@ function ag_get_property_fields( $data = '' )
                 'required'    => 0,
             ],
             [
+                'id'          => 'map',
+                'field_id'    => 'map',
+                'type'        => 'map',
+                'label'       => 'موقع العقار',
+                'placeholder' => '',
+                'coordinate'     => [
+                     'latitude'  => 'lat',
+                     'longitude' => 'lng',
+                ],
+                'value'       => [
+                    'latitude'  => $lat,
+                    'longitude' => $lng,
+                ],
+                'required'    => 0,
+            ],
+            [
                 'id'          => 'prop_featured',
                 'field_id'    => 'prop_featured',
                 'label'       => houzez_option('cl_make_featured', 'Do you want to mark this property as featured?'),
@@ -225,7 +241,7 @@ function ag_get_property_fields( $data = '' )
             [
                 'id'          => 'prop_features',
                 'field_id'    => 'prop_features[]',
-                'type'        => 'select',
+                'type'        => 'checkbox',
                 'label'       => houzez_option('cls_features', 'Features'),
                 'placeholder' => '',
                 'options'     => $property_features,
