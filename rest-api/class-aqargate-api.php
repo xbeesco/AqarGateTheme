@@ -112,7 +112,7 @@ class AqarGateApi {
 			'path'                => '/send-otp',
 			'callback'            => 'send_otp',
 			'permission_callback' => 'allow_access',
-			'methods'             => 'GET',
+			'methods'             => 'POST',
 		),
         'aqargate_check_otp' => array(
 			'path'                => '/check-otp',
@@ -1383,10 +1383,34 @@ class AqarGateApi {
                 __( 'Authorization header not found.'  )
             );
         }
+        global $current_user;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
 
-        $response = __( 'تم ارسال رقم التحقيق', 'aqargate' );
+        if( !isset( $data['phone'] ) || empty( $data['phone'] )){
+            return $this->error_response(
+                'error_rest_otp',
+                'Missing Phone Number'
+            );
+        }
 
-        return $this->response( $response );  
+        if( !isset( $data['code'] ) || empty( $data['code'] )){
+            return $this->error_response(
+                'error_rest_otp',
+                'Missing Country Code'
+            );
+        }
+
+        $otp_number = self::onlySendOTPSMS( $data['code'], $data['phone'] );
+
+        if (!empty( $otp_number ) && is_numeric( $otp_number )) {
+            update_user_meta(  $userID ,'aqar_author_last_otp', $otp_number );
+            $massege = __( 'تم ارسال رقم التحقيق', 'aqargate' ); 
+        } else {
+            $massege = $otp_number; 
+        }
+
+        return $this->response( $massege );  
     }
        
     /**
@@ -1405,16 +1429,11 @@ class AqarGateApi {
         }
 
         if( !isset( $_GET['otp'] ) ){
-            return new WP_Error(
+            return $this->error_response(
                 'error_rest_otp',
-                'Missing Otp Number',
-                array(
-                    'status' => 403,
-                )
+                'Missing Otp Number'
             );
         }
-
-        
 
         global $current_user;
         $user = wp_get_current_user();
@@ -1426,16 +1445,62 @@ class AqarGateApi {
 
         $otp = get_user_meta( $userID, 'aqar_author_last_otp', true );
 
-        if( (int) $_GET['otp'] === 1234 ) {
+        if( (int) $_GET['otp'] === (int) $otp ) {
             return $this->response( __('تم تاكيد التسجيل' , 'aqargate') );
         } else {
             return $this->error_response(
                 'rest_invalid_otp',
-                esc_html__('الرقم المدخل غير صحيح', 'houzez-login-register') 
+                esc_html__('الرقم المدخل غير صحيح', 'aqargate') 
             );
         }
 
     }
+
+    public static function generate_otp_digits(){
+		$digits = carbon_get_theme_option('otp-digits') ? carbon_get_theme_option('otp-digits') : 4;
+		return rand( pow( 10, $digits - 1 ) , pow( 10, $digits ) - 1 );
+	}
+
+    /**
+	 * This will only send OTP SMS.
+	 * @return OTP
+	*/
+	public static function onlySendOTPSMS( $phone_code, $phone_no ){
+
+		$operator = aq_wp_twilio();
+
+		if( !$operator ){
+			return $this->error_response( 'no-operator', __( "Operator not found. Please download operator SDK from the plugin settings. Check documentation for how to setup.", 'mobile-login-woocommerce' ) );
+		}
+
+		$otp =  self::generate_otp_digits();
+    
+		//$otpSent = $operator->Add_Caller_ID( $phone_code.$phone_no, self::getOTPSMSText( $otp ) );
+        
+		$otpSent = $operator->sendSMS( $phone_code.$phone_no, self::getOTPSMSText( $otp ) );
+
+		//$otpSent = true;
+
+		if( is_wp_error( $otpSent ) ){
+			return $otpSent;
+		}
+
+		return $otp;
+	}
+
+    public static function getOTPSMSText( $otp ){
+		
+		$sms_text = carbon_get_theme_option('r-sms-txt');
+
+		$placeholders = array(
+			'[otp]'		=> $otp,
+		);
+		foreach ( $placeholders as $placeholder => $placeholder_value ) {
+			$sms_text = str_replace( $placeholder , $placeholder_value , $sms_text );
+		}
+
+		return $sms_text;
+	}
     
     /**
      * membership

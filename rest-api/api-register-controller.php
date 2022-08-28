@@ -6,7 +6,7 @@ function ag_register( $request )
 
     $allowed_html = array();
 
-    $usermane          = trim( sanitize_text_field( wp_kses( $_POST['username'], $allowed_html ) ));
+    
     $email             = trim( sanitize_text_field( wp_kses( $_POST['useremail'], $allowed_html ) ));
     $term_condition    = wp_kses( $_POST['term_condition'], $allowed_html );
     $enable_password   = houzez_option('enable_password');
@@ -48,13 +48,14 @@ function ag_register( $request )
     // }
     
     $phone_number = isset( $_POST['phone_number'] ) ? $_POST['phone_number'] : '';
+
     if( empty($phone_number) && houzez_option('register_mobile', 0) == 1 ) {
         return AqarGateApi::error_response(
             'rest_invalid_number',
             esc_html__('Please enter your number', 'houzez-login-register') 
         );
     }
-
+   
     $user_query = new WP_User_Query( array( 'number' => -1 ) );
     $return = '';
     // User Loop
@@ -76,26 +77,27 @@ function ag_register( $request )
     $id_number = isset( $_POST['id_number'] ) ? $_POST['id_number'] : '';
     $ad_number = isset( $_POST['ad_number'] ) ? $_POST['ad_number'] : '';
     $type_id   = isset( $_POST['aqar_author_type_id'] ) ? $_POST['aqar_author_type_id'] : '';
+
+    $username = trim( sanitize_text_field( wp_kses( $_POST['username'], $allowed_html ) ));
     
-    if( empty( $usermane ) ) {
+    if( empty( $username ) ) {
         return AqarGateApi::error_response(
             'rest_invalid_username',
             esc_html__('The username field is empty.', 'houzez-login-register')
         );
     }
-    if( strlen( $usermane ) < 3 ) {
+    if( strlen( $username ) < 3 ) {
         return AqarGateApi::error_response(
             'rest_invalid_username',
             esc_html__('Minimum 3 characters required', 'houzez-login-register') 
         );
     }
-    if (preg_match("/^[0-9A-Za-z_]+$/", $usermane) == 0) {
-        return AqarGateApi::error_response(
-            'rest_invalid_username',
-            esc_html__('Invalid username (do not use special characters or spaces)!', 'houzez-login-register')
-        );
+
+    if ( preg_match("/^[0-9A-Za-z_]+$/", $username) == 0 ) {
+        $username = $phone_number;
     }
-    if( username_exists( $usermane ) ) {
+
+    if( username_exists( $username ) ) {
         return AqarGateApi::error_response(
             'rest_invalid_username',
             esc_html__('This username is already registered.', 'houzez-login-register')
@@ -150,13 +152,14 @@ function ag_register( $request )
     } else {
         $user_password = wp_generate_password( $length=12, $include_standard_special_chars=false );
     }
-    $user_id = wp_create_user( $usermane, $user_password, $email );
+   
+    $user_id = wp_create_user( $username, $user_password );
     
     
     
     
     if ( is_wp_error($user_id) ) {
-        return array( 'user_id' =>  $user_id );
+        return AqarGateApi::error_response('rest_invalid_user', $user_id );
     } else {
     
         wp_update_user( array( 'ID' => $user_id, 'role' => $user_role ) );
@@ -214,7 +217,7 @@ function ag_register( $request )
 
         do_action('houzez_after_register', $user_id);
 
-        $user_token = aqargate_token_after_register( $usermane, $user_password );
+        $user_token = aqargate_token_after_register( $username, $user_password );
 
 
         $author_data = [ 'user_id' => $user_id ];

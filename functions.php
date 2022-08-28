@@ -15,8 +15,8 @@ new AG_CF;
 
 include_once ( AG_DIR.'classes/class-prop.php' );
 new AG_Prop;
-
-include_once ( AG_DIR . 'classes/aqargate-class.php' );
+require_once ( AG_DIR. 'classes/class-otp-twilio.php' );
+include_once ( AG_DIR. 'classes/aqargate-class.php' );
 new AqarGate();
 
 include_once ( AG_DIR . 'rest-api/class-aqargate-api.php' );

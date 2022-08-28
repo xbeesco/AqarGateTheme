@@ -61,7 +61,16 @@ class AG_CF
                                 
                
             )
-        );
+        )
+        ->add_tab( __( 'Twilio Settings' ), array(
+            Field::make( 'text', 'twilio-account-sid' ),
+            Field::make( 'text', 'twilio-auth-token' ),
+            Field::make( 'text', 'twilio-sender-number' ),
+            Field::make( 'textarea', 'r-sms-txt' )
+            ->set_attribute( 'placeholder', __("[otp] is your One Time Verification(OTP) to confirm your phone no at AqarGate.",'aqargate') ),
+
+        ) );
+
 
              // Display container on Book Category taxonomy
             Container::make( 'term_meta', __( 'Icon Font' ) )
