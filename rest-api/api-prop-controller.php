@@ -7,18 +7,62 @@
  * @param  mixed $data_collection
  * @return array/prop/data
  */
-function get_prop_data( $prop_id , $data_collection ){
+function get_prop_data( $prop_id , $data_collection, $user_id ){
+    
     
     global $post;   
     $post = $prop_id;
     setup_postdata( $post ); 
 
+    $fav_ids = 'houzez_favorites-'.$user_id;
+    $fav_ids = get_option( $fav_ids );
+
     $data['id'] = $prop_id;
-    $data['property_status'] = get_post_status ( $prop_id );
+    $statuses = get_post_statuses();
+      
+    $data['prop_status'] = [ 
+        "status" => $statuses[ get_post_status($prop_id ) ] ,
+        "key" => get_post_status( $prop_id ) 
+    ];
+    $data['is_favorite'] = 0;
+    if( !empty($fav_ids) && is_array($fav_ids)){
+        if( in_array(get_the_ID(), $fav_ids) ) {
+            $data['is_favorite'] = 1;
+        }
+    }
+    
+    $is_featured = get_post_meta( get_the_ID( ), 'fave_featured', true);
+    if( empty( $is_featured ) ) {
+        $is_featured = 0;
+    }else{
+        $is_featured = intval( $is_featured );
+    }
+    $data['is_featured'] = $is_featured;
+    $data['property_overview'] = property_overview_details( 'crb_overview_fields', get_the_ID() );
+    $data['property_details']  = property_overview_details( 'crb_details_fields', get_the_ID() );
+    $author_picture_id         =   get_the_author_meta( 'fave_author_picture_id' , $user_id );
+    $user_custom_picture       =   get_the_author_meta( 'fave_author_custom_picture' , $userID );
+
+        if( !empty( $author_picture_id ) ) {
+            $author_picture_id = intval( $author_picture_id );
+            if ( $author_picture_id ) {
+                $author_picture =  [
+                        'url' => wp_get_attachment_image_url( $author_picture_id, 'large' ),
+                        'id'  => $author_picture_id
+                ];
+            }
+        } else {
+            $author_picture =  [
+                'url' => $user_custom_picture,
+                'id'  => null
+            ];
+        }
 
     if ( 'search' === $data_collection ){
         $data['title'] = get_the_title();
         $data['description'] = get_the_content();
+        $data['author'] = get_the_author();
+        $data['author_pic'] = $author_picture;
         $data['pricePin'] = houzez_listing_price_map_pins();
         $data['property_type'] = houzez_taxonomy_simple('property_type'); 
         //Featured image
@@ -28,17 +72,17 @@ function get_prop_data( $prop_id , $data_collection ){
             if ( ! empty( $thumbnail_array[ 0 ] ) ) {
                 $data[ 'thumbnail' ] = $thumbnail_array[ 0 ];
             }
-        }
-        $location = houzez_get_listing_data('property_location');
-        $location = explode(',', $location);
-        $data['coordinate'] = [
-            'latitude'   => isset($location[0]) ? $location[0] : '',
-            'longitude'  => isset($location[1]) ? $location[1] : ''
-        ];
+        }  
+        $data['bedrooms'] = houzez_get_listing_data('property_bedrooms');
+        $data['rooms'] = houzez_get_listing_data('property_rooms');
+        $data['bathrooms'] = houzez_get_listing_data('property_bathrooms');
+        $data['garage'] = houzez_get_listing_data('property_garage'); 
     }
 
     if ( 'popup-search' === $data_collection || 'list' === $data_collection ){
         $data[ 'title' ] = get_the_title();
+        $data['author']  = get_the_author();
+        $data['author_pic'] = $author_picture;
         $data['pricePin'] = houzez_listing_price_map_pins();
         $data['property_type'] = houzez_taxonomy_simple('property_type'); 
         //Featured image
@@ -49,6 +93,11 @@ function get_prop_data( $prop_id , $data_collection ){
                 $data[ 'thumbnail' ] = $thumbnail_array[ 0 ];
             }
         }
+        $data['bedrooms'] = houzez_get_listing_data('property_bedrooms');
+        $data['rooms'] = houzez_get_listing_data('property_rooms');
+        $data['bathrooms'] = houzez_get_listing_data('property_bathrooms');
+        $data['garage'] = houzez_get_listing_data('property_garage');
+
     }
 
     if ( 'list' === $data_collection ){
@@ -56,14 +105,15 @@ function get_prop_data( $prop_id , $data_collection ){
         $address = houzez_get_listing_data('property_map_address');
         if(!empty($address)) {
             $data['address'] = $address;
+        }else{
+            $data['address'] = '';
         }
-        $data['author'] = get_the_author();
 
         $propID = get_the_ID();
         $prop_size = houzez_get_listing_data('property_size');
         $listing_area_size = houzez_get_listing_area_size( $propID );
         $listing_size_unit = houzez_get_listing_size_unit( $propID );
-        $data['prop_size'] = $listing_area_size . ' ' . $listing_size_unit; 
+        $data['prop_size'] = $listing_area_size; 
 
         $prop_bath  = houzez_get_listing_data('property_bathrooms');
         $prop_bath_label = ($prop_bath > 1 ) ? houzez_option('glc_baths', 'Baths') : houzez_option('glc_bath', 'Bath');
@@ -88,29 +138,82 @@ function get_prop_data( $prop_id , $data_collection ){
         $data['label'] = houzez_taxonomy_simple('property_label');
 
     }
-
+    $location = houzez_get_listing_data('property_location');
+    $location = explode(',', $location);
+    $data['coordinate'] = [
+        'latitude'   => isset($location[0]) ? $location[0] : '',
+        'longitude'  => isset($location[1]) ? $location[1] : ''
+    ];
     if ( 'property' === $data_collection ){ 
 
-        $data = property_details(); 
+        $data = property_details( $user_id ); 
     }
 
     wp_reset_postdata();
     return $data ;
 
 }
-
-
+ 
     /**
      * property_details
      *
+     * @param  mixed $user_id
      * @return void
      */
-    function property_details()
-    {
+    function property_details($user_id){
 
         $data['id'] = get_the_ID();
+        $statuses = get_post_statuses();
+        $data['prop_status'] = [ 
+            "status" => $statuses[ get_post_status($prop_id ) ] ,
+            "key" => get_post_status( $prop_id ) 
+        ];
+        $fav_ids = 'houzez_favorites-'.$user_id;
+        $fav_ids = get_option( $fav_ids );
+        $data['is_favorite'] = 0;
+            if( !empty($fav_ids) && is_array($fav_ids)){
+                if( in_array(get_the_ID(), $fav_ids) ) {
+                    $data['is_favorite'] = 1;
+                }
+            }
+            
+        $is_featured = get_post_meta( get_the_ID( ), 'fave_featured', true);
+        if( empty( $is_featured ) ) {
+            $is_featured = 0;
+        }else{
+            $is_featured = intval( $is_featured );
+        }
+        $data['is_featured'] = $is_featured;
         $data['location'] = houzez_get_listing_data('property_location');
         $data[ 'title' ] = get_the_title();
+
+        $author_id = get_the_author_meta( 'ID' ); 
+        $user_role  = houzez_user_role_by_user_id( $author_id );
+        if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "مفوض";}
+        elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "مفوض"; }
+        elseif( $user_role == "houzez_owner"  ) { $Advertiser_character =  "مالك"; } 
+        elseif( $user_role == "houzez_buyer"  ) { $Advertiser_character =  "مفوض"; } 
+        elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مفوض" ; }
+        elseif( $user_role == "houzez_manager") { $Advertiser_character = "مفوض"; }
+        $author_picture_id         =   get_the_author_meta( 'fave_author_picture_id' , $user_id );
+        $user_custom_picture    =   get_the_author_meta( 'fave_author_custom_picture' , $userID );
+        if( !empty( $author_picture_id ) ) {
+            $author_picture_id = intval( $author_picture_id );
+            if ( $author_picture_id ) {
+                $author_picture =  [
+                        'url' => wp_get_attachment_image_url( $author_picture_id, 'large' ),
+                        'id'  => $author_picture_id
+                ];
+            }
+        } else {
+            $author_picture =  [
+                'url' => $user_custom_picture,
+                'id'  => null
+            ];
+        }
+        $data['author_pic'] = $author_picture;
+        $data['author'] = get_the_author();
+        $data['author_character'] = $Advertiser_character;
         $data['pricePin'] = houzez_listing_price_map_pins();
         $data['property_type'] = houzez_taxonomy_simple('property_type'); 
         //Featured image
@@ -121,12 +224,28 @@ function get_prop_data( $prop_id , $data_collection ){
                 $data[ 'thumbnail' ] = $thumbnail_array[ 0 ];
             }
         }
+        $thumbnails = get_post_meta(get_the_id(), 'fave_property_images', true);
+        
+        $data_thumbnails = [];
+        if( !empty( $thumbnails ) && is_array( $thumbnails ) ) {
+            foreach( $thumbnails as $thumbnail ){
+                $thumbnail_array = wp_get_attachment_image_src( $thumbnail, 'houzez-item-image-1' );
+                $data_thumbnails[] = $thumbnail_array[0]; 
+            }
+        }
+        $data['video_url']  = get_post_meta(get_the_id(), 'fave_video_url', true);
+        $data['thumbnails'] = $data_thumbnails;
         $data[ 'date' ] = get_the_date();
         $address = houzez_get_listing_data('property_map_address');
         if(!empty($address)) {
             $data['address'] = $address;
+        }else{
+            $data['address'] = ''; 
         }
-        $data['author'] = get_the_author();
+
+        $data['property_overview'] = property_overview_details( 'crb_overview_fields', get_the_ID() );
+        $data['property_details']  = property_overview_details( 'crb_details_fields', get_the_ID() );
+        
         $data['zipcode'] = houzez_get_listing_data('property_zip');
         $data['country'] = houzez_taxonomy_simple('property_country');
         $data['state'] = houzez_taxonomy_simple('property_state');
@@ -173,7 +292,7 @@ function get_prop_data( $prop_id , $data_collection ){
 
                     if( $field_type == "url" ) {
 
-                        if(!empty($data_value) && $hide_fields[$field_id] != 1) {
+                        if(!empty($data_value)) {
                             $properity_info[] = [
                                 'title' => $field_title ,
                                 'value' =>  $data_value
@@ -181,7 +300,7 @@ function get_prop_data( $prop_id , $data_collection ){
                         } 
 
                     } else {
-                        if(!empty($data_value) && $hide_fields[$field_id] != 1) {
+                        if(!empty($data_value)) {
                             $properity_info[] = [
                                 'title' => $field_title ,
                                 'value' =>  $data_value
@@ -194,6 +313,12 @@ function get_prop_data( $prop_id , $data_collection ){
         }
 
          $data['description'] = get_the_content();
+         $location = houzez_get_listing_data('property_location');
+         $location = explode(',', $location);
+         $data['coordinate'] = [
+            'latitude'   => isset($location[0]) ? $location[0] : '',
+            'longitude'  => isset($location[1]) ? $location[1] : ''
+         ];
 
         return $data;
     }
@@ -207,11 +332,8 @@ function get_prop_data( $prop_id , $data_collection ){
     function ag_submit_property( $request ) {
 
         $new_property = [];
-        $_POST = $request ;
-
-        global $current_user;
-        wp_get_current_user();
-        $userID  = $current_user->ID;
+        $user = wp_get_current_user();
+        $userID  = $user->ID;
         
         if ( isset( $_POST['author'] ) ){
             $userID = $_POST['author'];
@@ -222,15 +344,19 @@ function get_prop_data( $prop_id , $data_collection ){
         $edit_listings_admin_approved = houzez_option('edit_listings_admin_approved');
         $enable_paid_submission = houzez_option('enable_paid_submission');
 
+        
+
         // Title
         if( isset( $_POST['prop_title']) ) {
             $new_property['post_title'] = sanitize_text_field( $_POST['prop_title'] );
         }
-
+        $user_submit_has_no_membership = '';
         if( $enable_paid_submission == 'membership' ) {
-            $user_submit_has_no_membership = isset($_POST['user_submit_has_no_membership']) ? $_POST['user_submit_has_no_membership'] : '';
+            if ( !is_user_logged_in() ) { 
+              $user_submit_has_no_membership = 'yes';
+            }
         } else {
-            $user_submit_has_no_membership = 'no';
+              $user_submit_has_no_membership = 'no';
         }
 
         // Description
@@ -272,7 +398,16 @@ function get_prop_data( $prop_id , $data_collection ){
             if( $prop_id > 0 ) {
                 $submitted_successfully = true;
                 if( $enable_paid_submission == 'membership'){ // update package status
-                    houzez_update_package_listings( $userID );
+                    $has_package = get_the_author_meta( 'package_id', $userID );
+                    $agent_parent = get_user_meta( $userID, 'fave_agent_agency', true );
+                    if( !empty( $has_package ) ) {
+                        $package_user_id = $userID ;
+                    }elseif( !empty( $agent_parent ) && is_numeric( $agent_parent ) ){
+                        $package_user_id = $agent_parent;
+                    }
+                    $package_listings = get_the_author_meta( 'package_listings' , $package_user_id );
+                    
+                    houzez_update_package_listings( intval($package_user_id) );
                 }
             }
 
@@ -282,7 +417,14 @@ function get_prop_data( $prop_id , $data_collection ){
 
             if( get_post_status( intval( $_POST['prop_id'] ) ) == 'draft' ) {
                 if( $enable_paid_submission == 'membership') {
-                    houzez_update_package_listings($userID);
+                    $has_package = get_the_author_meta( 'package_id', $userID );
+                    $agent_parent = get_user_meta( $userID, 'fave_agent_agency', true );
+                    if( !empty( $has_package ) ) {
+                        $package_user_id = $userID ;
+                    }elseif( !empty( $agent_parent ) && is_numeric( $agent_parent ) ){
+                        $package_user_id = $agent_parent;
+                    }
+                    houzez_update_package_listings( $package_user_id );
                 }
                 if( $listings_admin_approved != 'yes' && ( $enable_paid_submission == 'no' || $enable_paid_submission == 'free_paid_listing' || $enable_paid_submission == 'membership' ) ) {
                     $new_property['post_status'] = 'publish';
@@ -316,7 +458,7 @@ function get_prop_data( $prop_id , $data_collection ){
                         $field_type = $value->type;
 
                         if( isset( $_POST[$field_name] ) && !empty( $_POST[$field_name] ) ) {
-
+                            
                             if( $field_type == 'checkbox_list' || $field_type == 'multiselect' ) {
                                 delete_post_meta( $prop_id, 'fave_'.$field_name );
                                 foreach ( $_POST[ $field_name ] as $value ) {
@@ -326,9 +468,10 @@ function get_prop_data( $prop_id , $data_collection ){
                                 update_post_meta( $prop_id, 'fave_'.$field_name, sanitize_text_field( $_POST[$field_name] ) );
                             }
 
-                        } else {
-                            delete_post_meta( $prop_id, 'fave_'.$field_name );
-                        }
+                        } 
+                        // else {
+                        //     delete_post_meta( $prop_id, 'fave_'.$field_name );
+                        // }
 
                     endforeach; 
                 endif;
@@ -435,9 +578,21 @@ function get_prop_data( $prop_id , $data_collection ){
                     update_post_meta($prop_id, 'fave_property_id', $prop_id );
             }
 
+            if( $submission_action == 'update_property' ) {
+                $old_prop_video_id = get_post_meta($prop_id, 'fave_video_id', true);
+            }
+
             // Property Video Url
-            if( isset( $_POST['prop_video_url'] ) ) {
-                update_post_meta( $prop_id, 'fave_video_url', sanitize_text_field( $_POST['prop_video_url'] ) );
+            if( isset( $_FILES['prop_video_url'] ) && !empty( $_FILES['prop_video_url'] ) ) {
+                $prop_video_id = AqarGateApi::upload_images( $_FILES, 'prop_video_url' );
+                $property_video_url = wp_get_attachment_url( $prop_video_id[0] );
+                update_post_meta( $prop_id, 'fave_video_url', $property_video_url );
+                update_post_meta( $prop_id, 'fave_video_id', $prop_video_id[0] );
+            }
+            // clean up the old meta information related to video_url when property update
+            if( isset( $_FILES['prop_video_url'] ) && empty( $_FILES['prop_video_url'] ) && $submission_action == "update_property" ){
+                delete_post_meta( $prop_id, 'fave_video_url');
+                delete_post_meta( $prop_id, 'fave_video_id' );
             }
 
             // property video image - in case of update
@@ -452,22 +607,25 @@ function get_prop_data( $prop_id , $data_collection ){
             }
 
             // clean up the old meta information related to images when property update
-            if( $submission_action == "update_property" ){
-                delete_post_meta( $prop_id, 'fave_property_images' );
-                delete_post_meta( $prop_id, 'fave_attachments' );
-                delete_post_meta( $prop_id, 'fave_agents' );
-                delete_post_meta( $prop_id, 'fave_property_agency' );
-                delete_post_meta( $prop_id, '_thumbnail_id' );
-            }
+            // if( $submission_action == "update_property" ){
+            //     delete_post_meta( $prop_id, 'fave_property_images' );
+            //     delete_post_meta( $prop_id, 'fave_attachments' );
+            //     delete_post_meta( $prop_id, 'fave_agents' );
+            //     delete_post_meta( $prop_id, 'fave_property_agency' );
+            //     delete_post_meta( $prop_id, '_thumbnail_id' );
+            // }
             
             // Property Images
             if( isset( $_FILES['propperty_image_ids'] ) ) {
                 if (!empty($_FILES['propperty_image_ids']) && is_array($_FILES['propperty_image_ids'])) {
                     $property_image_ids = array();
+                    // clean up the old meta information related to images when property update
+                    delete_post_meta( $prop_id, 'fave_property_images' );
                     $property_image_ids =  AqarGateApi::upload_images( $_FILES, 'propperty_image_ids' );
-                    foreach ( (array) $property_image_ids as $prop_img_id ) {
-                        add_post_meta($prop_id, 'fave_property_images', $prop_img_id);
-                    }
+                    add_post_meta($prop_id, 'fave_property_images', $property_image_ids);
+                    // foreach ( (array) $property_image_ids as $prop_img_id ) {
+                    //     add_post_meta($prop_id, 'fave_property_images', $property_image_ids);
+                    // }
                     
                     // featured image
                     if( isset( $_FILES['featured_image_id'] ) ) {
@@ -502,28 +660,32 @@ function get_prop_data( $prop_id , $data_collection ){
  
 
             // Add property type
-            if( isset( $_POST['prop_type'] ) && ( $_POST['prop_type'] != '-1' ) ) {
+            if( isset( $_POST['prop_type'] ) ) {
                 $type = array_map( 'intval', $_POST['prop_type'] );
+                // var_export($type);
                 wp_set_object_terms( $prop_id, $type, 'property_type' );
-            } else {
-                wp_set_object_terms( $prop_id, '', 'property_type' );
-            }
+            } 
+            // else {
+            //     wp_set_object_terms( $prop_id, '', 'property_type' );
+            // }
 
             // Add property status
-            if( isset( $_POST['prop_status'] ) && ( $_POST['prop_status'] != '-1' ) ) {
+            if( isset( $_POST['prop_status'] )  ) {
                 $prop_status = array_map( 'intval', $_POST['prop_status'] );
                 wp_set_object_terms( $prop_id, $prop_status, 'property_status' );
-            } else {
-                wp_set_object_terms( $prop_id, '', 'property_status' );
-            }
+            } 
+            // else {
+            //     wp_set_object_terms( $prop_id, '', 'property_status' );
+            // }
 
             // Add property status
             if( isset( $_POST['prop_labels'] ) ) {
                 $prop_labels = array_map( 'intval', $_POST['prop_labels'] );
                 wp_set_object_terms( $prop_id, $prop_labels, 'property_label' );
-            } else {
-                wp_set_object_terms( $prop_id, '', 'property_label' );
-            }
+            } 
+            // else {
+            //     wp_set_object_terms( $prop_id, '', 'property_label' );
+            // }
 
             // Country
             if( isset( $_POST['country'] ) ) {
@@ -562,7 +724,13 @@ function get_prop_data( $prop_id , $data_collection ){
                 }
             }
 
-
+            if( isset( $_POST['gdpr_agreement'] ) ) {
+                // Update GDPR
+                if ( !empty( $_POST['gdpr_agreement'] ) ) {
+                    $gdpr_agreement = sanitize_text_field( $_POST['gdpr_agreement'] );
+                    update_post_meta( $prop_id, 'fave_gdpr_agreement', $gdpr_agreement );
+                }
+            }
             // Add property state
             if( isset( $_POST['administrative_area_level_1'] ) ) {
                 $property_state = sanitize_text_field( $_POST['administrative_area_level_1'] );
@@ -775,6 +943,10 @@ function get_prop_data( $prop_id , $data_collection ){
             }
 
             // Address
+            if( isset( $_POST['geocomplete'] ) ) {
+                update_post_meta( $prop_id, 'fave_property_map_address', sanitize_text_field( $_POST['geocomplete'] ) );
+                update_post_meta( $prop_id, 'fave_property_address', sanitize_text_field( $_POST['geocomplete'] ) );
+            }
             if( isset( $_POST['property_map_address'] ) ) {
                 update_post_meta( $prop_id, 'fave_property_map_address', sanitize_text_field( $_POST['property_map_address'] ) );
                 update_post_meta( $prop_id, 'fave_property_address', sanitize_text_field( $_POST['property_map_address'] ) );
@@ -794,6 +966,13 @@ function get_prop_data( $prop_id , $data_collection ){
                 update_post_meta( $prop_id, 'fave_property_map', '1' );
                 update_post_meta( $prop_id, 'fave_property_map_street_view', $streetView );
 
+                require_once ( AG_DIR. 'classes/locationiq-class.php' );
+
+                $response = ApiNaAddress::create_connection( $lat, $lng, 'Address' );
+ 
+                if( !empty( $response ) &&  $response->success === true ){
+                    ag_maybe_create_term ( $prop_id , $response );
+                }
             }
             
 

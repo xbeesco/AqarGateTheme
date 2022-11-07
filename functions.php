@@ -1,4 +1,5 @@
 <?php
+
 add_action( 'wp_enqueue_scripts', 'ag_enqueue_styles' );
 function ag_enqueue_styles() {
     wp_enqueue_style( 'houzez-child', get_stylesheet_uri() );
@@ -25,6 +26,8 @@ require_once ( AG_DIR. 'rest-api/api-fields-controller.php' );
 
 include_once ( AG_DIR . 'classes/aqargate-export.php' );
 
+include_once ( AG_DIR. 'libs/jwt/jwt-auth.php' );
+
 function csv_to_array($file) {
 
     if (($handle = fopen($file, 'r')) === false) {
@@ -49,13 +52,8 @@ function csv_to_array($file) {
   
   }
 
-
-// add_action( 'init', 'add_File');
- function add_File(){
-
-        $data = ag_get_property_fields(null);
-        $data = json_encode($data);
-        $folder = AG_DIR. 'rest-json/';
-        $file_name ='main-fields.json';
-        file_put_contents($folder.$file_name, $data);
+// add_action('init', 'debug_post');
+function debug_post(){
+    prr($_POST);
+    wp_die();
 }

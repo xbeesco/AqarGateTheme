@@ -15,7 +15,7 @@ function ag_user_membership( $user_id ){
         if( $remaining_listings == -1 ) {
             $remaining_listings = esc_html__('Unlimited', 'houzez');
         }
-
+        
         if( !empty( $package_id ) ) {
 
             $seconds = 0;
@@ -26,6 +26,9 @@ function ag_user_membership( $user_id ){
             $pack_billing_period = get_post_meta( $package_id, 'fave_billing_time_unit', true );
             $pack_billing_frequency = get_post_meta( $package_id, 'fave_billing_unit', true );
             $pack_date = strtotime ( get_user_meta( $user_id, 'package_activation',true ) );
+            $pack_users = get_post_meta( $package_id, 'fave_package_users', true );
+            $gency_users = get_agency_users_count( $user_id );
+            $pack_color  = get_post_meta( $package_id, 'fave_package_color', true );
 
             switch ( $pack_billing_period ) {
                 case 'Day':
@@ -42,12 +45,20 @@ function ag_user_membership( $user_id ){
                     break;
             }
 
+            if( intval( $gency_users ) >=  intval( $pack_users ) ) {
+                $remaining_users = "0" ; 
+            }else{
+                $remaining_users = intval( $pack_users ) - intval( $gency_users ) ; 
+            }
+
             $pack_time_frame = $seconds * $pack_billing_frequency;
             $expired_date    = $pack_date + $pack_time_frame;
             $expired_date = date_i18n( get_option('date_format'),  $expired_date );
 
             $response['pack_title'] = esc_attr( $pack_title );
-
+            $response['pack_color'] = $pack_color;
+            $response['pack_users'] = esc_attr( $pack_users );
+            $response['remaining_users'] = esc_attr( $remaining_users );
             if( $pack_unmilited_listings == 1 ) {
             $response['pack_listings'] = esc_html__('unlimited','houzez');
             $response['remaining_listings'] = esc_html__('unlimited','houzez');
@@ -57,10 +68,10 @@ function ag_user_membership( $user_id ){
             }
             $response['pack_featured_listings'] = esc_attr( $pack_featured_listings );
             $response['pack_featured_remaining_listings'] = esc_attr( $pack_featured_remaining_listings );
-            $response['expired_date'] = esc_attr( $expired_date );
+            $response['expired_date'] = date_i18n( get_option( 'date_format' ), strtotime( $expired_date )) ;
            
 
-        }
+        } 
         return $response;
 }
 
@@ -100,24 +111,45 @@ function ag_membership_type(){
         )
     );
     $packages_qry = get_posts( $args );
-
     if( count($packages_qry) == 0 ) {
-        return $this->error_response(
+        return AqarGateApi::error_response(
             'rest_invalid_data',
             __( 'No Memebership Package(s) Found'  )
         );
     }
 
+
     foreach ( $packages_qry as $key => $pack ) { 
+
+        $billing_time_unit = get_post_meta( $pack->ID, 'fave_billing_time_unit', true );
+        $billing_unit      = get_post_meta( $pack->ID, 'fave_billing_unit', true );
+
+        if( $billing_time_unit == 'Day')
+            $billing_time_unit = 'يوم';
+        elseif( $billing_time_unit == 'Week')
+            $billing_time_unit = 'اسبوع';
+        elseif( $billing_time_unit == 'Month')
+            $billing_time_unit = 'شهر';
+        elseif( $billing_time_unit == 'Year')
+            $billing_time_unit = 'سنة';
+
+            $pack_image = get_post_meta( $pack->ID, 'fave_package_image', true );
+            $pack_image_url = '';
+            if( !empty( $pack_image ) ){
+                $pack_image_url = wp_get_attachment_image_url( $pack_image, 'full');
+            }
     
     $response['packages'][]= [
         'pack_id'                 => $pack->ID,
         'pack_title'              => get_the_title( $pack->ID ),
+        'pack_color'              => get_post_meta( $pack->ID, 'fave_package_color', true ),  
         'pack_price'              => get_post_meta( $pack->ID, 'fave_package_price', true ),
+        'pack_image'              => $pack_image_url,
+        'pack_users'              => get_post_meta( $pack->ID, 'fave_package_users', true ),
         'pack_listings'           => get_post_meta( $pack->ID, 'fave_package_listings', true ),
         'pack_featured_listings'  => get_post_meta( $pack->ID, 'fave_package_featured_listings', true ),
         'pack_unlimited_listings' => get_post_meta( $pack->ID, 'fave_unlimited_listings', true ),
-        'pack_billing_period'     => get_post_meta( $pack->ID, 'fave_billing_time_unit', true ),
+        'pack_billing_period'     => $billing_time_unit,
         'pack_billing_frquency'   => get_post_meta( $pack->ID, 'fave_billing_unit', true ),
         'fave_package_images'     => get_post_meta( $pack->ID, 'fave_package_images', true ),
         'pack_package_tax'        => get_post_meta( $pack->ID, 'fave_package_tax', true ),
@@ -126,7 +158,7 @@ function ag_membership_type(){
     ];
 
     }
-    wp_reset_query();
+    wp_reset_postdata();
     return $response;
 }
 

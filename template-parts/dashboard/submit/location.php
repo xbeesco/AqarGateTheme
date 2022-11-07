@@ -20,7 +20,7 @@ if (houzez_edit_property()) {
 		<div class="row">
 
 			<?php if( $hide_prop_fields['map_address'] != 1 ) { ?>
-			<div class="col-md-6 col-sm-12">
+			<div class="col-md-12 col-sm-12">
 				<?php get_template_part('template-parts/dashboard/submit/form-fields/address'); ?>
 			</div>
 			<?php } ?>

@@ -18,10 +18,10 @@ function ag_get_property_fields( $data = '' )
     $property_features_terms = get_terms(array('property_feature'), array( 'orderby' => 'name', 'order' => 'ASC', 'hide_empty' => false ) );
    // $property_city_terms = get_terms (array( "property_city" ),array( 'orderby' => 'name', 'order' => 'ASC','hide_empty' => false, 'parent' => 0));
     //$property_area_terms = get_terms (array("property_area"), array('orderby' => 'name','order' => 'ASC', 'hide_empty' => false,'parent' => 0 ));
-    
-    $property_state     = ag_get_taxonomies_with_id_value( 'property_state', $property_state_terms, -1);
-    $property_city      = ag_get_taxonomies_with_id_value( 'property_city', $property_city_terms, -1);
-    $property_area      = ag_get_taxonomies_with_id_value( 'property_area', $property_area_terms, -1);
+    $property_state = $property_city = $property_area = "";
+    // $property_state     = ag_get_taxonomies_with_id_value( 'property_state', $property_state_terms, -1);
+    // $property_city      = ag_get_taxonomies_with_id_value( 'property_city', $property_city_terms, -1);
+    // $property_area      = ag_get_taxonomies_with_id_value( 'property_area', $property_area_terms, -1);
     $property_features  = ag_get_taxonomies_with_id_value( 'property_feature', $property_features_terms, -1);
 
     $prop_post = get_post( $prop_id  );
@@ -37,23 +37,20 @@ function ag_get_property_fields( $data = '' )
         }
     }
 
-    $property_images   = get_post_meta( $prop_id , 'fave_property_images', false );
-    $featured_image_id = get_post_thumbnail_id( $prop_id  );
-    $featured_image = [
-        'url' => wp_get_attachment_image_url( $featured_image_id, 'large' ),
-        'id'  => $featured_image_id,
-    ];
-    $property_images[] = $featured_image_id;
-    $property_images   = array_unique($property_images);
+    $property_images   = get_post_meta( $prop_id , 'fave_property_images', true );
     $property_images_data = [];
+    
     if( is_array( $property_images ) && !empty( $property_images ) ) {
         foreach( $property_images as $property_image ) {
-            $property_images_data[] = [
-                'url' => wp_get_attachment_image_url( $property_image, 'large' ),
-                'id'  => $property_image,
-            ];
+                $thumbnail_array = wp_get_attachment_image_src( $property_image, 'houzez-item-image-1' );
+                $property_images_data[] = [
+                    'url' => $thumbnail_array[0],
+                    'id'  => $property_image,
+                ];         
         }
     }
+
+    $prop_video_url = get_post_meta( $prop_id, 'fave_video_url', true );
     
     /**
      *  Theme field builder
@@ -83,7 +80,7 @@ function ag_get_property_fields( $data = '' )
             [
                 'id'          => 'prop_labels',
                 'field_id'    => 'prop_labels[]',
-                'type'        => 'select',
+                'type'        => 'checkbox',
                 'label'       => houzez_option('cl_prop_label', 'Property Label').houzez_required_field('prop_labels'),
                 'placeholder' => '',
                 'options'     => ag_get_taxonomies_with_id_value( 'property_label', $property_label_terms, -1),
@@ -93,7 +90,7 @@ function ag_get_property_fields( $data = '' )
             [
                 'id'          => 'prop_status',
                 'field_id'    => 'prop_status[]',
-                'type'        => 'select',
+                'type'        => 'radio',
                 'label'       => houzez_option('cl_prop_status', 'Property Status').houzez_required_field('prop_status'),
                 'placeholder' => '',
                 'options'     => ag_get_taxonomies_with_id_value( 'property_status', $property_status_terms, -1),
@@ -106,14 +103,14 @@ function ag_get_property_fields( $data = '' )
                 'type'        => 'select',
                 'label'       => houzez_option('cl_prop_type', 'Property Type').houzez_required_field('prop_type'),
                 'placeholder' => '',
-                'options'     => ag_get_taxonomies_with_id_value( 'property_type', $prop_type, -1),
+                'options'     => ag_get_taxonomies_with_id_value( 'property_type', $prop_type, -1, true),
                 'value'       => ag_get_taxonomies_for_edit_listing_multivalue( $prop_id , 'property_type'),
                 'required'    => 1,
             ],
             [
                 'id'          => 'prop_price',
                 'field_id'    => 'prop_price',
-                'type'        => 'text',
+                'type'        => 'number',
                 'label'       => houzez_option('cl_sale_price', 'Sale or Rent Price').houzez_required_field('sale_rent_price'),
                 'placeholder' => houzez_option('cl_sale_price_plac', 'Enter the price'),
                 'options'     => '',
@@ -202,8 +199,7 @@ function ag_get_property_fields( $data = '' )
                 'id'          => 'prop_featured',
                 'field_id'    => 'prop_featured',
                 'label'       => houzez_option('cl_make_featured', 'Do you want to mark this property as featured?'),
-                'type'        => 'radio',
-                'label'       => houzez_option( 'cl_longitude', 'Longitude' ),
+                'type'        => 'checkbox',
                 'placeholder' => '',
                 'options'     => '',
                 'value'       => ag_get_field_meta('featured', $prop_id ),
@@ -213,7 +209,7 @@ function ag_get_property_fields( $data = '' )
                 'id'          => 'login-required',
                 'field_id'    => 'login-required',
                 'label'       => houzez_option('cl_login_view', 'The user must be logged in to view this property'),
-                'type'        => 'radio',
+                'type'        => 'checkbox',
                 'placeholder' => '',
                 'options'     => '',
                 'value'       => ag_get_field_meta('loggedintoview', $prop_id ),
@@ -236,12 +232,13 @@ function ag_get_property_fields( $data = '' )
                 'label'       => houzez_option( 'cls_gdpr', 'GDPR Agreement *' ),
                 'placeholder' => '',
                 'options'     => '',
+                'value'       => ag_get_field_meta('gdpr_agreement', $prop_id ),
                 'required'    => 1,
             ],
             [
                 'id'          => 'prop_features',
                 'field_id'    => 'prop_features[]',
-                'type'        => 'checkbox',
+                'type'        => 'multi-checkbox',
                 'label'       => houzez_option('cls_features', 'Features'),
                 'placeholder' => '',
                 'options'     => $property_features,
@@ -259,13 +256,13 @@ function ag_get_property_fields( $data = '' )
                 'required'    => 0,
             ],
             [
-                'id'          => 'featured_image_id',
-                'field_id'    => 'featured_image_id',
-                'type'        => 'image',
-                'label'       => houzez_option('cls_media', 'Property Media'),
+                'id'          => 'prop_video_url',
+                'field_id'    => 'prop_video_url',
+                'type'        => 'video',
+                'label'       => houzez_option('sps_video', 'Video'),
                 'placeholder' => '',
                 'options'     => [],
-                'value'       => $featured_image,
+                'value'       => $prop_video_url,
                 'required'    => 0,
             ]
             
@@ -294,20 +291,25 @@ function ag_get_property_fields_builder(  $data = '' ){
     unset($fields_builder['placebo']);
 
     if ( isset($_GET) && !empty( $_GET['tax_id'] ) ) {
-          $ag_fields    = carbon_get_term_meta( $_GET['tax_id'], 'crb_available_fields' );
+        $ag_fields    = carbon_get_term_meta( $_GET['tax_id'], 'app_available_extra_fields' );
         if( empty( $ag_fields ) ) {
           $term = get_term( $_GET['tax_id'], 'property_type');
           $termParent = ( $term->parent == 0 ) ? $term : get_term( $term->parent, 'property_type' );
-          $ag_fields  = carbon_get_term_meta( $termParent->term_id, 'crb_available_fields' );
+          $ag_fields  = carbon_get_term_meta( $termParent->term_id, 'app_available_extra_fields' );
         }
-          
-        // return houzez_details_section_fields(); 
 
+        $fields_ids = [];
         if ( !empty( $ag_fields ) ) {
-            $fields_builder = array_flip( $ag_fields );
+            foreach ( $ag_fields as $value ) {
+                foreach( $value['fields'] as  $field_id ){
+                    $fields_ids[] = $field_id;
+                }
+            } 
+            $fields_builder = array_flip( $fields_ids );
         }else{
             return $ag_fields;
         }
+        
         $listing_data_composer = houzez_option('preview_data_composer');
         $data_composer = $listing_data_composer['enabled'];
         // return $fields_builder;
@@ -316,7 +318,8 @@ function ag_get_property_fields_builder(  $data = '' ){
     if ( $fields_builder ) {
         $fields_custom = [];
         foreach ( $fields_builder as $key => $value ) {
-            if( !in_array($key, houzez_details_section_fields())) { 
+            if( in_array( $key, houzez_details_section_fields() )  === false ) { 
+
                 $field_array = Houzez_Fields_Builder::get_field_by_slug($key);
                 $field_title = houzez_wpml_translate_single_string($field_array['label']);
                 $placeholder = houzez_wpml_translate_single_string($field_array['placeholder']);
@@ -339,19 +342,32 @@ function ag_get_property_fields_builder(  $data = '' ){
                     $field_array['options'] = '';
                  }
                  
-                 if ( $key === 'd8b9d8b1d8b6-d8a7d984d8b4d8a7d8b1d8b9' ) {
+                 if ( 
+                    $key === 'd8b9d8b1d8b6-d8a7d984d8b4d8a7d8b1d8b9' || 
+                    $key === 'd8b9d8afd8af-d8a7d984d988d8add8afd8a7d8aa' ||
+                    $key === 'd8b9d8afd8af-d8a7d984d985d8b5d8a7d8b9d8af'
+                    ) {
                     $field_array['type'] = "slider";
                  }
+
+                 if( 
+                    $key === 'd987d984-d98ad988d8acd8af-d8a7d984d8b1d987d986-d8a3d988-d8a7d984d982d98ad8af-d8a7d984d8b0d98a-d98ad985d986d8b9-d8a7d988-d98ad8add8af' ||
+                    $key === 'd8a7d984d8add982d988d982-d988d8a7d984d8a7d984d8aad8b2d8a7d985d8a7d8aa-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8a7d984d8bad98ad8b1-d985' ||
+                    $key === 'd8a7d984d986d8b2d8a7d8b9d8a7d8aa-d8a7d984d982d8a7d8a6d985d8a9-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1'||
+                    $key === 'd8a7d984d985d8b9d984d988d985d8a7d8aa-d8a7d984d8aad98a-d982d8af-d8aad8a4d8abd8b1-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8b3d988d8a7d8a1'
+                    ){
+                    $field_array['type'] = "checkbox";
+                 }
                  $field_array['value'] = $data_value;
+                 $field_array['required'] = 0;
                 
                 $fields_custom[] = $field_array;
 
-           } else if( in_array($key, houzez_details_section_fields() ) ){
+           } 
+           if( in_array( $key, houzez_details_section_fields() ) ){
 
-        //    array( "beds","baths","rooms","area-size","area-size-unit","land-area","land-area-unit",
-        //     "garage","garage-size","property-id", "year" );
-             
             if( $key === 'beds' ) {
+                // var_export($key);
                 $fields_custom[] = [
                     'id'          => 'prop_beds',
                     'field_id'    => 'prop_beds',
@@ -363,6 +379,7 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 0,
                 ];
               }
+
               if( $key === 'baths' ) {
                 $fields_custom[] = [
                     'id'          => 'prop_baths',
@@ -375,6 +392,7 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 0,
                 ];
               }
+
               if( $key === 'rooms' ) {
                 $fields_custom[] =             [
                     'id'          => 'prop_rooms',
@@ -387,6 +405,7 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 0,
                 ];
               }
+
               if( $key === 'area-size' ) {
                 $fields_custom[] = [
                     'id'          => 'prop_size',
@@ -399,6 +418,7 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 1,
                 ];
               }
+
               if( $key === 'area-size-unit' ) {
                 global $area_prefix_default, $area_prefix_changeable;
                 $fields_custom[] = [
@@ -412,6 +432,7 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 1,
                 ];
               }
+
               if( $key === 'land-area' ) {
                 $fields_custom[] =             [
                     'id'          => 'prop_land_area',
@@ -424,6 +445,7 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 0,
                 ];
               }
+
               if( $key === 'land-area-unit' ) {
                 $fields_custom[] = [
                     'id'          => 'prop_land_area_prefix',
@@ -436,11 +458,12 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 1,
                 ];
               }
+
               if( $key === 'garage' ) {
                 $fields_custom[] =  [
                     'id'          => 'prop_garage',
                     'field_id'    => 'prop_garage',
-                    'type'        => 'number',
+                    'type'        => 'slider',
                     'label'       => houzez_option('cl_garage', 'Garages').houzez_required_field('garages'),
                     'placeholder' => houzez_option('cl_garage_plac', 'Enter number of garages'),
                     'options'     => '',
@@ -448,6 +471,7 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 0,
                 ];
               }
+
               if( $key === 'garage-size' ) {
                 $fields_custom[] =  [
                     'id'          => 'prop_garage_size',
@@ -460,6 +484,7 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 0,
                 ];
               }
+
               if( $key === 'property-id' ) {
                 $fields_custom[] =  [
                     'id'          => 'property_id',
@@ -469,9 +494,10 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'placeholder' => houzez_option('cl_prop_id_plac', 'Enter property ID'),
                     'options'     => '',
                     'value'       => ag_get_field_meta( 'property_id',  $prop_id  ),
-                    'required'    => 1,
+                    'required'    => 0,
                 ];
               }
+
               if( $key === 'year' ) {
                 $fields_custom[] = [
                     'id'          => 'prop_year_built',
@@ -484,7 +510,6 @@ function ag_get_property_fields_builder(  $data = '' ){
                     'required'    => 1,
                 ];
               }
-
            }
         }
 
@@ -510,19 +535,18 @@ function ag_get_property_fields_extra(  $data = '' ){
      */
     $adp_details_fields = houzez_option('adp_details_fields');
     $fields_builder = $adp_details_fields['enabled'];
-    unset($fields_builder['placebo']);
     
     if ( $fields_builder ) {
+        unset( $fields_builder['placebo'] );
         $fields_custom = [];
         foreach ( $fields_builder as $key => $value ) {
             if( !in_array($key, houzez_details_section_fields())) { 
                 $field_array = Houzez_Fields_Builder::get_field_by_slug($key);
                 $field_title = houzez_wpml_translate_single_string($field_array['label']);
                 $placeholder = houzez_wpml_translate_single_string($field_array['placeholder']);
-                $field_name = $field_array['field_id'];
-                $field_type = $field_array['type'];
-                $data_value = ag_get_field_meta( $key,  $prop_id  );
-
+                $field_name  = $field_array['field_id'];
+                $field_type  = $field_array['type'];
+  
                 if( $field_type === 'select' || $field_type ==='multiselect' || $field_type ==='checkbox_list' ) { 
                     $field_options = $field_array['fvalues'];
                     $options = unserialize( $field_options );
@@ -534,20 +558,37 @@ function ag_get_property_fields_extra(  $data = '' ){
                         ];
                     } // end foreach options
                     $field_array['options'] = $option;
-                 } else { $field_array['options'] = ''; }
-
-                 if ( $key === 'd8b9d8b1d8b6-d8a7d984d8b4d8a7d8b1d8b9' ) {
-                      $field_array['type'] = "slider";
+                    
+                 } else { 
+                    $field_array['options'] = ''; 
+                    
                  }
 
-                 $field_array['value'] = $data_value;
-                 $fields_custom[] = $field_array;
+                 if ( 
+                    $key === 'd8b9d8b1d8b6-d8a7d984d8b4d8a7d8b1d8b9' || 
+                    $key === 'd8b9d8afd8af-d8a7d984d988d8add8afd8a7d8aa' ||
+                    $key === 'd8b9d8afd8af-d8a7d984d985d8b5d8a7d8b9d8af'
+                    ) {
+                    $field_array['type'] = "slider";
 
-           } else if( in_array($key, houzez_details_section_fields() ) ){
+                 }
 
-        //    array( "beds","baths","rooms","area-size","area-size-unit","land-area","land-area-unit",
-        //     "garage","garage-size","property-id", "year" );
-             
+                 if( 
+                    $key === 'd987d984-d98ad988d8acd8af-d8a7d984d8b1d987d986-d8a3d988-d8a7d984d982d98ad8af-d8a7d984d8b0d98a-d98ad985d986d8b9-d8a7d988-d98ad8add8af' ||
+                    $key === 'd8a7d984d8add982d988d982-d988d8a7d984d8a7d984d8aad8b2d8a7d985d8a7d8aa-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8a7d984d8bad98ad8b1-d985' ||
+                    $key === 'd8a7d984d986d8b2d8a7d8b9d8a7d8aa-d8a7d984d982d8a7d8a6d985d8a9-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1'||
+                    $key === 'd8a7d984d985d8b9d984d988d985d8a7d8aa-d8a7d984d8aad98a-d982d8af-d8aad8a4d8abd8b1-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8b3d988d8a7d8a1'
+                    ){
+                    $field_array['type'] = "checkbox";
+        
+                 }
+
+                 $field_array['key']   = $field_array['field_id'];
+                 $field_array['value'] = get_post_meta( $prop_id, 'fave_'.$key, true );    
+                 $fields_custom[]      = $field_array;     
+                            
+            } elseif(in_array($key, houzez_details_section_fields())){
+
             if( $key === 'beds' ) {
                 $fields_custom[] = [
                     'id'          => 'prop_beds',
@@ -556,6 +597,7 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_bedrooms', 'Bedrooms').houzez_required_field('bedrooms'),
                     'placeholder' => houzez_option('cl_bedrooms_plac', 'Enter number of bedrooms'),
                     'options'     => '',
+                    'key'         => 'beds',
                     'value'       => ag_get_field_meta( 'property_bedrooms',  $prop_id  ),
                     'required'    => 0,
                 ];
@@ -568,6 +610,7 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_bathrooms', 'Bathrooms').houzez_required_field('bathrooms'),
                     'placeholder' => houzez_option('cl_bathrooms_plac', 'Enter number of bathrooms'),
                     'options'     => '',
+                    'key'         => 'baths',
                     'value'       => ag_get_field_meta( 'property_bathrooms',  $prop_id  ),
                     'required'    => 0,
                 ];
@@ -580,6 +623,7 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_rooms', 'Rooms').houzez_required_field('rooms'),
                     'placeholder' => houzez_option('cl_bedrooms_plac', 'Enter number of bedrooms'),
                     'options'     => '',
+                    'key'         => 'rooms',
                     'value'       => ag_get_field_meta( 'property_rooms',  $prop_id  ),
                     'required'    => 0,
                 ];
@@ -592,12 +636,12 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_area_size', 'Area Size').houzez_required_field('area_size'),
                     'placeholder' => houzez_option('cl_area_size_plac', 'Enter property area size'),
                     'options'     => '',
+                    'key'         => 'area-size',
                     'value'       => ag_get_field_meta( 'property_size',  $prop_id  ),
                     'required'    => 1,
                 ];
               }
               if( $key === 'area-size-unit' ) {
-                global $area_prefix_default, $area_prefix_changeable;
                 $fields_custom[] = [
                     'id'          => 'prop_size_prefix',
                     'field_id'    => 'prop_size_prefix',
@@ -605,6 +649,7 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_area_size_postfix', 'Size Postfix'),
                     'placeholder' => houzez_option('cl_area_size_postfix_plac', 'Enter the size postfix'),
                     'options'     => '',
+                    'key'         => 'area-size-unit',
                     'value'       => ag_get_field_meta( 'property_size_prefix',  $prop_id  ),
                     'required'    => 1,
                 ];
@@ -617,6 +662,7 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_land_size', 'Land Area').houzez_required_field( 'land_area' ),
                     'placeholder' => houzez_option('cl_land_size_postfix_plac', 'Enter property land area postfix'),
                     'options'     => '',
+                    'key'         => 'land-area',
                     'value'       => ag_get_field_meta( 'property_land',  $prop_id  ),
                     'required'    => 0,
                 ];
@@ -629,6 +675,7 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_land_size_postfix', 'Land Area Size Postfix'),
                     'placeholder' => houzez_option('cl_land_size_postfix_plac', 'Enter property land area postfix'),
                     'options'     => '',
+                    'key'         => 'land-area-unit',
                     'value'       => ag_get_field_meta( 'property_land_postfix',  $prop_id  ),
                     'required'    => 1,
                 ];
@@ -637,10 +684,11 @@ function ag_get_property_fields_extra(  $data = '' ){
                 $fields_custom[] =  [
                     'id'          => 'prop_garage',
                     'field_id'    => 'prop_garage',
-                    'type'        => 'number',
+                    'type'        => 'slider',
                     'label'       => houzez_option('cl_garage', 'Garages').houzez_required_field('garages'),
                     'placeholder' => houzez_option('cl_garage_plac', 'Enter number of garages'),
                     'options'     => '',
+                    'key'         => 'garage',
                     'value'       => ag_get_field_meta( 'property_garage',  $prop_id  ),
                     'required'    => 0,
                 ];
@@ -653,11 +701,13 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_garage_size', 'Garages Size'),
                     'placeholder' => houzez_option('cl_garage_size_plac', 'Enter the garages size'),
                     'options'     => '',
+                    'key'         => 'garage-size',
                     'value'       => ag_get_field_meta( 'property_garage_size',  $prop_id  ),
                     'required'    => 0,
                 ];
               }
               if( $key === 'property-id' ) {
+                
                 $fields_custom[] =  [
                     'id'          => 'property_id',
                     'field_id'    => 'property_id',
@@ -665,6 +715,7 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_prop_id', 'Property ID').houzez_required_field( 'prop_id' ),
                     'placeholder' => houzez_option('cl_prop_id_plac', 'Enter property ID'),
                     'options'     => '',
+                    'key'         => 'property-id',
                     'value'       => ag_get_field_meta( 'property_id',  $prop_id  ),
                     'required'    => 1,
                 ];
@@ -677,16 +728,16 @@ function ag_get_property_fields_extra(  $data = '' ){
                     'label'       => houzez_option('cl_year_built', 'Year Built').houzez_required_field( 'year_built' ),
                     'placeholder' => houzez_option('cl_year_built_plac', 'Enter year built'),
                     'options'     => '',
+                    'key'         => 'year',
                     'value'       => ag_get_field_meta( 'property_year',  $prop_id  ),
                     'required'    => 1,
                 ];
               }
+            }
 
-           }
         }
-
-    
-        return $fields_custom;
+        
+        return  $fields_custom;
     }
     
 }
@@ -702,10 +753,20 @@ function ag_get_property_fields_extra(  $data = '' ){
 function ag_get_taxonomies_with_id_value($taxonomy, $parent_taxonomy, $taxonomy_id, $child_terms = false ){
     
     
-    if (!empty($parent_taxonomy)) {
+    if (!empty($parent_taxonomy) && !is_wp_error( $parent_taxonomy )) {
+
+        if( 'property_type' === $taxonomy ) {
+            $options['all'] = [
+                'id' => 0,
+                'name' => 'الكل',
+                'slug' => '',
+                'category_icon' => ''
+            ];
+        }
 
         foreach ( $parent_taxonomy as $key => $term ) {
-
+         
+         $term_id = isset($term->term_id) ? $term->term_id : '';
          $property_type_icon = carbon_get_term_meta( $term->term_id, 'property_type_icon' );
          $icon_type  = get_term_meta($term->term_id, 'fave_feature_icon_type', true);
          $icon_class = get_term_meta($term->term_id, 'fave_prop_features_icon', true);
@@ -765,7 +826,9 @@ function ag_get_taxonomies_with_id_value($taxonomy, $parent_taxonomy, $taxonomy_
                 unset($options[$key]);
             }
         }
-        return array_values( $options );
+       
+
+        return  array_values( $options )  ;
     }
 
     
@@ -857,7 +920,7 @@ function ag_get_taxonomies_with_id_value($taxonomy, $parent_taxonomy, $taxonomy_
                     if ( class_exists( 'sitepress' ) ) {
                         $default_lang = apply_filters( 'wpml_default_language', NULL );
                         $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_state', true, $default_lang );
-                        $term_meta= get_option( "_houzez_property_state_$term_id_default");
+                        $term_meta = get_option( "_houzez_property_state_$term_id_default");
                         $parent_country = sanitize_title($term_meta['parent_country']);
                         $parent_country = get_term_by( 'slug', $parent_country, 'property_country' )->slug;       
                     }

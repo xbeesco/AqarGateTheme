@@ -12,7 +12,25 @@
         $post = $agency_id;
         setup_postdata( $post ); 
 
+        $author_id = get_post_field( 'post_author', get_the_ID() );
+
+        $id_number = get_user_meta( $author_id, 'aqar_author_id_number', true );
+        $ad_number = get_user_meta( $author_id, 'aqar_author_ad_number', true);
+        $type_id   = get_user_meta( $author_id, 'aqar_author_type_id', true);
+        $user_role = houzez_user_role_by_user_id( $author_id );
+        if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "مفوض";}
+        elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "مفوض"; }
+        elseif( $user_role == "houzez_owner"  ) { $Advertiser_character =  "مالك"; } 
+        elseif( $user_role == "houzez_buyer"  ) { $Advertiser_character =  "مفوض"; } 
+        elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مفوض" ; }
+        elseif( $user_role == "houzez_manager") { $Advertiser_character = "مفوض"; }
+
         $agency_data[ 'agency_id' ] = get_the_ID();
+        $agency_data[ 'agency_user_id' ] = $author_id;
+
+        $agency_data[ 'user_ad_number' ] = $ad_number;
+        $agency_data[ 'user_ad_type' ]   = $Advertiser_character;
+
         $agency_data[ 'name' ] = get_the_title();
         $agency_data[ 'desc' ] = strip_tags( get_the_content() ) ;
 
@@ -61,4 +79,23 @@
  
         wp_reset_postdata();
         return $agency_data;
+    }
+    
+    /**
+     * get_agency_users_count
+     *
+     * @param  mixed $userID
+     * @return void
+     */
+    function get_agency_users_count($userID){
+
+        $wp_user_query = new WP_User_Query( array(
+            array( 
+            'role' => 'houzez_agent' ),
+            'meta_key' => 'fave_agent_agency',
+            'meta_value' => $userID
+        ));
+        $agents = $wp_user_query->get_total();
+
+        return $agents;
     }

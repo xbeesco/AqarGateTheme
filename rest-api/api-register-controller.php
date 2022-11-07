@@ -7,7 +7,7 @@ function ag_register( $request )
     $allowed_html = array();
 
     
-    $email             = trim( sanitize_text_field( wp_kses( $_POST['useremail'], $allowed_html ) ));
+    $email             = trim( sanitize_text_field( wp_kses( $_POST['email'], $allowed_html ) ));
     $term_condition    = wp_kses( $_POST['term_condition'], $allowed_html );
     $enable_password   = houzez_option('enable_password');
     $response          = isset($_POST["g-recaptcha-response"]) ? $_POST["g-recaptcha-response"] : '';
@@ -46,7 +46,27 @@ function ag_register( $request )
     //         esc_html__('The last name field is empty.', 'houzez-login-register') 
     //     );
     // }
+    if( empty( $email ) ) {
+        return AqarGateApi::error_response(
+            'rest_invalid_email',
+            esc_html__('The email field is empty.', 'houzez-login-register') 
+        );
+    }
     
+    if( email_exists( $email ) ) {
+        return AqarGateApi::error_response(
+            'rest_invalid_email',
+            esc_html__('This email address is already registered.', 'houzez-login-register') 
+        );
+    }
+    
+    if( !is_email( $email ) ) {
+        return AqarGateApi::error_response(
+            'rest_invalid_email',
+            esc_html__('Invalid email address.', 'houzez-login-register') 
+        );
+    }
+
     $phone_number = isset( $_POST['phone_number'] ) ? $_POST['phone_number'] : '';
 
     if( empty($phone_number) && houzez_option('register_mobile', 0) == 1 ) {
@@ -62,7 +82,7 @@ function ag_register( $request )
     if ( ! empty( $user_query->results ) ) {
         foreach ( $user_query->results as $user ) {
             $user_id = $user->ID;
-            $fave_author_phone = get_user_meta( $user_id, 'fave_author_phone', true);
+            $fave_author_phone  = get_user_meta( $user_id, 'fave_author_phone', true);
             $fave_author_mobile = get_user_meta( $user_id, 'fave_author_mobile', true);
             
             if( (int) $fave_author_phone === (int) $phone_number || (int) $fave_author_mobile === (int) $phone_number) {
@@ -94,7 +114,10 @@ function ag_register( $request )
     }
 
     if ( preg_match("/^[0-9A-Za-z_]+$/", $username) == 0 ) {
-        $username = $phone_number;
+        return AqarGateApi::error_response(
+            'rest_invalid_username',
+            esc_html__('Invalid username (do not use special characters or spaces)!', 'houzez')
+        );
     }
 
     if( username_exists( $username ) ) {
@@ -104,26 +127,7 @@ function ag_register( $request )
         );
     }
 
-    // if( empty( $email ) ) {
-    //     return AqarGateApi::error_response(
-    //         'rest_invalid_email',
-    //         esc_html__('The email field is empty.', 'houzez-login-register') 
-    //     );
-    // }
-    
-    // if( email_exists( $email ) ) {
-    //     return AqarGateApi::error_response(
-    //         'rest_invalid_email',
-    //         esc_html__('This email address is already registered.', 'houzez-login-register') 
-    //     );
-    // }
-    
-    // if( !is_email( $email ) ) {
-    //     return AqarGateApi::error_response(
-    //         'rest_invalid_email',
-    //         esc_html__('Invalid email address.', 'houzez-login-register') 
-    //     );
-    // }
+   
     
     // if( $enable_password == 'yes' ){
     //     $user_pass         = trim( sanitize_text_field(wp_kses( $_POST['register_pass'] ,$allowed_html) ) );
@@ -162,7 +166,11 @@ function ag_register( $request )
         return AqarGateApi::error_response('rest_invalid_user', $user_id );
     } else {
     
-        wp_update_user( array( 'ID' => $user_id, 'role' => $user_role ) );
+        wp_update_user( array( 
+            'ID' => $user_id, 
+            'role' => $user_role ,
+            'user_email' => $email,
+            ) );
     
         // if( $enable_password =='yes' ) {
         //     echo json_encode( array( 'success' => true, 'msg' => esc_html__('Your account was created and you can login now!', 'houzez-login-register') ) );
@@ -217,7 +225,9 @@ function ag_register( $request )
 
         do_action('houzez_after_register', $user_id);
 
-        $user_token = aqargate_token_after_register( $username, $user_password );
+        $user = get_userdata($user_id);
+
+        $user_token = aqargate_token_after_register( null, null,  $user );
 
 
         $author_data = [ 'user_id' => $user_id ];
@@ -248,7 +258,7 @@ function api_update_profile( $data ){
     if( isset( $_POST['user_id'] ) && !empty( $_POST['user_id'] ) ) {
         $userID = $_POST['user_id'];
     }
-    
+    $allowed_html = array();
     $user_company = $userlangs = $latitude = $longitude = $tax_number = $user_location = $license = $user_address = $fax_number = $firstname = $lastname = $title = $about = $userphone = $usermobile = $userskype = $facebook = $twitter = $linkedin = $instagram = $pinterest = $profile_pic = $profile_pic_id = $website = $useremail = $service_areas = $specialties = $whatsapp = '';
     
     if( isset( $_POST['firstname'] ) ) {
@@ -559,11 +569,16 @@ function api_update_profile( $data ){
     }
 
     $profile_pic_id = isset($_FILES['profile-pic-id'] ) ? AqarGateApi::upload_images( (array)$_FILES, 'profile-pic-id' ) : '';
-
-    $thumbnail_url = wp_get_attachment_image_src( $profile_pic_id[0] );
-
+    if( !empty($profile_pic_id) ){
+      $thumbnail_url = wp_get_attachment_image_src( $profile_pic_id[0] );
+    }
     if( !empty($profile_pic_id) ){
         houzez_save_user_photo($userID, $profile_pic_id[0], $thumbnail_url);
+    }
+   
+    if( isset( $_POST['user-password'] ) && !empty( $_POST['user-password'] ) ) {
+        $user_pass = trim(sanitize_text_field(wp_kses( $_POST['user-password'], $allowed_html)));
+        wp_set_password( $user_pass, $userID );
     }
 
     if( isset( $_POST['useremail'] ) ) { 
@@ -572,14 +587,16 @@ function api_update_profile( $data ){
             $useremail = sanitize_email( $_POST['useremail'] );
             $useremail = is_email( $useremail );
             if( !$useremail ) {
-                return json_encode( array( 'success' => false, 'msg' => esc_html__('The Email you entered is not valid. Please try again.', 'houzez') ) );
-
+                return AqarGateApi::error_response(
+                    'rest_invalid_email',
+                     esc_html__('The Email you entered is not valid. Please try again.', 'houzez') );
             } else {
                 $email_exists = email_exists( $useremail );
                 if( $email_exists ) {
                     if( $email_exists != $userID ) {
-                        return json_encode( array( 'success' => false, 'msg' => esc_html__('This Email is already used by another user. Please try a different one.', 'houzez') ) );
-
+                        return AqarGateApi::error_response(
+                            'rest_invalid_email',
+                            esc_html__('This Email is already used by another user. Please try a different one.', 'houzez') );
                     }
                 } else {
                     $return = wp_update_user( array ('ID' => $userID, 'user_email' => $useremail ) );
@@ -608,14 +625,19 @@ function api_update_profile( $data ){
 
     $allowed_html = array();
   
-    if( isset( $_POST['role'] ) && $_POST['role'] != '' ){
+    if( isset( $_POST['role'] ) && !empty( $_POST['role'] ) ){
         $user_role = isset( $_POST['role'] ) ? sanitize_text_field( wp_kses( $_POST['role'], $allowed_html ) ) : '';
-        wp_update_user( array ('ID' => $userID, 'role' => $user_role ) );
-    
+        wp_update_user( array ('ID' => $userID, 'role' => $user_role ) );   
     } 
-    
-    wp_update_user( array ('ID' => $userID,  'display_name' => $_POST['display_name'] ) );
-    return  array( 'success' => true, 'msg' => __('تم تحديث الملف الشخصي', 'houzez') );
+    if( isset($_POST['display_name']) && !empty( $_POST['display_name'] )) {
+        wp_update_user( array ('ID' => $userID,  'display_name' => $_POST['display_name'] ) );
+    }
+        
+    return  array( 
+        'success' => true, 
+        'msg' => __('تم تحديث الملف الشخصي', 'houzez'),
+        'user_id' => $userID
+    );
 
 }
 
@@ -628,7 +650,7 @@ function api_update_profile( $data ){
  * @return void
  */
 
-function aqargate_token_after_register( $username , $password ){
+function aqargate_token_after_register( $username , $password, $user ){
 
         $_request = new WP_REST_Request( 'POST', '/jwt-auth/v1/token' );
         $_request->set_header( 'content-type', 'application/json' );
@@ -637,6 +659,7 @@ function aqargate_token_after_register( $username , $password ){
                 [
                     'username' => $username,
                     'password' => $password,
+                    'user'     => $user
                 ]
             )
         );
@@ -644,4 +667,87 @@ function aqargate_token_after_register( $username , $password ){
 
         return $response->data; // this will return a token
    
+}
+
+
+/**
+ * ag_profile_fields_with_value
+ *
+ * @param  mixed $userID
+ * @return void
+ */
+function ag_profile_fields_with_value( $userID ){
+    
+    $username               =   get_the_author_meta( 'user_login' , $userID );
+        $user_title             =   get_the_author_meta( 'fave_author_title' , $userID );
+        $first_name             =   get_the_author_meta( 'first_name' , $userID );
+        $last_name              =   get_the_author_meta( 'last_name' , $userID );
+        $user_email             =   get_the_author_meta( 'user_email' , $userID );
+        $user_mobile            =   get_the_author_meta( 'fave_author_mobile' , $userID );
+        $user_whatsapp          =   get_the_author_meta( 'fave_author_whatsapp' , $userID );
+        $user_phone             =   get_the_author_meta( 'fave_author_phone' , $userID );
+        $description            =   get_the_author_meta( 'description' , $userID );
+        $userlangs              =   get_the_author_meta( 'fave_author_language' , $userID );
+        $user_company           =   get_the_author_meta( 'fave_author_company' , $userID );
+        $tax_number             =   get_the_author_meta( 'fave_author_tax_no' , $userID );
+        $fax_number             =   get_the_author_meta( 'fave_author_fax' , $userID );
+        $user_address           =   get_the_author_meta( 'fave_author_address' , $userID );
+        $service_areas          =   get_the_author_meta( 'fave_author_service_areas' , $userID );
+        $specialties            =   get_the_author_meta( 'fave_author_specialties' , $userID );
+        $license                =   get_the_author_meta( 'fave_author_license' , $userID );
+        $gdpr_agreement         =   get_the_author_meta( 'gdpr_agreement' , $userID );
+        $id_number              =   get_the_author_meta( 'aqar_author_id_number' , $userID );
+        $ad_number              =   get_the_author_meta( 'aqar_author_ad_number' , $userID );
+        $type_id                =   get_the_author_meta( 'aqar_author_type_id' , $userID );
+        $user_custom_picture    =   get_the_author_meta( 'fave_author_custom_picture' , $userID );
+        $author_picture_id      =   get_the_author_meta( 'fave_author_picture_id' , $userID );
+
+        if( !empty( $author_picture_id ) ) {
+            $author_picture_id = intval( $author_picture_id );
+            if ( $author_picture_id ) {
+                $author_picture =  [
+                        'url' => wp_get_attachment_image_url( $author_picture_id, 'large' ),
+                        'id'  => $author_picture_id
+                ];
+            }
+        } else {
+            $author_picture =  [
+                'url' => $user_custom_picture,
+                'id'  => null
+            ];
+        }
+       
+       if( houzez_is_agency() ) {
+           $title_position_lable = esc_html__('Agency Name','houzez');
+           $about_lable = esc_html__( 'About Agency', 'houzez' );
+       } else {
+           $title_position_lable =  esc_html__('Title / Position','houzez');
+           $about_lable = esc_html__( 'About me', 'houzez' );
+       }
+       $profile_fields['username'] = esc_attr( $username );
+
+        $profile_fields['useremail'] = esc_attr( $user_email );
+
+    if( !houzez_is_agency() ):
+        $profile_fields['firstname'] = esc_attr( $first_name );
+        $profile_fields['lastname'] = esc_attr( $last_name );
+    endif;
+
+    $profile_fields['title'] = esc_attr( $user_title );
+    $profile_fields['license'] = esc_attr( $license );
+    $profile_fields['usermobile'] = esc_attr( $user_mobile );
+    $profile_fields['whatsapp'] = esc_attr( $user_whatsapp );
+    $profile_fields['id_number'] = esc_attr( $id_number );
+    $profile_fields['ad_number'] = esc_attr( $ad_number );
+    $profile_fields['aqar_author_type_id'] = esc_attr( $type_id );
+    $profile_fields['tax_number'] = esc_attr( $tax_number );
+    $profile_fields['userphone'] = esc_attr( $user_phone );
+    if( !houzez_is_agency() ):
+    $profile_fields['user_company'] = esc_attr( $user_company );
+    endif;
+    $profile_fields['user_address'] = esc_attr( $user_address );
+    $profile_fields['bio'] = wp_strip_all_tags($description);
+    $profile_fields['profile-pic-id'] = $author_picture;
+
+    return $profile_fields;
 }

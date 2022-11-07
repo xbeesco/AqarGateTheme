@@ -3,7 +3,7 @@
     $property_provinces = csv_to_array($file);
     
     // 1- insert province to property tax .
-    foreach ( $property_provinces as $mdaKey ) {
+    foreach ( $property_provinces as $province ) {
             // prr($mdaKey);wp_die();
             $nameAr = $mdaKey['nameAr'];
             $provinc_id = $mdaKey['id'];  
