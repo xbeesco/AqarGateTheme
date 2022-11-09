@@ -713,69 +713,58 @@ function ag_generate_cache_file(){
  */
 function ag_generate_cache_location_file(){
 
-    $cache_data = [];
-
+    $data = [];
     $time = date("F d, Y h:i:s A");
-    $cache_data['cache_last_location_update'] =  $time;
-    $property_state_terms = get_terms (
-        array(
-            "property_state"
-        ),
-        array(
-            'orderby' => 'name',
-            'order' => 'ASC',
-            'hide_empty' => false,
-            'parent' => 0
-        )
-    );
-    $searched_term = isset( $_POST[ 'country' ] ) ? $_POST[ 'country' ] : -1 ;
-    $property_state = ag_hirarchical_options( 'property_state', $property_state_terms, $searched_term );
-    if( count( $property_state ) == 0 ) {
-        $property_state = [] ;
-    }
-    $cache_data['state']= $property_state;
+    $data['cache_last_location_update'] =  $time;
 
-    $property_city_terms = get_terms (
-        array(
-            "property_city"
-        ),
-        array(
-            'orderby' => 'name',
-            'order' => 'ASC',
-            'hide_empty' => false,
-            'parent' => 0
-        )
-    );
-    $searched_term = isset( $_POST[ 'state' ] ) ? $_POST[ 'state' ] : -1 ;
-    $property_city = ag_hirarchical_options( 'property_city', $property_city_terms, $searched_term);
+    $property_state = get_terms ( array( "property_state" ) ,array( 'hide_empty' => false ) );
+    $property_city  = get_terms ( array( "property_city"  ) ,array( 'hide_empty' => true ) );
+    $property_area  = get_terms ( array( "property_area"  ) ,array( 'hide_empty' => true ) );
 
-    if( count( $property_city ) == 0 ) {
-        $property_city = [] ;
-    }
+    foreach ( $property_state as  $state ){
 
-    $cache_data['city']= $property_city;
+      $city_data = [];
+      foreach ( $property_city as  $city ){ 
+        $term_meta= get_option( "_houzez_property_city_$city->term_id");
+        $parent_state = sanitize_title($term_meta['parent_state']);
+        $parent_state_id = get_term_by( 'slug', urldecode($parent_state), 'property_state' )->term_id;
+        
+        $area_data = [];
+        foreach ( $property_area as $area ) {
+            $term_meta= get_option( "_houzez_property_area_$area->term_id");
+            $parent_city = sanitize_title($term_meta['parent_city']);
+            $parent_city_id = get_term_by( 'slug', urldecode($parent_city), 'property_city' )->term_id;
+            if ( $parent_city_id  == $city->term_id ) {
+                $area_data [] = [
+                    'id'   => $area->term_id,
+                    'name' => $area->name,
+                ];
+            }
+        }
 
-    $property_area_terms = get_terms (
-        array(
-            "property_area"
-        ),
-        array(
-            'orderby' => 'name',
-            'order' => 'ASC',
-            'hide_empty' => false,
-            'parent' => 0
-        )
-    );
-    $searched_term = isset( $_POST[ 'city' ] ) ? $_POST[ 'city' ] : -1 ;
-    $property_area = ag_hirarchical_options( 'property_area', $property_area_terms, $searched_term);
-
-    if( count( $property_area ) == 0 ) {
-        $property_area = [] ;
+        if ( $state->term_id == $parent_state_id ) {
+            $city_data[] = [
+                    'id'   => $city->term_id,
+                    'name' => $city->name,
+                    'area' => $area_data
+            ];  
+         }
+      }
+        $data['state'][] = [
+            'id'   => $state->term_id,
+            'name' => $state->name,
+            'city' => $city_data,
+        ];
     }
 
-    $cache_data['area']= $property_area ;
 
-    return $cache_data;
+    // prr( $data );
+    $data_decode   = json_encode( $data );
+    $folder = AG_DIR. 'location-json/';
+    $file_name = 'location.json';
+    $file   = file_put_contents( $folder.$file_name, $data_decode );
+
+    return $data;
 }
 
 
@@ -1436,8 +1425,8 @@ function ag_get_token_cache_data( $request ){
     $response_data['user_favorite_properties']  = AqarGateApi::favorite_properties( $request );
 
     $AqarGateApi = new AqarGateApi;
-    global $wpdb, $current_user;
     $tabel = $wpdb->prefix . 'houzez_threads';
+    global $wpdb, $current_user;
     $conversations = $wpdb->get_results(
         "
         SELECT * 
@@ -1451,21 +1440,21 @@ function ag_get_token_cache_data( $request ){
         
         foreach( (array)$conversations as $conversation ) {    
 
-            $conversation_id[] = $AqarGateApi->get_all_conversation( $userID,  $conversation ) ;
+            $conversation_id[] = $AqarGateApi->get_all_conversation( $current_user_id,  $conversation ) ;
         }
 
-        // $response =  $conversation_id;
-        $response_data['user_conversations']  = $conversation_id;
+        $response['conversations'] =  $conversation_id;
+        $response_data['user_conversations']  = AqarGateApi::response( $response );
     }else{
         $response_data['user_conversations']  = [];
     }
-    // $response_data['main_fields']   = $AqarGateApi->fields_steps( $request );
+
     $response_data['user_info']     = $AqarGateApi->author( $request );
     $response_data['user_invoices'] = $AqarGateApi->get_invoices( $request );
     if( houzez_is_agency() === true ) {
-        $response_data['user_agents'] = $AqarGateApi->get_agents( $request );
+        $response_data['user_agents']   = $AqarGateApi->get_agents( $request );
     }else{
-        $response_data['user_agents'] = []; 
+        $response_data['user_agents']   = []; 
     }
 
     $response['data'] = $response_data;

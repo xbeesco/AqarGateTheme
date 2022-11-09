@@ -60,8 +60,8 @@ function ag_user_membership( $user_id ){
             $response['pack_users'] = esc_attr( $pack_users );
             $response['remaining_users'] = esc_attr( $remaining_users );
             if( $pack_unmilited_listings == 1 ) {
-            $response['pack_listings'] = esc_html__('unlimited','houzez');
-            $response['remaining_listings'] = esc_html__('unlimited','houzez');
+            $response['pack_listings'] = esc_html__('غير محدود','houzez');
+            $response['remaining_listings'] = esc_html__('غير محدود','houzez');
             } else {
             $response['pack_listings'] = esc_attr( $pack_listings );
             $response['remaining_listings'] = esc_attr( $remaining_listings );

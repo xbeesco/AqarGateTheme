@@ -9,9 +9,18 @@
 function ag_get_property_fields( $data = '' )
 {
 
-    $prop_id = isset($data['prop_id']) ? $data['prop_id'] : null;
+    $prop_id = isset( $data['prop_id'] ) ? $data['prop_id'] : false;
+
+    $user = wp_get_current_user();
+    $user_id = $user->ID;
+
+    $pack_featured_remaining_listings = houzez_get_featured_remaining_listings( $user_id );
+    $disabled = 0;
+    if( $pack_featured_remaining_listings <= 0 ){
+        $disabled = 1;
+    }
    
-    $property_label_terms = get_terms (array("property_label"), array('orderby' => 'name','order' => 'ASC','hide_empty' => false,));
+    $property_label_terms  = get_terms (array("property_label"), array('orderby' => 'name','order' => 'ASC','hide_empty' => false,));
     $property_status_terms = get_terms (array( "property_status"),array('orderby' => 'name','order' => 'ASC','hide_empty' => false,));
     $prop_type = get_terms (array("property_type"),array('orderby' => 'name','order' => 'ASC','hide_empty' => false,));
    // $property_state_terms = get_terms (array("property_state"), array('orderby' => 'name','order' => 'ASC','hide_empty' => false,'parent' => 0));
@@ -25,7 +34,7 @@ function ag_get_property_fields( $data = '' )
     $property_features  = ag_get_taxonomies_with_id_value( 'property_feature', $property_features_terms, -1);
 
     $prop_post = get_post( $prop_id  );
-    $location = ag_get_field_meta('property_location', $prop_id );
+    $location  = ag_get_field_meta('property_location', $prop_id );
     $lat = ''; $lng = '';
     if( !empty( $location ) ) {
         $location = explode(",", $location);
@@ -39,14 +48,15 @@ function ag_get_property_fields( $data = '' )
 
     $property_images   = get_post_meta( $prop_id , 'fave_property_images', true );
     $property_images_data = [];
-    
+    $property_images_data_ids = [];
     if( is_array( $property_images ) && !empty( $property_images ) ) {
         foreach( $property_images as $property_image ) {
                 $thumbnail_array = wp_get_attachment_image_src( $property_image, 'houzez-item-image-1' );
                 $property_images_data[] = [
                     'url' => $thumbnail_array[0],
-                    'id'  => $property_image,
-                ];         
+                    'id'  => ( int ) $property_image,
+                ];
+                $property_images_data_ids[] = ( int ) $property_image;         
         }
     }
 
@@ -203,6 +213,7 @@ function ag_get_property_fields( $data = '' )
                 'placeholder' => '',
                 'options'     => '',
                 'value'       => ag_get_field_meta('featured', $prop_id ),
+                'disabled'    => $disabled,
                 'required'    => 0,
             ],
             [
@@ -253,6 +264,16 @@ function ag_get_property_fields( $data = '' )
                 'placeholder' => '',
                 'options'     => [],
                 'value'       => $property_images_data,
+                'required'    => 0,
+            ],
+            [
+                'id'          => 'propperty_edit_image_ids',
+                'field_id'    => 'propperty_edit_image_ids[]',
+                'type'        => 'hidden',
+                'label'       => __('property images ids*'),
+                'placeholder' => '',
+                'options'     => [],
+                'value'       => $property_images_data_ids,
                 'required'    => 0,
             ],
             [
@@ -960,14 +981,7 @@ function ag_get_taxonomies_with_id_value($taxonomy, $parent_taxonomy, $taxonomy_
                 }
 
 
-                $child_terms = get_terms($taxonomy_name, array(
-                    'hide_empty' => false,
-                    'parent' => $term->term_id
-                ));
 
-                if (!empty($child_terms)) {
-                    ag_hirarchical_options( $taxonomy_name, $child_terms, $searched_term, "- ".$prefix );
-                }
             }
 
             return $options;

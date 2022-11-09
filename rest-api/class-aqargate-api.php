@@ -1912,9 +1912,29 @@ class AqarGateApi {
                 __( 'عزيزنا العميل : نفيد سيادتكم لقد تخطيت عدد الاعلانات المسموحة بها في باقتكم يرجي الاشتراك في باقة اخري'  )
             );
         }
+        $response = [];
+        
+        $remaining_listings = houzez_get_remaining_listings( $user_id );
+        $pack_listings = get_post_meta( $package_id, 'fave_package_listings', true ); 
+        $pack_featured_remaining_listings = houzez_get_featured_remaining_listings( $user_id );
+        $pack_featured_listings = get_post_meta( $package_id, 'fave_package_featured_listings', true );
+        $pack_unmilited_listings = get_post_meta( $package_id, 'fave_unlimited_listings', true );
 
-        $response = __('شكرا عميلنا العزيز : تم التحقق من الباقة يمكنك نشر اعلانك العقاري', 'aqargate');
-       
+        if( $pack_unmilited_listings == 1 ) {
+            $pack_listings = esc_html__('غير محدود','houzez');
+            $remaining_listings = esc_html__('غير محدود','houzez');
+            } else {
+            $pack_listings = esc_attr( $pack_listings );
+            $remaining_listings = esc_attr( $remaining_listings );
+        }
+
+        $response['message'] = __('شكرا عميلنا العزيز : تم التحقق من الباقة يمكنك نشر اعلانك العقاري', 'aqargate');
+        $response['membership_data'] = [
+            'pack_featured_listings' => esc_attr( $pack_featured_listings ),
+            'pack_featured_remaining_listings' => esc_attr( $pack_featured_remaining_listings ),
+            'pack_listings' => esc_attr( $pack_listings ),
+            'remaining_listings' => esc_attr( $remaining_listings ),
+        ];
         return self::response( $response ) ;
 
     }
@@ -2030,10 +2050,13 @@ class AqarGateApi {
                 __("You don't have any favorite listings yet!", 'houzez')
             );
         }
+
+        $data_collection = isset( $_GET['data_collection'] ) ? $_GET['data_collection'] : 'list';
+
         $user = wp_get_current_user( );
         $user_id = $user->ID;
         foreach ((array)$fav_props as $prop_id) {
-            $response[] = get_prop_data( $prop_id , $_GET['data_collection'], $user_id );
+            $response[] = get_prop_data( $prop_id , $data_collection, $user_id );
         }
         wp_reset_postdata();
 
@@ -2674,8 +2697,8 @@ class AqarGateApi {
             $user_custom_picture = get_template_directory_uri().'/img/profile-avatar.png';
         }
 
-        $conversation_link = houzez_get_template_link_2('template/user_dashboard_messages.php');
-        $conversation_link = add_query_arg( $url_query, $thread_link );
+        // $conversation_link = houzez_get_template_link_2('template/user_dashboard_messages.php');
+        // $conversation_link = add_query_arg( $url_query, $thread_link );
 
         $sender_first_name  =  get_the_author_meta( 'first_name', $sender_id );
         $sender_last_name  =  get_the_author_meta( 'last_name', $sender_id );
@@ -3325,6 +3348,7 @@ class AqarGateApi {
         elseif( $user_role === "houzez_buyer"  ) { $Advertiser_character =  "مفوض"; } 
         elseif( $user_role === "houzez_seller" ) { $Advertiser_character =  "مفوض" ; }
         elseif( $user_role === "houzez_manager") { $Advertiser_character = "مفوض"; }
+        else{$Advertiser_character = 'مشترك';}
 
 
         $author_info['author_id'] = $author_id;
@@ -3584,6 +3608,8 @@ class AqarGateApi {
             return self::get_invoice( $data );
         }
 
+        $paged = isset($data['paged']) ? $data['paged'] : 1;
+
         $user = wp_get_current_user();
 
         if($user){ $userID = $user->ID; }
@@ -3607,7 +3633,6 @@ class AqarGateApi {
             foreach ( $invoices as $invoice ) {
                 $invoice_data   = houzez_get_invoice_meta( $invoice );
                 $user_info      = get_userdata($invoice_data['invoice_buyer_id']);
-                $invoice_detail = add_query_arg( 'invoice_id', $invoice, $dashboard_invoices );
                 $billing_for_if = get_post_meta( $invoice, 'HOUZEZ_invoice_for', true );
                 $invoice_status = get_post_meta( $invoice, 'invoice_payment_status', true );
                 if( $invoice_status == 0 ) {
