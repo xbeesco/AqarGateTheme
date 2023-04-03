@@ -8,17 +8,19 @@ $allowed_html_array = array(
 );
 $user_show_roles = houzez_option('user_show_roles');
 $show_hide_roles = houzez_option('show_hide_roles');
+
 ?>
 <div id="hz-register-messages" class="hz-social-messages"></div>
 <?php if( get_option('users_can_register') ) { ?>
 <form>
+    <div id="register-form">
     <div class="register-form-wrap">
 
         <?php if( houzez_option('register_first_name', 0) == 1 ) { ?>
         <div class="form-group">
             <div class="form-group-field username-field">
                 <input class="form-control" name="first_name" type="text"
-                    placeholder="<?php esc_html_e('First Name','houzez'); ?>" />
+                    placeholder="<?php esc_html_e('First Name','houzez'); ?>" required/>
             </div><!-- input-group -->
         </div><!-- form-group -->
         <?php } ?>
@@ -27,7 +29,7 @@ $show_hide_roles = houzez_option('show_hide_roles');
         <div class="form-group">
             <div class="form-group-field username-field">
                 <input class="form-control" name="last_name" type="text"
-                    placeholder="<?php esc_html_e('Last Name','houzez'); ?>" />
+                    placeholder="<?php esc_html_e('Last Name','houzez'); ?>" required/>
             </div><!-- input-group -->
         </div><!-- form-group -->
         <?php } ?>
@@ -35,7 +37,7 @@ $show_hide_roles = houzez_option('show_hide_roles');
         <div class="form-group">
             <div class="form-group-field username-field">
                 <input class="form-control" name="username" type="text"
-                    placeholder="<?php esc_html_e('Username','houzez'); ?>" />
+                    placeholder="<?php esc_html_e('Username','houzez'); ?>" required/>
             </div><!-- input-group -->
         </div><!-- form-group -->
 
@@ -43,15 +45,20 @@ $show_hide_roles = houzez_option('show_hide_roles');
         <div class="form-group">
             <div class="form-group-field email-field">
                 <input class="form-control" name="useremail" type="email"
-                    placeholder="<?php esc_html_e('Email','houzez'); ?>" />
+                    placeholder="<?php esc_html_e('Email','houzez'); ?>" required/>
             </div><!-- input-group -->
         </div><!-- form-group -->
 
         <?php if( houzez_option('register_mobile', 0) == 1 ) { ?>
         <div class="form-group">
             <div class="form-group-field phone-field">
+                <div class="input-group">
                 <input class="form-control" name="phone_number" type="number"
-                    placeholder="<?php esc_html_e('Phone','houzez'); ?>" />
+                    placeholder="<?php esc_html_e('Phone','houzez'); ?>" required/>
+                    <div class="input-group-text" style="width: 63px;">
+                        <input class="form-text-input mt-0" name="code" type="text" value="+966" style="width: 50px;padding: 0;">
+                    </div>
+                </div>
             </div><!-- input-group -->
         </div><!-- form-group -->
         <?php } ?>
@@ -124,10 +131,22 @@ $show_hide_roles = houzez_option('show_hide_roles');
 
 
     <?php get_template_part('template-parts/google', 'reCaptcha'); ?>
+    </div>
 
+    <div id="otp-form-1">
+        <div class="form-group">
+            <div class="form-group-field phone-field">
+                <input class="form-control" name="otp" type="text"
+                    placeholder="<?php esc_html_e('تأكيد رمز تفعيل الهاتف','houzez'); ?>" required/>
+                <input type="hidden" name="user" value="" id="register_user">
+                <input type="hidden" name="redirect_to" value="<?php echo esc_url(houzez_after_login_redirect()); ?>">
+
+            </div><!-- input-group -->
+        </div><!-- form-group -->
+    </div>
     <?php wp_nonce_field( 'AqarGat_register_nonce', 'AqarGat_register_security' ); ?>
     <input type="hidden" name="action" value="AqarGat_register" id="register_action">
-    <button id="houzez-register-btn" type="submit" class="btn btn-primary btn-full-width">
+    <button id="aqar-register-btn" type="submit" class="btn btn-primary btn-full-width">
         <?php get_template_part('template-parts/loader'); ?>
         <?php esc_html_e('Register','houzez');?>
     </button>

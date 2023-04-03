@@ -1,6 +1,14 @@
 <?php
+$ip = $_SERVER['REMOTE_ADDR'];
+$details = json_decode(file_get_contents("http://ipinfo.io/{$ip}"));
+$is_worldWide = false;
+if( isset( $details->country ) && $details->country != 'SA' ){
+    $is_worldWide = true;
+}
+
 global $current_user, $houzez_local;
 $userID = get_current_user_id();
+
 $username               =   get_the_author_meta( 'user_login' , $userID );
 $user_title             =   get_the_author_meta( 'fave_author_title' , $userID );
 $first_name             =   get_the_author_meta( 'first_name' , $userID );
@@ -22,6 +30,36 @@ $gdpr_agreement         =   get_the_author_meta( 'gdpr_agreement' , $userID );
 $id_number              =   get_the_author_meta( 'aqar_author_id_number' , $userID );
 $ad_number              =   get_the_author_meta( 'aqar_author_ad_number' , $userID );
 $type_id                =   get_the_author_meta( 'aqar_author_type_id' , $userID );
+$brokerage_license_number = get_the_author_meta( 'brokerage_license_number' , $userID );
+$roles = array('houzez_agent' => 'houzez_agent', 'houzez_agency' => 'houzez_agency', 'houzez_owner' => 'houzez_owner');
+$class = 'style="display:none;"';
+$readonly = '';
+$is_verify = get_user_meta( $userID, 'aqar_phone_confirm', true );
+if( $is_verify ) {
+    $readonly = 'readonly';
+}
+/*
+if( ! $is_worldWide ) {
+    $class = 'style="display:none;"';
+    foreach ( $roles as $role ) { 
+        if( in_array($role, $current_user->roles ) ) {
+            if( empty( $brokerage_license_number ) ){
+                echo 'يرجي تعبئة الخانات التالية : رقم رخصة الوساطة العقارية ';
+                echo '<br>';
+            }
+            if( empty( $id_number ) ){
+                echo 'يرجي تعبئة الخانات التالية : رقم الهوية ';
+                echo '<br>';
+            }
+            if( empty( $tax_number ) ){
+                echo 'يرجي تعبئة الخانات التالية : رقم السجل التجاري';
+                echo '<br>';
+            }
+        }
+    }
+}
+*/
+
 if( houzez_is_agency() ) {
     $title_position_lable = esc_html__('Agency Name','houzez');
     $about_lable = esc_html__( 'About Agency', 'houzez' );
@@ -29,9 +67,11 @@ if( houzez_is_agency() ) {
     $title_position_lable =  esc_html__('Title / Position','houzez');
     $about_lable = esc_html__( 'About me', 'houzez' );
 }
+
 $packages_page_link = houzez_get_template_link('template/template-packages.php'); 
  ?>
 <h2><?php esc_html_e( 'Information', 'houzez' ); ?></h2>
+
 <div class="dashboard-content-block">
     <div class="row">
         <div class="col-md-3 col-sm-12">
@@ -55,7 +95,7 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                     <div class="form-group">
                         <label for="useremail"><?php esc_html_e('Email','houzez');?></label>
                         <input type="text" name="useremail" class="form-control"
-                            value="<?php echo esc_attr( $user_email );?>">
+                            value="<?php echo esc_attr( $user_email );?>" readonly>
                     </div>
                 </div>
 
@@ -140,7 +180,7 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                         <label for="usermobile"><?php esc_html_e('Mobile','houzez');?></label>
                         <input type="text" name="usermobile" class="form-control"
                             value="<?php echo esc_attr( $user_mobile );?>"
-                            placeholder="<?php esc_html_e('Enter your mobile phone number','houzez');?>">
+                            placeholder="<?php esc_html_e('Enter your mobile phone number','houzez');?>" <?php echo $readonly; ?>>
                     </div>
                 </div>
                 <div class="col-sm-6 col-xs-12" style="display: none;">
@@ -153,19 +193,12 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                 </div>
                 <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
-                        <label for="id_number"><?php esc_html_e('رقم الهوية / أو السجل التجاري','houzez');?></label>
-                        <input type="text" name="id_number" value="<?php echo esc_attr( $id_number );?>"
-                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم الهوية','houzez');?>">
+                        <label for="tax_number"><?php esc_html_e('Tax Number','houzez');?></label>
+                        <input type="text" name="tax_number" value="<?php echo esc_attr( $tax_number );?>"
+                            class="form-control" placeholder="<?php esc_html_e('Enter your tax number','houzez');?>">
                     </div>
                 </div>
-                <div class="col-sm-6 col-xs-12">
-                    <div class="form-group">
-                        <label for="ad_number"><?php esc_html_e('رقم المعلن','houzez');?></label>
-                        <input type="text" name="ad_number" value="<?php echo esc_attr( $ad_number );?>"
-                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم المعلن','houzez');?>">
-                    </div>
-                </div>
-                <div class="col-sm-6 col-xs-12">
+                <div class="col-sm-6 col-xs-12" style="display:none;">
                     <div class="form-group">
                         <label for="type_id">
                             <?php esc_html_e('نوع المعلن','houzez');?>
@@ -180,17 +213,31 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                 </div>
                 <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
-                        <label for="tax_number"><?php esc_html_e('Tax Number','houzez');?></label>
-                        <input type="text" name="tax_number" value="<?php echo esc_attr( $tax_number );?>"
-                            class="form-control" placeholder="<?php esc_html_e('Enter your tax number','houzez');?>">
+                        <label for="id_number"><?php esc_html_e('رقم الهوية','houzez');?></label>
+                        <input type="text" name="id_number" value="<?php echo esc_attr( $id_number );?>"
+                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم الهوية','houzez');?>">
                     </div>
                 </div>
                 <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
+                        <label for="brokerage_license_number"><?php esc_html_e('رقم رخصة الوساطة العقارية','houzez');?></label>
+                        <input type="text" name="brokerage_license_number" value="<?php echo esc_attr( $brokerage_license_number );?>"
+                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم رخصة الوساطة العقارية','houzez');?>">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xs-12" style="display:none;">
+                    <div class="form-group">
+                        <label for="ad_number"><?php esc_html_e('رقم المعلن','houzez');?></label>
+                        <input type="text" name="ad_number" value="<?php echo esc_attr( $ad_number );?>"
+                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم المعلن','houzez');?>">
+                    </div>
+                </div>
+                <div class="col-sm-6 col-xs-12" style="display: none;">
+                    <div class="form-group">
                         <label for="userphone"><?php esc_html_e('Phone','houzez');?></label>
                         <input type="text" name="userphone" class="form-control"
                             value="<?php echo esc_attr( $user_phone );?>"
-                            placeholder="<?php esc_html_e('Enter your phone number','houzez');?>">
+                            placeholder="<?php esc_html_e('Enter your phone number','houzez');?>" readonly>
                     </div>
                 </div>
                 <div class="col-sm-6 col-xs-12" style="display: none;">

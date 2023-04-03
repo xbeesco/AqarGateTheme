@@ -4,8 +4,7 @@ wp_get_current_user();
 $userID  = $current_user->ID;
 check_ajax_referer( 'aqargate_profile_ajax_nonce', 'aqargate-security-profile' );
 
-$user_company = $userlangs = $latitude = $longitude = $tax_number = $user_location = $license = $user_address = $fax_number = $firstname = $lastname = $title = $about = $userphone = $usermobile = $userskype = $facebook = $twitter = $linkedin = $instagram = $pinterest = $profile_pic = $profile_pic_id = $website = $useremail = $service_areas = $specialties = $whatsapp = '';
-
+$agent_id =  $firstname =  $lastname =  $title =  $about =  $userphone =  $usermobile =  $whatsapp =  $userskype =  $facebook =  $twitter =  $linkedin =  $instagram =  $pinterest =  $youtube =  $vimeo =  $googleplus =  $profile_pic =  $profile_pic_id =  $website =  $useremail =  $license =  $tax_number =  $fax_number =  $userlangs =  $user_address =  $user_company =  $service_areas =  $specialties =  $tiktok =  $telegram = '';
 
 // Update first name
 if ( !empty( $_POST['firstname'] ) ) {
@@ -103,6 +102,13 @@ if ( !empty( $_POST['ad_number'] ) ) {
     update_user_meta( $userID, 'aqar_author_ad_number', $ad_number );
 } else {
     delete_user_meta( $userID, 'aqar_author_ad_number' );
+}
+
+if( !empty( $_POST['brokerage_license_number'] ) ){
+    $brokerage_license_number = $_POST['brokerage_license_number'];
+    update_user_meta( $userID, 'brokerage_license_number', $brokerage_license_number );
+}else{
+    delete_user_meta( $userID, 'brokerage_license_number' ); 
 }
 
 // type_id
@@ -298,15 +304,27 @@ if( !empty( $_POST['useremail'] ) ) {
         $agency_id = get_user_meta( $userID, 'fave_author_agency_id', true );
         $user_as_agent = houzez_option('user_as_agent');
 
-        if (in_array('houzez_agent', (array)$current_user->roles)) {
-            houzez_update_user_agent ( $agent_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $fax_number, $userlangs, $user_address, $user_company, $service_areas, $specialties );
+        if (in_array('houzez_agent', ( array ) $current_user->roles)) {
+            houzez_update_user_agent ( $agent_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $fax_number, $userlangs, $user_address, $user_company, $service_areas, $specialties, $tiktok, $telegram);
         } elseif(in_array('houzez_agency', (array)$current_user->roles)) {
             houzez_update_user_agency ( $agency_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $user_address, $user_location, $latitude, $longitude, $fax_number, $userlangs );
         }
 
     }
 }
- 
+
+// include_once ( AG_DIR.'classes/class-rega.php' );
+// $valid_status = REGA::is_valid_ad( $prop_id='', $userID );
+// wp_update_user( array ('ID' => $userID, 'display_name' => $_POST['display_name'] ) );
+
+// if( $valid_status === true ){
+//     update_user_meta( $userID, 'is_valid_ad', 'is_valid' );
+// }else{
+//     delete_user_meta( $userID, 'is_valid_ad' );
+//     echo json_encode( array( 'success' => true, 'msg' => $valid_status ) );
+//     die();
+// }
+
 wp_update_user( array ('ID' => $userID, 'display_name' => $_POST['display_name'] ) );
 echo json_encode( array( 'success' => true, 'msg' => esc_html__('تم تحديث الملف الشخصي', 'houzez') ) );
 die();

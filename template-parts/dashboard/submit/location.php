@@ -20,7 +20,7 @@ if (houzez_edit_property()) {
 		<div class="row">
 
 			<?php if( $hide_prop_fields['map_address'] != 1 ) { ?>
-			<div class="col-md-12 col-sm-12">
+			<div class="col-md-6 col-sm-12">
 				<?php get_template_part('template-parts/dashboard/submit/form-fields/address'); ?>
 			</div>
 			<?php } ?>
@@ -74,14 +74,14 @@ if (houzez_edit_property()) {
 				<a id="reset" href="#" style="display:none;"><?php esc_html_e('Reset Marker', 'houzez');?></a>
 			</div><!-- col-md-6 col-sm-12 -->
 			
-			<div class="col-md-6 col-sm-12 submit-lat-long mt-5">
-				<?php get_template_part('template-parts/dashboard/submit/form-fields/latitude'); ?>
-			</div>
-			<div class="col-md-6 col-sm-12 submit-lat-long mt-5">	
-				<?php get_template_part('template-parts/dashboard/submit/form-fields/longitude'); ?>
+			<div class="col-md-12 col-sm-12 submit-lat-long">
+				<div class="row">
+				  <?php get_template_part('template-parts/dashboard/submit/form-fields/latitude'); ?>
 				
+				  <?php get_template_part('template-parts/dashboard/submit/form-fields/longitude'); ?>
+				</div>
 				<?php 
-				if( $houzez_map_system == 'google' ) { 
+				if($houzez_map_system == 'google') { 
 					get_template_part('template-parts/dashboard/submit/form-fields/street-view'); 
 				}
 				?>

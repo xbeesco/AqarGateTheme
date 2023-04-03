@@ -72,7 +72,7 @@ class Router {
 			'methods'             => 'POST',
 			'args'                => 'block_renderer_args_schema',
 		)
-	);			
+	);
 
 	/**
 	 * Version of the API

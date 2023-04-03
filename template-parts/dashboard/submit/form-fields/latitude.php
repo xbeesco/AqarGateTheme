@@ -1,5 +1,5 @@
 <?php global $houzez_local; ?>
-<div class="form-group">
+<div class="form-group col-md-6 col-sm-12">
 	<label for="lat"><?php echo houzez_option( 'cl_latitude', 'Latitude' ); ?></label>
 
 	<input class="form-control" id="latitude" name="lat" value="<?php

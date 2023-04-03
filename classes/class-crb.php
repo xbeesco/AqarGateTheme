@@ -41,50 +41,6 @@ class AG_CF
             ->set_html( $export_btn )
         ) )
 
-        ->add_tab( __( 'Update Site api Cache' ), array(
-            Field::make( 'html', 'last_update_cache' )
-            ->set_html( $cache_btn )
-        ) )
-
-        ->add_tab(
-            __( 'APP Options', 'ag' ),
-            array(
-                Field::make( 'file', 'ag_logo', __( 'app logo' ) )
-	            ->set_type( array( 'image' ) )->set_value_type( 'url' ),
-                Field::make( 'file', 'ag_reload_gif', __( 'app reload gif' ) )
-	            ->set_type( array( 'image' ) )->set_value_type( 'url' ),
-                Field::make( 'file', 'ag_json', __( 'app json' ) )
-	            ->set_type( array( 'json' ) )->set_value_type( 'url' ),
-                Field::make( 'complex', 'app_available_fields', __( 'Add Property Steps' ) )
-                ->add_fields( array(
-                    Field::make( 'text', 'tilte', __( 'عنوان الصفحة' ) ),
-                    Field::make( 'multiselect', 'fields', __( 'Select Fileds To Step' ) )
-                    ->add_options( $this->prop_multi_step_fileds() )
-                ) )
-                ->set_header_template( '
-                    <% if (tilte) { %>
-                        <%- tilte %>
-                    <% } %>
-                ' ),
-                                   
-            )
-        )
-        ->add_tab( __( 'Apk Pages' ), array(
-            Field::make( 'textarea', 'ag_policy', __( 'policy page content' ) )
-            ->set_rows( 4 ),
-            Field::make( 'textarea', 'ag_adv', __( 'شروط الإعلان' ) )
-            ->set_rows( 4 ),
-            Field::make( 'complex', 'ag_how_adv', __( 'طريقة الإعلان' ) )
-            ->add_fields( array(
-                Field::make( 'text', 'tilte', __( 'عنوان العنصر' ) ),
-                Field::make( 'textarea', 'content', __( 'محتوي العنصر' ) )
-                ->set_rows( 4 ),
-            ) )->set_header_template( '
-            <% if (tilte) { %>
-                <%- tilte %>
-            <% } %>
-        ' )
-        ))
         ->add_tab( __( 'Twilio Settings' ), array(
             Field::make( 'text', 'twilio-account-sid' ),
             Field::make( 'text', 'twilio-auth-token' ),
@@ -96,16 +52,7 @@ class AG_CF
 
 
              // Display container on Book Category taxonomy
-            Container::make( 'term_meta', __( 'Icon Font' ) )
-            ->where( 'term_taxonomy', '=', 'property_type')
-            ->add_fields( array( 
-                Field::make( 'icon', 'property_type_icon', __( 'Property Icon', 'crb' ) ),
-                Field::make( 'multiselect', 'crb_overview_fields', __( 'Select app overview Fileds To Show' ) )
-                ->add_options( $this->ag_fields_array() ),
-                Field::make( 'multiselect', 'crb_details_fields', __( 'Select app details Fileds To Show' ) )
-                ->add_options( $this->ag_fields_array() )      
-            ) );
-
+            
             Container::make( 'term_meta', __( 'Icon Font' ) )
             ->where( 'term_taxonomy', '=', 'property_status' )
             ->add_fields( array( 
@@ -142,18 +89,8 @@ class AG_CF
         
         ) );
 
-        Container::make( 'term_meta', __( 'Select Fileds To Show in apk' ) )
-        ->where( 'term_taxonomy', '=', 'property_type' )
-        ->add_fields( array(
-            Field::make( 'complex', 'app_available_extra_fields', __( 'Add Property Steps for Mobile' ) )
-            ->add_fields( array(
-                Field::make( 'text', 'tilte', __( 'عنوان الصفحة' ) ),
-                Field::make( 'multiselect', 'fields', __( 'اختيار الحقول:' ) )
-                ->add_options( $this->ag_fields_array() )
-            ) )
-        
-        ) );
     }
+    
     
     /**
      * ag_fields_array
@@ -163,7 +100,7 @@ class AG_CF
     public function ag_fields_array(){
         //get Fields
         $fields_builder = array();
-        $adp_details_fields = houzez_option('adp_details_fields');
+        $adp_details_fields = isset(get_option('houzez_options')['adp_details_fields']) ? get_option('houzez_options')['adp_details_fields'] : '' ;
         if( is_array( $adp_details_fields ) ){
             $fields_builder = $adp_details_fields['enabled'];
             unset($fields_builder['placebo']);

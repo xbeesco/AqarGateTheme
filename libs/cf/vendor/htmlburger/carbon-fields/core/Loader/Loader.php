@@ -42,7 +42,7 @@ class Loader {
 
 		add_action( 'after_setup_theme', array( $this, 'load_textdomain' ), 9999 );
 		add_action( 'init', array( $this, 'trigger_fields_register' ), 0 );
-		add_action( 'rest_api_init', array( $this, 'initialize_widgets' ) );
+		// add_action( 'rest_api_init', array( $this, 'initialize_widgets' ) );
 		add_action( 'carbon_fields_fields_registered', array( $this, 'initialize_containers' ) );
 		add_action( 'admin_enqueue_scripts', array( $this, 'enqueue_media_browser' ), 0 );
 		add_action( 'admin_print_footer_scripts', array( $this, 'enqueue_assets' ), 9 );

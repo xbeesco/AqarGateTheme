@@ -56,8 +56,6 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
         <form id="submit_property_form" name="new_post" method="post" action="" enctype="multipart/form-data" class="update-frontend-property">
             <input type="hidden" name="draft_prop_id" value="<?php echo intval($edit_prop_id); ?>">
             
-            <?php ag_publish_edit_alert( $property_data->ID,  __('Submitted successfully.', 'houzez'), $property_data->post_author );  ?>
-
             <div class="validate-errors alert alert-danger houzez-hidden" role="alert">
                 <?php echo wp_kses(__( '<strong>Error!</strong> Please fill out the following required fields.', 'houzez' ), $allowed_html); ?>
                 <button type="button" class="close" data-dismiss="alert" aria-label="Close">

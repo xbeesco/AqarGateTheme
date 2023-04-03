@@ -67,6 +67,7 @@ class Jwt_Auth_Public
         $this->namespace = $this->plugin_name . '/v' . intval($this->version);
     }
 
+    
     /**
      * Add the endpoints to the API
      */
@@ -74,11 +75,13 @@ class Jwt_Auth_Public
     {
         register_rest_route($this->namespace, 'token', array(
             'methods' => 'POST',
+            // 'permission_callback' => '__return_true ',
             'callback' => array($this, 'generate_token'),
         ));
 
         register_rest_route($this->namespace, 'token/validate', array(
             'methods' => 'POST',
+            // 'permission_callback' => '__return_true ',
             'callback' => array($this, 'validate_token'),
         ));
     }

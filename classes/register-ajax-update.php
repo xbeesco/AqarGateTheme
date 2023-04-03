@@ -10,6 +10,36 @@ $term_condition    = wp_kses( $_POST['term_condition'], $allowed_html );
 $enable_password = houzez_option('enable_password');
 $response = isset($_POST["g-recaptcha-response"]) ? $_POST["g-recaptcha-response"] : '';
 
+
+/* -------------------------------------------------------------------------- */
+/*                             otp post functions                             */
+/* -------------------------------------------------------------------------- */
+if( ( isset( $_POST['otp'] ) && is_numeric( $_POST['otp'] ) )  && isset( $_POST['user'] ) && is_numeric( $_POST['user'] )  ) {
+   
+    $otp = get_user_meta( (int) $_POST['user'] , 'aqar_author_last_otp', true );
+
+        // if( (int) $_GET['otp'] === 123456 ) {
+        if( (int) $_POST['otp'] === (int) $otp ) {
+            update_user_meta(  (int) $_POST['user'] ,'aqar_phone_confirm', 1 );
+            wp_set_current_user ( intval( $_POST['user'] ) );
+            echo json_encode( array(
+                'success' => true,
+                'redirect_to' => esc_url($_POST['redirect_to']),
+                'msg' => __('تم تاكيد رقم التفعيل - يمكنك تسجيل الدخول الان' , 'aqargate') 
+            ) );
+    
+        } else {
+            echo json_encode( array(
+                'success' => false,
+                'msg' => esc_html__('الرقم المدخل غير صحيح', 'aqargate') 
+            ) );
+        }
+    wp_die();
+}
+
+/* -------------------------------------------------------------------------- */
+/*                             register functions                             */
+/* -------------------------------------------------------------------------- */
 do_action('houzez_before_register');
 
 $user_role = get_option( 'default_role' );
@@ -40,10 +70,38 @@ if( empty($lastname) && houzez_option('register_last_name', 0) == 1 ) {
 }
 
 $phone_number = isset( $_POST['phone_number'] ) ? $_POST['phone_number'] : '';
+$code = isset( $_POST['code'] ) ? $_POST['code'] : '';
+
+
 if( empty($phone_number) && houzez_option('register_mobile', 0) == 1 ) {
     echo json_encode( array( 'success' => false, 'msg' => esc_html__('Please enter your number', 'houzez-login-register') ) );
     wp_die();
 }
+
+if( empty($code) ) {
+    echo json_encode( array( 'success' => false, 'msg' => esc_html__('Please enter your country code number', 'houzez-login-register') ) );
+    wp_die();
+}
+
+if( !empty($phone_number) && houzez_option('register_mobile', 0) == 1  ) {
+    $user_query = new WP_User_Query( array( 'number' => -1 ) );
+    // User Loop
+    if ( ! empty( $user_query->results ) ) {
+        foreach ( $user_query->results as $user ) {
+            $user_id = $user->ID;
+            $fave_author_phone  = get_user_meta( $user_id, 'fave_author_phone', true);
+            $fave_author_mobile = get_user_meta( $user_id, 'fave_author_mobile', true);
+            
+            if( (int) $fave_author_phone === (int) $phone_number || (int) $fave_author_mobile === (int) $phone_number) {
+                echo json_encode( array( 'success' => false, 'msg' => esc_html__('This phone number is already registered !', 'houzez-login-register') ) );
+                wp_die();
+            }
+        }
+    }
+}
+
+
+
 $id_number = isset( $_POST['id_number'] ) ? $_POST['id_number'] : '';
 $ad_number = isset( $_POST['ad_number'] ) ? $_POST['ad_number'] : '';
 $type_id   = isset( $_POST['aqar_author_type_id'] ) ? $_POST['aqar_author_type_id'] : '';
@@ -117,20 +175,47 @@ if ( is_wp_error($user_id) ) {
 } else {
 
     wp_update_user( array( 'ID' => $user_id, 'role' => $user_role ) );
+    $otp_number = onlySendOTPSMS( $code, $phone_number );
+
+    if (!empty( $otp_number ) && is_numeric( $otp_number )) {
+        update_user_meta(  $user_id,'aqar_author_last_otp', $otp_number );
+        $massege = __( 'تم ارسال رقم التحقيق', 'aqargate' ); 
+        $api = true;
+    } else {
+        $massege = $otp_number; 
+        $api = false;
+    }
 
     if( $enable_password =='yes' ) {
-        echo json_encode( array( 'success' => true, 'msg' => esc_html__('Your account was created and you can login now!', 'houzez-login-register') ) );
+        if( $api ) {
+            echo json_encode( array( 
+                'success' => true, 
+                'msg' => esc_html__('Your account was created and you can login now!', 'houzez-login-register') . ' - ' . $massege ,
+                'user' => $user_id
+            ) );
+        }else{
+            echo json_encode( array( 
+                'success' => true, 
+                'msg' => esc_html__('Your account was created and you can login now!', 'houzez-login-register') . ' - ' . $massege ,
+            ) );
+        }
     } else {
-        echo json_encode( array( 'success' => true, 'msg' => esc_html__('An email with the generated password was sent!', 'houzez-login-register') ) );
+        echo json_encode( array( 
+            'success' => true, 
+            'msg' => esc_html__('An email with the generated password was sent!', 'houzez-login-register') . ' - ' . $massege,
+            'user' => $user_id
+        ) );
     }
 
     update_user_meta( $user_id, 'first_name', $firstname);
     update_user_meta( $user_id, 'last_name', $lastname);
 
     if( $user_role == 'houzez_agency' ) {
-        update_user_meta( $user_id, 'fave_author_phone', $phone_number);
+        update_user_meta( $user_id, 'fave_author_phone', $code.$phone_number);
+        update_user_meta( $user_id, 'fave_author_mobile', $code.$phone_number);
     } else {
-        update_user_meta( $user_id, 'fave_author_mobile', $phone_number);
+        update_user_meta( $user_id, 'fave_author_phone', $code.$phone_number);
+        update_user_meta( $user_id, 'fave_author_mobile', $code.$phone_number);
     }
 
     if( $user_role == 'houzez_agency' ) {
@@ -156,13 +241,14 @@ if ( is_wp_error($user_id) ) {
         }
 
         if ($user_role == 'houzez_agent' || $user_role == 'author') {
-            houzez_register_as_agent($usermane, $email, $user_id, $phone_number);
+            houzez_register_as_agent($usermane, $email, $user_id, $code.$phone_number);
 
         } else if ($user_role == 'houzez_agency') {
-            houzez_register_as_agency($usermane, $email, $user_id, $phone_number);
+            houzez_register_as_agency($usermane, $email, $user_id, $code.$phone_number);
         }
     }
-    houzez_wp_new_user_notification( $user_id, $user_password, $phone_number );
+    houzez_wp_new_user_notification( $user_id, $user_password, $code.$phone_number );
+    
 
     do_action('houzez_after_register', $user_id);
 }

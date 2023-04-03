@@ -28,7 +28,6 @@ if ( isset($_GET) && !empty( $_GET['edit_property'] ) ) {
     }
 	
 }
-
 if( $is_worldWide ){
 	unset($fields_builder['d987d984-d98ad988d8acd8af-d8a7d984d8b1d987d986-d8a3d988-d8a7d984d982d98ad8af-d8a7d984d8b0d98a-d98ad985d986d8b9-d8a7d988-d98ad8add8af']);
 	unset($fields_builder['d8a7d984d986d8b2d8a7d8b9d8a7d8aa-d8a7d984d982d8a7d8a6d985d8a9-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1']);
@@ -41,10 +40,6 @@ if( $is_worldWide ){
 }
 unset($fields_builder['d986d988d8b9-d8a7d984d8a5d8b9d984d8a7d986-d8a7d984d8b1d8a6d98ad8b3d98a']);
 ?>
-<div id="details" class="dashboard-content-block-wrap <?php echo esc_attr($is_multi_steps);?>">
-	<h2><?php echo houzez_option('cls_details', 'Details'); ?></h2>
-	<div id="aqar-details" class="dashboard-content-block">
-		
 		<div class="row">
 			<?php
 			$wide_field = array(
@@ -92,12 +87,3 @@ unset($fields_builder['d986d988d8b9-d8a7d984d8a5d8b9d984d8a7d986-d8a7d984d8b1d8a
 			
 			
 		</div><!-- row -->
-	</div><!-- dashboard-content-block -->
-
-	<?php if( $hide_prop_fields['additional_details'] != 1 ) { ?>
-	<h2><?php echo houzez_option('cls_additional_details', 'Additional details'); ?></h2>
-	<div class="dashboard-content-block">
-		<?php get_template_part('template-parts/dashboard/submit/form-fields/additional-details'); ?>
-	</div><!-- dashboard-content-block -->
-	<?php } ?>
-</div><!-- dashboard-content-block-wrap -->

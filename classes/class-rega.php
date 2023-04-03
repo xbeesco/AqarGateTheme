@@ -89,7 +89,7 @@ class REGA{
         }
 
         $id_number = get_user_meta( $userID, 'aqar_author_id_number', true );
-        $ad_number = get_user_meta( $userID, 'aqar_author_ad_number', true);
+        $ad_number = get_user_meta( $userID, 'brokerage_license_number', true);
         $type_id   = get_user_meta( $userID, 'aqar_author_type_id', true);
     
         $response = self::do_request(

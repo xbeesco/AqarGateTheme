@@ -31,13 +31,15 @@ function get_array_property_data(){
                 $Advertiser_category = 0;
             }
             
-            $first_name = get_the_author_meta( 'first_name' , $userID );
-            $last_name  = get_the_author_meta( 'last_name' , $userID );
-            $user_email = get_the_author_meta( 'user_email' , $userID );
+            $first_name  = get_the_author_meta( 'first_name' , $userID );
+            $last_name   = get_the_author_meta( 'last_name' , $userID );
+            $user_email  = get_the_author_meta( 'user_email' , $userID );
             $user_mobile = get_the_author_meta( 'fave_author_mobile' , $userID );
             $license     = get_the_author_meta( 'fave_author_license' , $userID );
             if( empty( $license ) ){
                 $license = 0 ;
+            } else {
+                $license = preg_replace('/\D/', '', $license);
             }
             $expiration_date = get_houzez_listing_expire($prop_id);
             // prr($expiration_date);
@@ -75,8 +77,8 @@ function get_array_property_data(){
                 $property_area = '0';
             }
             $property_label =  wp_get_post_terms( $prop_id, 'property_label', array("fields" => "all"));
-            if ( !is_wp_error($property_label) && $property_area ) {
-                $property_label = isset( $property_label[0] ) ? $property_label[0]->name : '0';
+            if (!is_wp_error($property_label) && $property_area) {
+                $property_label = isset($property_label[0]->name) ? $property_label[0]->name : '0';
             }else{
                 $property_label = '0';
             }
@@ -90,7 +92,7 @@ function get_array_property_data(){
                     $Using_For = get_term($property_type[0]->term_id, 'property_type');
                     $Using_For = $Using_For->name;
                     $property_type = get_term($property_type[0]->parent, 'property_type');
-                    $property_type = isset($property_type->name) ? $property_type->name : '0';
+                    $property_type = property_exists( $property_type, 'name' ) ? $property_type->name : '0';
                 }
                 
             }else{
@@ -113,9 +115,7 @@ function get_array_property_data(){
             $prop_size = houzez_get_listing_area_size( $prop_id );
             $Rooms_Number = get_post_meta( $prop_id, 'fave_property_rooms', true );
             $Construction_Date = get_post_meta( $prop_id, 'fave_property_year', true );
-            if( empty( $Construction_Date ) ){
-                $Construction_Date = 0 ;
-            }
+            if(empty($Construction_Date)){$Construction_Date = 0 ;}
             $Street_Width = get_post_meta($prop_id, 'fave_d8b9d8b1d8b6-d8a7d984d8b4d8a7d8b1d8b9', true); 
             if(empty($Street_Width)){$Street_Width = 0 ;}
             $Property_limits_and_lenghts = get_post_meta($prop_id, 'fave_d8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1', true);  
@@ -147,7 +147,7 @@ function get_array_property_data(){
             }
             $Authorization_number = get_post_meta($prop_id, 'fave_d8b1d982d985-d8a7d984d8aad981d988d98ad8b6', true); 
             if(empty($Authorization_number)){
-                $Authorization_number = 0 ;
+                $Authorization_number = 'مفوض كتابيا' ;
             }
             $Real_Estate_Facade = get_post_meta($prop_id, 'fave_d988d8a7d8acd987d8a9-d8a7d984d8b9d982d8a7d8b1', true); 
             if(empty($Real_Estate_Facade)){
@@ -162,7 +162,7 @@ function get_array_property_data(){
             $total_views = intval( get_post_meta($prop_id, 'houzez_total_property_views', true) );
             $user = new WP_User($userID); 
             $user_role = houzez_user_role_by_user_id($userID);
-            $Advertiser_character =  "مفوض";
+            $Advertiser_character = '';
             if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "مفوض";}
             elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "مفوض"; }
             elseif( $user_role == "houzez_owner"  ) { $Advertiser_character =  "مالك"; } 
@@ -221,7 +221,7 @@ function get_array_property_data(){
                  'Advertiser category' => $Advertiser_category,
                  'Advertiser license number' => $ad_number ,
                  'Advertiser`s email' => $user_email,
-                 'Advertiser registration number' => $license,
+                 'Advertiser registration number' => intval($license),
                  'Authorization number' => $Authorization_number,
          );
             
