@@ -65,8 +65,8 @@ if ( !empty( $_POST['title'] ) ) {
 }
 
 // Update About
-if ( !empty( $_POST['bio'] ) ) {
-    $about = wp_kses_post(  wpautop( wptexturize( $_POST['bio'] ) ) );
+if ( !empty( $_POST['about'] ) ) {
+    $about = wp_kses_post(  wpautop( wptexturize( $_POST['about'] ) ) );
     update_user_meta( $userID, 'description', $about );
 } else {
     delete_user_meta( $userID, 'description' );
@@ -111,6 +111,57 @@ if( !empty( $_POST['brokerage_license_number'] ) ){
     delete_user_meta( $userID, 'brokerage_license_number' ); 
 }
 
+if( !empty( $_POST['license_expiration_date'] ) ){
+    $license_expiration_date = $_POST['license_expiration_date'];
+    update_user_meta( $userID, 'license_expiration_date', $license_expiration_date );
+}else{
+    delete_user_meta( $userID, 'license_expiration_date' ); 
+}
+
+if( !empty( $_POST['aqar_state'] ) ){
+    $aqar_state = $_POST['aqar_state'];
+    update_user_meta( $userID, 'aqar_state', $aqar_state );
+}else{
+    delete_user_meta( $userID, 'aqar_state' ); 
+}
+if( !empty( $_POST['aqar_city'] ) ){
+    $aqar_city = $_POST['aqar_city'];
+    update_user_meta( $userID, 'aqar_city', $aqar_city );
+}else{
+    delete_user_meta( $userID, 'aqar_city' ); 
+}
+if( !empty( $_POST['aqar_area'] ) ){
+    $aqar_area = $_POST['aqar_area'];
+    update_user_meta( $userID, 'aqar_area', $aqar_area );
+}else{
+    delete_user_meta( $userID, 'aqar_area' ); 
+}
+if( !empty( $_POST['aqar_zip'] ) ){
+    $aqar_zip = $_POST['aqar_zip'];
+    update_user_meta( $userID, 'aqar_zip', $aqar_zip );
+}else{
+    delete_user_meta( $userID, 'aqar_zip' ); 
+}
+if( !empty( $_POST['aqar_building_number'] ) ){
+    $aqar_building_number = $_POST['aqar_building_number'];
+    update_user_meta( $userID, 'aqar_building_number', $aqar_building_number );
+}else{
+    delete_user_meta( $userID, 'aqar_building_number' ); 
+}
+
+if( !empty( $_POST['aqar_additional_number'] ) ){
+    $aqar_additional_number = $_POST['aqar_additional_number'];
+    update_user_meta( $userID, 'aqar_additional_number', $aqar_additional_number );
+}else{
+    delete_user_meta( $userID, 'aqar_additional_number' ); 
+}
+
+if( !empty( $_POST['aqar_Shortcode'] ) ){
+    $aqar_Shortcode = $_POST['aqar_Shortcode'];
+    update_user_meta( $userID, 'aqar_Shortcode', $aqar_Shortcode );
+}else{
+    delete_user_meta( $userID, 'aqar_Shortcode' ); 
+}
 // type_id
 if ( !empty( $_POST['aqar_author_type_id'] ) ) {
     $ad_number = sanitize_text_field( $_POST['aqar_author_type_id'] );

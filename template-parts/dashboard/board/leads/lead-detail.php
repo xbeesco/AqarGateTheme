@@ -1,4 +1,6 @@
 <?php
+global $current_user;
+$userID = $current_user->ID;
 $dashboard_crm = houzez_get_template_link_2('template/user_dashboard_crm.php');
 
 $lead_id = isset($_GET['lead-id']) ? $_GET['lead-id'] : 0;
@@ -102,6 +104,8 @@ if( isset($_GET['tab']) && $_GET['tab'] == 'enquires' ) {
 <section class="dashboard-content-wrap">
     <div class="dashboard-content-inner-wrap">
         <div class="dashboard-content-block-wrap">
+        <?php echo aqar_is_verify_msg($userID); ?>  
+            <?php if( aqar_is_verify($userID) ) { ?> 
             <?php if( $lead_data ) { ?>
             <div class="row">
                 <div class="col-md-4 col-sm-12">
@@ -159,6 +163,7 @@ if( isset($_GET['tab']) && $_GET['tab'] == 'enquires' ) {
             <div class="dashboard-content-block">
                 <?php esc_html_e("You Don't have permission to access this lead.", 'houzez'); ?>
             </div><!-- dashboard-content-block -->
+        <?php } ?>
         <?php } ?>
         </div><!-- dashboard-content-block-wrap -->
     </div><!-- dashboard-content-inner-wrap -->

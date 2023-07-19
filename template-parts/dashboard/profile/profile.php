@@ -42,8 +42,14 @@ if( !empty( $id_for_permalink ) ) {
             <form method="post">
                 <?php get_template_part('template-parts/dashboard/profile/information'); ?>
 
-                <?php /* get_template_part('template-parts/dashboard/profile/rega'); */ ?>
                 <?php get_template_part('template-parts/dashboard/profile/social'); ?>
+
+                <?php get_template_part('template-parts/dashboard/profile/about-broker'); ?>
+
+                <?php get_template_part('template-parts/dashboard/profile/broker-address'); ?>
+
+
+
                 <?php wp_nonce_field( 'aqargate_profile_ajax_nonce', 'aqargate-security-profile' ); ?>
                 <input type="hidden" name="action" value="AqarGat_ajax_update_profile">
             </form>

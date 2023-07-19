@@ -2,16 +2,15 @@
     <div class="modal-dialog" role="document">
         <div class="modal-content">
             <div class="modal-header">
-                <div class="login-register-tabs">
+                <div class="login-register-tabs 1">
                     <ul class="nav nav-tabs">
                         <li class="nav-item">
                             <a class="modal-toggle-1 nav-link" data-toggle="tab" href="#login-form-tab" role="tab"><?php esc_html_e('Login', 'houzez'); ?></a>
                         </li>
-
                         <?php if( houzez_option('header_register') ) { ?>
                         <li class="nav-item">
                             <a class="modal-toggle-2 nav-link" data-toggle="tab" href="#register-form-tab" role="tab"><?php esc_html_e('Register', 'houzez'); ?></a>
-                        </li>
+                         </li>
                         <?php } ?>
                     </ul>    
                 </div><!-- login-register-tabs -->

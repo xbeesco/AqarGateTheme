@@ -10,5 +10,5 @@
         	echo sanitize_text_field($lat[0]);
         }
     }
-    ?>" placeholder="<?php echo houzez_option('cl_latitude_plac', 'Enter address latitude'); ?>" type="text">
+    ?>" placeholder="<?php echo houzez_option('cl_latitude_plac', 'Enter address latitude'); ?>" type="text" readonly>
 </div>

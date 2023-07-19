@@ -1,6 +1,6 @@
 <?php
 $all_enquires = Houzez_Enquiry::get_enquires();
-
+$userID = get_current_user_id();
 $is_not_lead_detail = true;
 if(isset($_GET['tab']) && $_GET['tab'] == 'enquires') {
     $is_not_lead_detail = false;
@@ -15,6 +15,8 @@ $dashboard_crm = houzez_get_template_link_2('template/user_dashboard_crm.php');
 
 if(!empty($all_enquires['data']['results'])) {
 ?>
+<?php echo aqar_is_verify_msg($userID); ?>  
+            <?php if( aqar_is_verify($userID) ) { ?> 
 <div class="d-flex justify-content-between mb-3">
     <div><?php echo esc_attr($all_enquires['data']['total_records']); ?> <?php esc_html_e('Inquiries found', 'houzez'); ?></div> 
     <div>
@@ -182,4 +184,5 @@ if(!empty($all_enquires['data']['results'])) {
     <div class="dashboard-content-block">
         <?php esc_html_e("Don't have any inquiry at this moment.", 'houzez'); ?>
     </div><!-- dashboard-content-block -->
+<?php } ?>
 <?php } ?>

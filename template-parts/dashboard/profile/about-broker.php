@@ -29,48 +29,50 @@ $readonly = '';
 if( $is_valid_ad == 'is_valid' ) {
     $readonly = 'readonly';
 }
+if( houzez_is_agency() ) {
+    $title_position_lable = esc_html__('Agency Name','houzez');
+    $about_lable = esc_html__( 'About Agency', 'houzez' );
+} else {
+    $title_position_lable =  esc_html__('Title / Position','houzez');
+    $about_lable = esc_html__( 'About me', 'houzez' );
+}
 
 ?>
+<h2><?php esc_html_e('نبذه  عن الوسيط','houzez');?></h2>
 <div class="dashboard-content-block" style="background: #f1f1f1;">
     <div class="row">
-        <div class="col-md-3 col-sm-12">
-            <h2><?php esc_html_e('حسابات الهيئة السعودية للعقار','houzez');?></h2>
+        <div class="col-md-3 col-sm-12">         
+            <a href="<?php echo esc_url($packages_page_link); ?>" target="_blank" class="btn btn-warning mb-4 text-center w-100" style="display:none;">   
+                شراء عضوية
+            </a>
+            <?php get_template_part('template-parts/dashboard/profile/photo'); ?>
         </div><!-- col-md-3 col-sm-12 -->
 
         <div class="col-md-9 col-sm-12">
             <div class="row">
-                <div class="col-sm-6 col-xs-12">
+            <div class="col-sm-12 col-xs-12">
                     <div class="form-group">
-                        <label for="type_id">
-                            <?php esc_html_e('نوع المعلن','houzez');?>
-                        </label>
-                        <select name="aqar_author_type_id" data-size="5" id="aqar_author_type_id"
-                            class="selectpicker form-control" title="يرجى الاختيار" <?php echo $readonly; ?>>
-                            <option <?php echo selected($type_id, '1', false); ?> value="1">مواطن</option>
-                            <option <?php echo selected($type_id, '2', false); ?> value="2">مقيم</option>
-                            <option <?php echo selected($type_id, '3', false); ?> value="3">منشأة</option>
-                        </select>
-                    </div><!-- form-group -->
-                </div>
-                <div class="col-sm-6 col-xs-12">
-                    <div class="form-group">
-                        <label for="id_number"><?php esc_html_e('رقم الهوية','houzez');?></label>
-                        <input type="text" name="id_number" value="<?php echo esc_attr( $id_number );?>"
-                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم الهوية','houzez');?>" <?php echo $readonly; ?>>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-xs-12">
-                    <div class="form-group">
-                        <label for="brokerage_license_number"><?php esc_html_e('رقم رخصة الوساطة العقارية','houzez');?></label>
-                        <input type="text" name="brokerage_license_number" value="<?php echo esc_attr( $brokerage_license_number );?>"
-                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم رخصة الوساطة العقارية','houzez');?>" <?php echo $readonly; ?>>
-                    </div>
-                </div>
-                <div class="col-sm-6 col-xs-12">
-                    <div class="form-group">
-                        <label for="ad_number"><?php esc_html_e('رقم المعلن','houzez');?></label>
-                        <input type="text" name="ad_number" value="<?php echo esc_attr( $ad_number );?>"
-                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم المعلن','houzez');?>" <?php echo $readonly; ?>>
+                        <label for="about"><?php echo esc_attr($about_lable); ?></label>
+                        <?php
+                        $editor_id = 'about';
+                        $settings = array(
+                            // 'media_buttons' => false,
+                            // 'textarea_rows' => 6,
+                            // 'tinymce' => true,
+                            // 'quicktags' => true
+                        );
+                        $args = array(
+                            'media_buttons' => false,
+                            'tinymce'       => array(
+                                'toolbar1'      => 'bold,italic,underline,separator,alignleft,aligncenter,alignright,separator,link,unlink,undo,redo',
+                            ),
+                        );
+                        if ( !empty($description) ) {
+                            wp_editor($description, $editor_id, $args);
+                        } else {
+                            wp_editor('', $editor_id, $args);
+                        }
+                        ?>
                     </div>
                 </div>
             </div><!-- row -->

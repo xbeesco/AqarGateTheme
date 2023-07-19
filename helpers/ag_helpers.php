@@ -200,93 +200,94 @@ function get_houzez_listing_expire( $postID ) {
     }
 }
 
-// function houzez_get_agent_info_top($args, $type, $is_single = true)
-// {
-//     global $post;
+function houzez_get_agent_info_top($args, $type, $is_single = true)
+{
+    global $post;
 
-//     $view_listing = houzez_option('agent_view_listing');
-//     $agent_phone_num = houzez_option('agent_phone_num');
+    $view_listing = houzez_option('agent_view_listing');
+    $agent_phone_num = houzez_option('agent_phone_num');
 
-//     if( empty($args['agent_name']) ) {
-//         return '';
-//     }
+    if( empty($args['agent_name']) ) {
+        return '';
+    }
     
-//     $author_id = get_post_field ( 'post_author', $args['agent_id'] );
-//     if( empty( $author_id ) ){
-//         $author_id = $post->post_author;
-//     }
+    $author_id = get_post_field ( 'post_author', $args['agent_id'] );
+    if( empty( $author_id ) ){
+        $author_id = $post->post_author;
+    }
 
-//     $id_number = get_user_meta( $author_id, 'aqar_author_id_number', true );
-//     $ad_number = get_user_meta( $author_id, 'aqar_author_ad_number', true);
-//     $type_id   = get_user_meta( $author_id, 'aqar_author_type_id', true);
-//     $user_role = houzez_user_role_by_user_id( $author_id );
-//     $Advertiser_character = '';
-//     if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "مفوض";}
-//     elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "مفوض"; }
-//     elseif( $user_role == "houzez_owner"  ) { $Advertiser_character =  "مالك"; } 
-//     elseif( $user_role == "houzez_buyer"  ) { $Advertiser_character =  "مفوض"; } 
-//     elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مفوض" ; }
-//     elseif( $user_role == "houzez_manager") { $Advertiser_character = "مفوض"; }
+    $id_number = get_user_meta( $author_id, 'aqar_author_id_number', true );
+    $ad_number = get_user_meta( $author_id, 'aqar_author_ad_number', true);
+    $type_id   = get_user_meta( $author_id, 'aqar_author_type_id', true);
+    $brokerage_license_number = get_user_meta( $author_id, 'brokerage_license_number', true);
+    $user_role = houzez_user_role_by_user_id( $author_id );
+    $Advertiser_character = '';
+    if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "مفوض";}
+    elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "مفوض"; }
+    elseif( $user_role == "houzez_owner"  ) { $Advertiser_character =  "مالك"; } 
+    elseif( $user_role == "houzez_buyer"  ) { $Advertiser_character =  "مفوض"; } 
+    elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مفوض" ; }
+    elseif( $user_role == "houzez_manager") { $Advertiser_character = "مفوض"; }
 
-//     if ($type == 'for_grid_list') {
-//         return '<a href="' . $args['link'] . '">' . $args['agent_name'] . '</a> ';
+    if ($type == 'for_grid_list') {
+        return '<a href="' . $args['link'] . '">' . $args['agent_name'] . '</a> ';
 
-//     } elseif ($type == 'agent_form') {
-//         $output = '';
+    } elseif ($type == 'agent_form') {
+        $output = '';
 
-//         $output .= '<div class="agent-details cc">';
-//             $output .= '<div class="d-flex flex-column align-items-center">';
-                
-//                 $output .= '<div class="agent-image" style="margin-bottom: 20px;">';
+        $output .= '<div class="agent-details cc">';
+            $output .= '<div class="d-flex flex-column align-items-center">';
+            $output .= '<h3> معلومات الوسيط </h3>';
+                $output .= '<div class="agent-image" style="margin-bottom: 20px;">';
                     
-//                     if ( $is_single == false ) {
-//                         $output .= '<input type="checkbox" class="houzez-hidden" checked="checked" class="multiple-agent-check" name="target_email[]" value="' . $args['agent_email'] . '" >';
-//                     }
+                    if ( $is_single == false ) {
+                        $output .= '<input type="checkbox" class="houzez-hidden" checked="checked" class="multiple-agent-check" name="target_email[]" value="' . $args['agent_email'] . '" >';
+                    }
 
-//                     $output .= '<img class="rounded" src="' . $args['picture'] . '" alt="' . $args['agent_name'] . '">';
+                    $output .= '<img class="rounded" src="' . $args['picture'] . '" alt="' . $args['agent_name'] . '">';
 
-//                 $output .= '</div>';
+                $output .= '</div>';
 
-//                 $output .= '<ul class="agent-information list-unstyled">';
+                $output .= '<ul class="agent-information list-unstyled">';
 
-//                     if (!empty($args['agent_name'])) {
-//                         $output .= '<li class="agent-name">';
-//                             $output .= '<i class="houzez-icon icon-single-neutral mr-1"></i> '.$args['agent_name'];
-//                         $output .= '</li>';
-//                     }
-//                     if( $author_id  && !empty( $ad_number ) ) {
-//                         $output .= '<li class="agent-ad-number">';
-//                           $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i> رقم المعلن :  ' . esc_attr( $ad_number );
-//                         $output .= '</li>';
-//                     }
+                    if (!empty($args['agent_name'])) {
+                        $output .= '<li class="agent-name">';
+                            $output .= '<i class="houzez-icon icon-single-neutral mr-1"></i> اسم الوسيط :  '.$args['agent_name'];
+                        $output .= '</li>';
+                    }
+                    if( $author_id  && !empty( $brokerage_license_number ) ) {
+                        $output .= '<li class="agent-ad-number">';
+                          $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i> رقم رخصة فال :  ' . esc_attr( $brokerage_license_number );
+                        $output .= '</li>';
+                    }
 
-//                     if( $author_id  && !empty( $Advertiser_character ) ) {
-//                         $output .= '<li class="Advertiser_character">';
-//                           $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i>  صفه المعلن :  ' . esc_attr( $Advertiser_character );
-//                         $output .= '</li>';
-//                     }
+                    // if( $author_id  && !empty( $Advertiser_character ) ) {
+                    //     $output .= '<li class="Advertiser_character">';
+                    //       $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i>  صفه المعلن :  ' . esc_attr( $Advertiser_character );
+                    //     $output .= '</li>';
+                    // }
                     
-//                     if ( $is_single == false && !empty($args['agent_mobile'])) {
-//                         $output .= '<li class="agent-phone agent-phone-hidden">';
-//                             $output .= '<i class="houzez-icon icon-phone mr-1"></i> ' . esc_attr($args['agent_mobile']);
-//                         $output .= '</li>';
-//                     }
+                    if ( $is_single == false && !empty($args['agent_mobile'])) {
+                        $output .= '<li class="agent-phone agent-phone-hidden">';
+                            $output .= '<i class="houzez-icon icon-phone mr-1"></i> ' . esc_attr($args['agent_mobile']);
+                        $output .= '</li>';
+                    }
 
                     
-//                     if($view_listing != 0) {
-//                         $output .= '<li class="agent-link">';
-//                             $output .= '<a href="' . $args['link'] . '">' . houzez_option('spl_con_view_listings', 'View listings') . '</a>';
-//                         $output .= '</li>';
-//                     }
+                    if($view_listing != 0) {
+                        $output .= '<li class="agent-link">';
+                            $output .= '<a href="' . $args['link'] . '">' . houzez_option('spl_con_view_listings', 'View listings') . '</a>';
+                        $output .= '</li>';
+                    }
 
 
-//                 $output .= '</ul>';
-//             $output .= '</div>';
-//         $output .= '</div>';
+                $output .= '</ul>';
+            $output .= '</div>';
+        $output .= '</div>';
 
-//         return $output;
-//     }
-// }
+        return $output;
+    }
+}
 
 function houzez_get_localization() {
 
@@ -1816,14 +1817,15 @@ function load_prop_field() {
   if (isset($_POST['term'])) {
     $term_id = intval($_POST['term']);
   }
+
   if ( $term_id ) {
     $ag_fields = carbon_get_term_meta( $term_id, 'crb_available_fields' );
-    $ip = $_SERVER['REMOTE_ADDR'];
-    $details = json_decode(file_get_contents("http://ipinfo.io/{$ip}"));
-    $is_worldWide = false;
-    if( isset( $details->country ) && $details->country != 'SA' ){
-        $is_worldWide = true;
-    }
+    // $ip = $_SERVER['REMOTE_ADDR'];
+    // $details = json_decode(file_get_contents("http://ipinfo.io/{$ip}"));
+    // $is_worldWide = false;
+    // if( isset( $details->country ) && $details->country != 'SA' ){
+    //     $is_worldWide = true;
+    // }
 
     $fields_ids = [];
     if ( !empty( $ag_fields ) ) {
@@ -1831,16 +1833,6 @@ function load_prop_field() {
                 $fields_ids[] = $value;   
         } 
         $fields_builder = array_flip( $fields_ids );
-    }
-    if( $is_worldWide ){
-        unset($fields_builder['d987d984-d98ad988d8acd8af-d8a7d984d8b1d987d986-d8a3d988-d8a7d984d982d98ad8af-d8a7d984d8b0d98a-d98ad985d986d8b9-d8a7d988-d98ad8add8af']);
-        unset($fields_builder['d8a7d984d986d8b2d8a7d8b9d8a7d8aa-d8a7d984d982d8a7d8a6d985d8a9-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1']);
-        unset($fields_builder['d8a7d984d8add982d988d982-d988d8a7d984d8a7d984d8aad8b2d8a7d985d8a7d8aa-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8a7d984d8bad98ad8b1-d985']);
-        unset($fields_builder['d8a7d984d985d8b9d984d988d985d8a7d8aa-d8a7d984d8aad98a-d982d8af-d8aad8a4d8abd8b1-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8b3d988d8a7d8a1']);
-        unset($fields_builder['d8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9']);
-        unset($fields_builder['d8b1d982d985-d8b9d982d8af-d8a7d984d988d8b3d8a7d8b7d8a9-d8a7d984d8b9d982d8a7d8b1d98ad8a9']);
-        unset($fields_builder['d8b1d982d985-d8a7d984d8aad981d988d98ad8b6']);
-    
     }
     unset($fields_builder['d986d988d8b9-d8a7d984d8a5d8b9d984d8a7d986-d8a7d984d8b1d8a6d98ad8b3d98a']);
     ob_start();
@@ -1917,6 +1909,9 @@ function aqar_get_custom_add_listing_field($key)
         $field_type = $field_array['type'];
         $field_options = $field_array['fvalues'];
 
+        $disabled = 'disabled';
+        $readonly = 'readonly';
+
         $selected = '';
         if (!houzez_edit_property()) {
             $selected = 'selected=selected';
@@ -1936,7 +1931,7 @@ function aqar_get_custom_add_listing_field($key)
                     <?php echo $field_title.houzez_required_field($field_name); ?>
                 </label>
 
-                <select name="<?php echo esc_attr($field_name);?>" data-size="5" class="selectpicker <?php houzez_required_field_2($field_name); ?> form-control bs-select-hidden" title="<?php echo esc_attr($placeholder); ?>" data-live-search="false">
+                <select name="<?php echo esc_attr($field_name);?>" data-size="5" class="selectpicker <?php houzez_required_field_2($field_name); ?> form-control bs-select-hidden" title="<?php echo esc_attr($placeholder); ?>" data-live-search="false" <?php echo $disabled; ?>>
                     
                     <option <?php echo esc_attr($selected); ?> value=""><?php esc_html_e('None', 'houzez'); ?> </option>
                     <?php
@@ -1962,7 +1957,7 @@ function aqar_get_custom_add_listing_field($key)
                     <?php echo $field_title.houzez_required_field($field_name); ?>
                 </label>
 
-                <select name="<?php echo esc_attr($field_name).'[]'; ?>" data-size="5" data-actions-box="true" class="selectpicker <?php houzez_required_field_2($field_name); ?> form-control bs-select-hidden" title="<?php echo esc_attr($placeholder); ?>" data-live-search="false" data-select-all-text="<?php echo houzez_option('cl_select_all', 'Select All'); ?>" data-deselect-all-text="<?php echo houzez_option('cl_deselect_all', 'Deselect All'); ?>" data-count-selected-text="{0}" multiple>
+                <select name="<?php echo esc_attr($field_name).'[]'; ?>" data-size="5" data-actions-box="true" class="selectpicker <?php houzez_required_field_2($field_name); ?> form-control bs-select-hidden" title="<?php echo esc_attr($placeholder); ?>" data-live-search="false" data-select-all-text="<?php echo houzez_option('cl_select_all', 'Select All'); ?>" data-deselect-all-text="<?php echo houzez_option('cl_deselect_all', 'Deselect All'); ?>" data-count-selected-text="{0}" multiple <?php echo $disabled; ?>>
                     
                     <?php
                     $options = unserialize($field_options);
@@ -2050,7 +2045,7 @@ function aqar_get_custom_add_listing_field($key)
                 <input name="<?php echo esc_attr($field_name);?>" <?php houzez_required_field_2($field_name); ?> type="number" min="1" class="form-control" value="<?php
                 if (houzez_edit_property()) {
                     houzez_field_meta($field_name);
-                } ?>" placeholder="<?php echo esc_attr($placeholder);?>">
+                } ?>" placeholder="<?php echo esc_attr($placeholder);?>" <?php echo $readonly; ?>>
             </div>
 
         <?php
@@ -2060,7 +2055,7 @@ function aqar_get_custom_add_listing_field($key)
                 <label for="<?php echo esc_attr($field_name); ?>">
                     <?php echo $field_title.houzez_required_field($field_name); ?>
                 </label>
-                <textarea class="form-control" name="<?php echo esc_attr($field_name);?>" placeholder="<?php echo esc_attr($placeholder);?>" <?php houzez_required_field_2($field_name); ?>><?php
+                <textarea class="form-control" name="<?php echo esc_attr($field_name);?>" placeholder="<?php echo esc_attr($placeholder);?>" <?php houzez_required_field_2($field_name); ?> <?php echo $readonly; ?>><?php
                 if (houzez_edit_property()) {
                     houzez_field_meta($field_name);
                 } ?></textarea>
@@ -2091,7 +2086,7 @@ function aqar_get_custom_add_listing_field($key)
                 <input name="<?php echo esc_attr($field_name);?>" <?php houzez_required_field_2($field_name); ?> type="text" class="form-control" value="<?php
                 if (houzez_edit_property()) {
                     houzez_field_meta($field_name);
-                } ?>" placeholder="<?php echo esc_attr($placeholder);?>">
+                } ?>" placeholder="<?php echo esc_attr($placeholder);?>" <?php echo $readonly; ?>>
             </div>
 
         <?php
@@ -2172,12 +2167,12 @@ if( ! function_exists('csv_to_array') ){
             die('Error opening file');
         }
         
-        $headers = fgetcsv($handle, 10000, ';');
-        // $headers = preg_replace('/ ^[\pZ\p{Cc}\x{feff}]+|[\pZ\p{Cc}\x{feff}]+$/ux', '', $headers);
+        $headers = fgetcsv($handle, 10000, ',');
+        $headers = preg_replace('/ ^[\pZ\p{Cc}\x{feff}]+|[\pZ\p{Cc}\x{feff}]+$/ux', '', $headers);
         $_data = array();
         
-        while ($row = fgetcsv($handle, 10000, ';')) {
-            // $row = preg_replace('/ ^[\pZ\p{Cc}\x{feff}]+|[\pZ\p{Cc}\x{feff}]+$/ux', '', $row);
+        while ($row = fgetcsv($handle, 10000, ',')) {
+            $row = preg_replace('/ ^[\pZ\p{Cc}\x{feff}]+|[\pZ\p{Cc}\x{feff}]+$/ux', '', $row);
             if (count($row) == count($headers)) {
                 $_data[] = array_combine($headers, $row);
             }else{
@@ -2189,4 +2184,167 @@ if( ! function_exists('csv_to_array') ){
         return $_data;
       
       }
+}
+
+
+function edit_prop_input()
+{
+
+    if ( houzez_edit_property() && get_option( '_aq_show_api' ) == 'yes' ) {
+        global $property_data;
+        $property_type             = wp_get_post_terms($property_data->ID, 'property_type', array("fields" => "ids"));
+        $property_status           = wp_get_post_terms($property_data->ID, 'property_status', array("fields" => "ids"));
+        $property_label            = wp_get_post_terms($property_data->ID, 'property_label', array("fields" => "ids"));
+        $city_id                   = wp_get_post_terms( $property_data->ID,'property_city', array("fields" => "ids") );
+        $property_area             = wp_get_post_terms( $property_data->ID,'property_area', array("fields" => "ids") );
+        $property_state            = wp_get_post_terms( $property_data->ID,'property_state', array("fields" => "ids") );
+        $prop_price                = get_post_meta( $property_data->ID, 'fave_property_price', true );
+        $postal_code               = get_post_meta( $property_data->ID, 'fave_property_zip', true );
+        $prop_size                 = get_post_meta( $property_data->ID, 'fave_property_size', true );
+        $meta_1                    = get_post_meta( $property_data->ID, 'fave_d8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1', true );
+        $meta_2                    = get_post_meta( $property_data->ID, 'fave_d8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9', true );
+        $meta_3                    = get_post_meta( $property_data->ID, 'fave_d8a7d984d8add982d988d982-d988d8a7d984d8a7d984d8aad8b2d8a7d985d8a7d8aa-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8a7d984d8bad98ad8b1-d985', true );
+        $meta_4                    = get_post_meta( $property_data->ID, 'fave_d8b1d982d985-d8a7d984d985d8aed8b7d8b7', true );       
+        $meta_5                    = get_post_meta( $property_data->ID, 'fave_d8aed8afd985d8a7d8aa-d8a7d984d8b9d982d8a7d8b1', true ); 
+        $meta_6                    = get_post_meta( $property_data->ID, 'fave_d988d8a7d8acd987d8a9-d8a7d984d8b9d982d8a7d8b1', true ); 
+        $meta_7                    = get_post_meta( $property_data->ID, 'fave_d982d986d988d8a7d8aa-d8a7d984d8a5d8b9d984d8a7d986', true ); 
+        
+            
+        $fave_property_map_address = get_post_meta( $property_data->ID, 'fave_property_map_address', true );
+        $fave_property_address     = get_post_meta( $property_data->ID, 'fave_property_address', true );
+        $lat                       = get_post_meta( $property_data->ID, 'houzez_geolocation_lat', true );
+        $lng                       = get_post_meta( $property_data->ID, 'houzez_geolocation_long', true );
+        $prop_land_area             = get_post_meta( $property_data->ID, 'fave_property_land', true );
+   ?>
+    
+    <input type="hidden" name="prop_type[]" id="prop_type" value="<?php echo $property_type[0]; ?>">
+    <input type="hidden" name="prop_status[]" value="<?php echo $property_status[0]; ?>">
+    <input type="hidden" name="prop_labels[]" value="<?php echo ( isset($property_label[0]) ? $property_label[0] : '' ); ?>">
+    <input type="hidden" name="prop_price" value="<?php echo $prop_price; ?>">
+    <input type="hidden" name="postal_code" value="<?php echo $postal_code; ?>">
+
+    <input type="hidden" name="prop_size" value="<?php echo $prop_size; ?>">
+    <input type="hidden" name="d8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1" value="<?php echo $meta_1; ?>">
+    <input type="hidden" name="d8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9" value="<?php echo $meta_2; ?>">
+    <input type="hidden" name="d8a7d984d8add982d988d982-d988d8a7d984d8a7d984d8aad8b2d8a7d985d8a7d8aa-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8a7d984d8bad98ad8b1-d985" value="<?php echo $meta_3; ?>">
+    <input type="hidden" name="property_map_address" value="<?php echo $fave_property_address; ?>">
+    <input type="hidden" name="lat" value="<?php echo $lat; ?>">
+    <input type="hidden" name="lng" value="<?php echo $lng; ?>">
+    <input type="hidden" name="prop_land_area" value="<?php echo $prop_land_area; ?>">
+    <input type="hidden" name="d8b1d982d985-d8a7d984d985d8aed8b7d8b7" value="<?php echo $meta_4; ?>">
+    <input type="hidden" name="d8aed8afd985d8a7d8aa-d8a7d984d8b9d982d8a7d8b1[]" value="<?php echo $meta_5; ?>">
+    <input type="hidden" name="d988d8a7d8acd987d8a9-d8a7d984d8b9d982d8a7d8b1" value="<?php echo $meta_6; ?>">
+    <input type="hidden" name="d982d986d988d8a7d8aa-d8a7d984d8a5d8b9d984d8a7d986[]" value="<?php echo $meta_7; ?>">
+   <?php 
+    } 
+}
+
+function aqar_is_verify_msg($userID)
+{
+    if( $userID > 0 ) {
+        $is_verify = get_user_meta( $userID, 'aqar_is_verify_user', true );
+        $dash_profile_link = houzez_get_template_link_2('template/user_dashboard_profile.php');
+
+        if( ! $is_verify ) { ?>
+        <div id="errors-messages" class="validate-errors alert alert-danger" role="alert">
+            <strong id="messages">
+            غير مسموح لك الدخول الي هذه الصفحه قبل ملأ الداتا <a href="<?php echo $dash_profile_link ; ?>"> الملف الشخصي </a>
+            </strong> 
+        </div>
+        <?php }
+        return;
+    }
+}
+
+function aqar_is_verify($userID)
+{
+    if( $userID > 0 ) {
+        $is_verify = get_user_meta( $userID, 'aqar_is_verify_user', true );
+        if( $is_verify ) { 
+            return true;
+        }
+        return false;
+    }
+}
+
+
+/*-----------------------------------------------------------------------------------*/
+/*   Upload picture for user profile using ajax
+/*-----------------------------------------------------------------------------------*/
+if( !function_exists( 'aqar_user_picture_upload' ) ) {
+    function aqar_user_picture_upload( ) {
+
+        $user_id = $_REQUEST['user_id'];
+        // $verify_nonce = $_REQUEST['verify_nonce'];
+        // if ( ! wp_verify_nonce( $verify_nonce, 'aqar_upload_nonce' ) ) {
+        //     echo json_encode( array( 'success' => false , 'reason' => 'Invalid request' ) );
+        //     die;
+        // }
+
+        $aqar_user_image = $_FILES['aqar_file_data_name'];
+        $aqar_wp_handle_upload = wp_handle_upload( $aqar_user_image, array( 'test_form' => false ) );
+
+        if ( isset( $aqar_wp_handle_upload['file'] ) ) {
+            $file_name  = basename( $aqar_user_image['name'] );
+            $file_type  = wp_check_filetype( $aqar_wp_handle_upload['file'] );
+
+            $uploaded_image_details = array(
+                'guid'           => $aqar_wp_handle_upload['url'],
+                'post_mime_type' => $file_type['type'],
+                'post_title'     => preg_replace( '/\.[^.]+$/', '', basename( $file_name ) ),
+                'post_content'   => '',
+                'post_status'    => 'inherit'
+            );
+
+            $profile_attach_id      =   wp_insert_attachment( $uploaded_image_details, $aqar_wp_handle_upload['file'] );
+            $profile_attach_data    =   wp_generate_attachment_metadata( $profile_attach_id, $aqar_wp_handle_upload['file'] );
+            wp_update_attachment_metadata( $profile_attach_id, $profile_attach_data );
+
+            $thumbnail_url = wp_get_attachment_image_src( $profile_attach_id, 'large' );
+            aqar_save_user_photo($user_id, $profile_attach_id, $thumbnail_url);
+
+            echo json_encode( array(
+                'success'   => true,
+                'url' => $thumbnail_url[0],
+                'attachment_id'    => $profile_attach_id
+            ));
+            die;
+
+        } else {
+            echo json_encode( array( 'success' => false, 'reason' => 'Profile Photo upload failed!' ) );
+            die;
+        }
+
+    }
+}
+add_action( 'wp_ajax_aqar_user_picture_upload', 'aqar_user_picture_upload' );    // only for logged in user
+
+if( !function_exists('aqar_save_user_photo')) {
+    function aqar_save_user_photo($user_id, $pic_id, $thumbnail_url) {
+        
+        update_user_meta( $user_id, 'fave_author_logo_id', $pic_id );
+        update_user_meta( $user_id, 'fave_author_custom_logo', $thumbnail_url[0] );
+
+        $user_agent_id = get_the_author_meta('fave_author_agent_id', $user_id);
+        $user_agency_id = get_the_author_meta('fave_author_agency_id', $user_id);
+        
+        if( !empty($user_agent_id) && aqar_is_agent() ) {
+            update_post_meta( $user_agent_id, '_thumbnail_id', $pic_id );
+        }
+        
+        if( !empty($user_agency_id) && aqar_is_agency() ) {
+            update_post_meta( $user_agency_id, '_thumbnail_id', $pic_id );
+        }
+
+    }
+}
+
+function ag_urlsafeB64Decode($input)
+{
+    $remainder = strlen($input) % 4;
+    if ($remainder) {
+        $padlen = 4 - $remainder;
+        $input .= str_repeat('=', $padlen);
+    }
+    return base64_decode(strtr($input, '-_', '+/'));
 }

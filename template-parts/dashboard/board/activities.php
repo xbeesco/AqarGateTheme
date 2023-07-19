@@ -1,4 +1,7 @@
 <?php
+global $current_user;
+$userID = $current_user->ID;
+
 $activities = Houzez_Activities::get_activities();
 $allowed_html_array = array(
     'i' => array(
@@ -27,6 +30,8 @@ $allowed_html_array = array(
 <section class="dashboard-content-wrap">
     <div class="dashboard-content-inner-wrap">
         <div class="dashboard-content-block-wrap">
+        <?php echo aqar_is_verify_msg($userID); ?>  
+            <?php if( aqar_is_verify($userID) ) { ?> 
             <?php if(!empty($activities['data']['results'])) { ?>
             <div class="row">
                 <div class="col-md-7 col-sm-12">
@@ -212,6 +217,7 @@ $allowed_html_array = array(
                 </div>
 
 
+            <?php } ?>
             <?php } ?>
 
         </div><!-- dashboard-content-block-wrap -->

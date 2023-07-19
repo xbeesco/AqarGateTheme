@@ -3,15 +3,21 @@
 <table class="form-table">
     <tbody>
         <tr class="user-aqar_author_id_number-wrap">
-            <th><label for="aqar_author_id_number"><?php echo esc_html__('Id Number', 'houzez'); ?></label></th>
+            <th><label for="aqar_author_id_number"><?php echo esc_html__('رقم الهوية', 'houzez'); ?></label></th>
             <td><input type="text" name="aqar_author_id_number" id="aqar_author_id_number"
                     value="<?php echo get_the_author_meta('aqar_author_id_number', $user->ID); ?>" class="regular-text">
             </td>
         </tr>
         <tr>
-            <th><label for="aqar_author_ad_number"><?php echo esc_html__('AD Number', 'houzez'); ?></label></th>
-            <td><input type="text" name="aqar_author_ad_number" id="aqar_author_ad_number"
-                    value="<?php echo get_the_author_meta('aqar_author_ad_number', $user->ID); ?>" class="regular-text">
+            <th><label for="brokerage_license_number"><?php esc_html_e('رقم رخصة الوساطة العقارية ( فال )','houzez');?></label></th>
+            <td><input type="text" name="brokerage_license_number" id="brokerage_license_number"
+                    value="<?php echo get_the_author_meta('brokerage_license_number', $user->ID); ?>" class="regular-text">
+            </td>
+        </tr>
+        <tr>
+            <th><label for="license_expiration_date"><?php esc_html_e('تاريخ انتهاء الرخصة	','houzez');?></label></th>
+            <td><input type="text" name="license_expiration_date" id="license_expiration_date"
+                    value="<?php echo get_the_author_meta('license_expiration_date', $user->ID); ?>" class="regular-text">
             </td>
         </tr>
         <tr>
@@ -24,9 +30,8 @@
                 <select name="aqar_author_type_id" data-size="5" id="aqar_author_type_id"
                     class="selectpicker form-control regular-text" title="يرجى الاختيار">
                     <option value="" disabled selected>يرجى الاختيار</option>
-                    <option <?php echo selected($type_id, '1', false); ?> value="1">مواطن</option>
-                    <option <?php echo selected($type_id, '2', false); ?> value="2">مقيم</option>
-                    <option <?php echo selected($type_id, '3', false); ?> value="3">منشأة</option>
+                    <option <?php echo selected($type_id, '1', false); ?> value="1">مسوق عقاري / مالك</option>
+                            <option <?php echo selected($type_id, '2', false); ?> value="2">شركة / مؤسسة / مكتب عقاري</option>
                 </select>
             </td>
 

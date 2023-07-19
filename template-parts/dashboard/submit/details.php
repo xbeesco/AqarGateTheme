@@ -1,10 +1,10 @@
 <?php
-$ip = $_SERVER['REMOTE_ADDR'];
-$details = json_decode(file_get_contents("http://ipinfo.io/{$ip}"));
+// $ip = $_SERVER['REMOTE_ADDR'];
+// $details = json_decode(file_get_contents("http://ipinfo.io/{$ip}"));
 $is_worldWide = false;
-if( isset( $details->country ) && $details->country != 'SA' ){
-	$is_worldWide = true;
-}
+// if( isset( $details->country ) && $details->country != 'SA' ){
+// 	$is_worldWide = true;
+// }
 global $prop_meta_data, $hide_prop_fields, $required_fields, $is_multi_steps, $area_prefix_default, $area_prefix_changeable;
 $area_prefix_default = houzez_option('area_prefix_default');
 $area_prefix_changeable = houzez_option('area_prefix_changeable');
@@ -29,6 +29,16 @@ if ( isset($_GET) && !empty( $_GET['edit_property'] ) ) {
 	
 }
 
+ if( get_option( '_aq_show_api' ) == 'yes' ) {
+	// unset($fields_builder['d8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1']);
+	// unset($fields_builder['d8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9']);
+	// unset($fields_builder['d8a7d984d8add982d988d982-d988d8a7d984d8a7d984d8aad8b2d8a7d985d8a7d8aa-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8a7d984d8bad98ad8b1-d985']);
+	// unset($fields_builder['area-size']);
+	// unset($fields_builder['land-area']);
+	// unset($fields_builder['d8b1d982d985-d8a7d984d985d8aed8b7d8b7']);
+
+ }
+
 if( $is_worldWide ){
 	unset($fields_builder['d987d984-d98ad988d8acd8af-d8a7d984d8b1d987d986-d8a3d988-d8a7d984d982d98ad8af-d8a7d984d8b0d98a-d98ad985d986d8b9-d8a7d988-d98ad8add8af']);
 	unset($fields_builder['d8a7d984d986d8b2d8a7d8b9d8a7d8aa-d8a7d984d982d8a7d8a6d985d8a9-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1']);
@@ -37,7 +47,6 @@ if( $is_worldWide ){
 	unset($fields_builder['d8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9']);
 	unset($fields_builder['d8b1d982d985-d8b9d982d8af-d8a7d984d988d8b3d8a7d8b7d8a9-d8a7d984d8b9d982d8a7d8b1d98ad8a9']);
 	unset($fields_builder['d8b1d982d985-d8a7d984d8aad981d988d98ad8b6']);
-
 }
 unset($fields_builder['d986d988d8b9-d8a7d984d8a5d8b9d984d8a7d986-d8a7d984d8b1d8a6d98ad8b3d98a']);
 ?>

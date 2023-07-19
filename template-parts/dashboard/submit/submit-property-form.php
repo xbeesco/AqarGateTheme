@@ -51,6 +51,10 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
         </div>';
 
     } else { ?>
+         
+         <?php  /* --------- get property data from api ----- */
+                   do_action( 'aqar_isvalid', $userID );
+                /* ------------------------------------------ */  ?>
 
         <form autocomplete="off" id="submit_property_form" name="new_post" method="post" action="#" enctype="multipart/form-data"
               class="add-frontend-property" novalidate>
@@ -72,9 +76,8 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
             <?php
             $layout = houzez_option('property_form_sections');
             $layout = $layout['enabled'];
-
+  
             if ($layout): foreach ($layout as $key=>$value) {
-
                 switch($key) {
 
                     case 'description-price':

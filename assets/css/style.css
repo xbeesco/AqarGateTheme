@@ -1,0 +1,59 @@
+/*
+Theme Name:     Aqargate
+Theme URI:      http://houzez.co/
+Template:       houzez
+Version:        4.5.0
+*/
+
+.alert-dismissible .close {
+    right: auto !important;
+}
+.qrcode, .item-price-wrap.aqar-gate, .page-title{
+    margin: 10px;
+}
+.block-content-wrap .detail-wrap li strong {
+    white-space: normal !important;
+}
+.prop-title-mobile{
+	max-width: calc( 100% - 120px );
+}
+.qr-mobile {
+    position: absolute;
+    left: 0;
+}
+#houzez-single-listing-map{
+    height: auto !important;
+}
+.agent-image img{
+    max-width: 265px;
+}
+
+.houzez-hidden,
+#otp-form,
+#otp-form-1{
+    display: none !important;
+}
+.bootstrap-select .btn {
+    border: 1px solid !important;
+    border-color: #dce0e0 !important;
+}
+form#submit_aqar_isvalid_form {
+    max-width: 75%;
+    margin: auto;
+    background: #050333;
+    color: #fff;
+    padding: 2rem 2rem 4rem 2rem;
+    border-radius: 8px;
+}
+@media (max-width: 767.98px){
+    form#submit_aqar_isvalid_form {
+        max-width: 100%;
+    }
+}
+form#submit_aqar_isvalid_form hr {
+    border-top: 1px dashed rgb(255 255 255 / 28%);
+}
+
+#property-info-text {
+    margin: 3rem 0;
+}

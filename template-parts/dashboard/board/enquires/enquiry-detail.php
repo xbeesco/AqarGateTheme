@@ -3,7 +3,7 @@ global $enquiry, $matched_query, $lead;
 $enquiry = Houzez_Enquiry::get_enquiry($_GET['enquiry']);
 $matched_query = matched_listings($enquiry->enquiry_meta);
 $belong_to = isset($_GET['enquiry']) ? $_GET['enquiry'] : '';
-
+$userID = get_current_user_id();
 $lead = Houzez_Leads::get_lead($enquiry->lead_id);
 
 $total_matched_listings = '0';
@@ -29,6 +29,8 @@ $back_link = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
 <section class="dashboard-content-wrap">
     <div class="dashboard-content-inner-wrap">
         <div class="dashboard-content-block-wrap">
+        <?php echo aqar_is_verify_msg($userID); ?>  
+            <?php if( aqar_is_verify($userID) ) { ?> 
             <?php if( $enquiry ) { ?>
             <div class="row">
                 <div class="col-md-4 col-sm-12">
@@ -107,6 +109,7 @@ $back_link = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : '';
                 <div class="dashboard-content-block">
                     <?php esc_html_e("You Don't have permission to access this inquiry.", 'houzez'); ?>
                 </div><!-- dashboard-content-block -->
+            <?php } ?>
             <?php } ?>
         </div><!-- dashboard-content-block-wrap -->
     </div><!-- dashboard-content-inner-wrap -->

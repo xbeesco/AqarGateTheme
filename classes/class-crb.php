@@ -21,24 +21,54 @@ class AG_CF
             $current_page = admin_url("admin.php?page=".$_GET["page"]);
             $export_btn   = '<a href="' . add_query_arg('export', '1', $current_page) . '" class="button button-primary">Export</a>';
             $cache_btn    = '<a href="' . add_query_arg('ag-update', '1', $current_page) . '" class="button button-primary">Update Cache</a>';
-       
+            $state_btn    = '<a href="' . add_query_arg('ag-state', '1', $current_page) . '" class="button button-primary">اضافة داتا المناطق 1</a>';
+            $city_btn     = '<a href="' . add_query_arg('ag-city', '1', $current_page) . '" class="button button-primary">اضافة داتا المدن 2</a>';
+            $area_btn_1     = '<a href="' . add_query_arg('ag-area-1', '1', $current_page) . '" class="button button-primary">اضافة داتا الاحياء رقم 1</a>';
+            $area_btn_2     = '<a href="' . add_query_arg('ag-area-2', '1', $current_page) . '" class="button button-primary">اضافة داتا الاحياء رقم 2</a>';
+            $area_btn_3     = '<a href="' . add_query_arg('ag-area-3', '1', $current_page) . '" class="button button-primary">اضافة داتا الاحياء رقم 3</a>';
+            
         } else {
             $export_btn = '';$cache_btn = '';
+            $state_btn = $city_btn = $area_btn_1 = $area_btn_2 = $area_btn_3 = '';
         }
         Container::make( 'theme_options','ag_settings', __( 'AG Settings' ) )
         
         ->add_tab(
             __( 'REGA', 'ag' ),
             array(
-                Field::make( 'text', 'client_id', __( 'Client ID', 'ag' ) ),
-                Field::make( 'text', 'client_secret', __( 'Client Secret', 'ag' ) ),
+                Field::make( 'text', 'client_id', __( 'XIBM Client Id', 'ag' ) ),
+                Field::make( 'text', 'client_secret', __( 'XIBM Client Secret', 'ag' ) ),
+                Field::make( 'text', 'form_head', __( 'عنوان نموذج اضافة الاعلان', 'ag' ) )
+                ->set_attribute( 'placeholder', 'اكمل البينات المطلوبة للتأكد من معلومات الاعلان' ),
+                Field::make( 'checkbox', 'repeat_prop', 'السماح بتكرار الاعلان' ),
                 Field::make( 'checkbox', 'aq_show_api', 'Enable Api' ),
+                Field::make( 'checkbox', 'sandbox', 'Enable sandbox' ),
+                Field::make( 'checkbox', 'dummy', 'Enable dummy data' ),
                
             )
         )
         ->add_tab( __( 'Property Export' ), array(
             Field::make( 'html', 'crb_information_text' )
             ->set_html( $export_btn )
+        ) )
+
+        ->add_tab( __( 'نفاذ' ), array(
+            Field::make( 'text', 'nafath_apikey', __( 'Nafath Apikey', 'ag' ) ),
+            Field::make( 'checkbox', 'nafath_sandbox', 'Enable sandbox' ),
+        ) )
+        ->add_tab( __( 'اضافة داتا المناطق/الاحياء/المدن' ), array(
+            Field::make( 'html', 'crb_information_text_0' )
+            ->set_html( __( 'الاضافة تكون بالترتيب المناطق اولا ثم المدن ثم الاحياء', 'ag' )  ),
+            Field::make( 'html', 'crb_information_text_2' )
+            ->set_html( $state_btn ),
+            Field::make( 'html', 'crb_information_text_3')
+            ->set_html( $city_btn ),
+            Field::make( 'html', 'crb_information_text_4')
+            ->set_html( $area_btn_1 ),
+            Field::make( 'html', 'crb_information_text_5')
+            ->set_html( $area_btn_2 ),
+            Field::make( 'html', 'crb_information_text_6')
+            ->set_html( $area_btn_3 )
         ) )
 
         ->add_tab( __( 'Twilio Settings' ), array(
@@ -128,5 +158,4 @@ class AG_CF
         }
         return $prop_multi_step_fileds;     
     }
-    
 }

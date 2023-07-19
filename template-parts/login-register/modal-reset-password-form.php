@@ -23,4 +23,4 @@
             </div><!-- modal-body -->
         </div><!-- modal-content -->
     </div><!-- modal-dialog -->
-</div><!-- login-register-form -->
+</div><!-- login-register-form --> 

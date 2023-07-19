@@ -1,6 +1,7 @@
 <?php
 global $deal_data;
 $deals = Houzez_Deals::get_deals();
+$userID = get_current_user_id();
 
 $active_deal = $won_deal = $lost_deal = '';
 $dashboard_crm = houzez_get_template_link_2('template/user_dashboard_crm.php');
@@ -52,7 +53,8 @@ if( isset($_GET['tab']) && $_GET['tab'] == 'active' ) {
     </div><!-- dashboard-header-wrap -->
 </header><!-- .header-main-wrap -->
 <section class="dashboard-content-wrap">
-    
+     <?php echo aqar_is_verify_msg($userID); ?>  
+            <?php if( aqar_is_verify($userID) ) { ?> 
     <div class="deals-table-wrap">
 
         <ul class="nav nav-pills deals-nav-tab" role="tablist">
@@ -124,6 +126,7 @@ if( isset($_GET['tab']) && $_GET['tab'] == 'active' ) {
         </div><!-- dashboard-content-block -->
 
     </div><!-- deals-table-wrap -->
+    <?php } ?>
 </section><!-- dashboard-content-wrap -->
 <section class="dashboard-side-wrap">
     <?php get_template_part('template-parts/dashboard/side-wrap'); ?>

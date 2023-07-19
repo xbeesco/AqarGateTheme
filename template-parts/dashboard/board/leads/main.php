@@ -1,3 +1,6 @@
+<?php 
+$userID = get_current_user_id();
+?>
 <header class="header-main-wrap dashboard-header-main-wrap">
     <div class="dashboard-header-wrap">
         <div class="d-flex align-items-center">
@@ -13,7 +16,8 @@
 <section class="dashboard-content-wrap">
     <div class="dashboard-content-inner-wrap">
         <div class="dashboard-content-block-wrap">
-
+        <?php echo aqar_is_verify_msg($userID); ?>  
+            <?php if( aqar_is_verify($userID) ) { ?> 
             <?php
             $dashboard_crm = houzez_get_template_link_2('template/user_dashboard_crm.php');
         
@@ -118,7 +122,7 @@
                     <?php esc_html_e("You don't have any contact at this moment.", 'houzez'); ?> <a class="open-close-slide-panel" href="#"><strong><?php esc_html_e('Add New Lead', 'houzez'); ?></strong></a>
                 </div><!-- dashboard-content-block -->
             <?php } ?>
-        
+            <?php } ?>
 
         </div><!-- dashboard-content-block-wrap -->
     </div><!-- dashboard-content-inner-wrap -->

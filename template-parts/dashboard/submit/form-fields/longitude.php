@@ -9,5 +9,5 @@
         	echo sanitize_text_field($lng[1]);
         }
     }
-    ?>" placeholder="<?php echo houzez_option('cl_longitude_plac', 'Enter address longitude'); ?>" type="text">
+    ?>" placeholder="<?php echo houzez_option('cl_longitude_plac', 'Enter address longitude'); ?>" type="text" readonly>
 </div>

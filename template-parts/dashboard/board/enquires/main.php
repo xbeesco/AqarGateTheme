@@ -1,3 +1,12 @@
+<?php $userID = get_current_user_id(); ?>
+<section class="dashboard-content-wrap">
+    <div class="dashboard-content-inner-wrap">
+        <div class="dashboard-content-block-wrap">
+<?php echo aqar_is_verify_msg($userID); ?>  
+</div><!-- dashboard-content-block-wrap -->
+    </div><!-- dashboard-content-inner-wrap -->
+</section><!-- dashboard-content-wrap -->
+        <?php if( aqar_is_verify($userID) ) { ?> 
 <header class="header-main-wrap dashboard-header-main-wrap">
     <div class="dashboard-header-wrap">
         <div class="d-flex align-items-center">
@@ -19,6 +28,7 @@
         </div><!-- dashboard-content-block-wrap -->
     </div><!-- dashboard-content-inner-wrap -->
 </section><!-- dashboard-content-wrap -->
+<?php } ?>
 <section class="dashboard-side-wrap">
     <?php get_template_part('template-parts/dashboard/side-wrap'); ?>
 </section>

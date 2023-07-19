@@ -14,28 +14,28 @@ $response = isset($_POST["g-recaptcha-response"]) ? $_POST["g-recaptcha-response
 /* -------------------------------------------------------------------------- */
 /*                             otp post functions                             */
 /* -------------------------------------------------------------------------- */
-if( ( isset( $_POST['otp'] ) && is_numeric( $_POST['otp'] ) )  && isset( $_POST['user'] ) && is_numeric( $_POST['user'] )  ) {
+// if( ( isset( $_POST['otp'] ) && is_numeric( $_POST['otp'] ) )  && isset( $_POST['user'] ) && is_numeric( $_POST['user'] )  ) {
    
-    $otp = get_user_meta( (int) $_POST['user'] , 'aqar_author_last_otp', true );
+//     $otp = get_user_meta( (int) $_POST['user'] , 'aqar_author_last_otp', true );
 
-        // if( (int) $_GET['otp'] === 123456 ) {
-        if( (int) $_POST['otp'] === (int) $otp ) {
-            update_user_meta(  (int) $_POST['user'] ,'aqar_phone_confirm', 1 );
-            wp_set_current_user ( intval( $_POST['user'] ) );
-            echo json_encode( array(
-                'success' => true,
-                'redirect_to' => esc_url($_POST['redirect_to']),
-                'msg' => __('تم تاكيد رقم التفعيل - يمكنك تسجيل الدخول الان' , 'aqargate') 
-            ) );
+//         // if( (int) $_GET['otp'] === 123456 ) {
+//         if( (int) $_POST['otp'] === (int) $otp ) {
+//             update_user_meta(  (int) $_POST['user'] ,'aqar_phone_confirm', 1 );
+//             wp_set_current_user ( intval( $_POST['user'] ) );
+//             echo json_encode( array(
+//                 'success' => true,
+//                 'redirect_to' => esc_url($_POST['redirect_to']),
+//                 'msg' => __('تم تاكيد رقم التفعيل - يمكنك تسجيل الدخول الان' , 'aqargate') 
+//             ) );
     
-        } else {
-            echo json_encode( array(
-                'success' => false,
-                'msg' => esc_html__('الرقم المدخل غير صحيح', 'aqargate') 
-            ) );
-        }
-    wp_die();
-}
+//         } else {
+//             echo json_encode( array(
+//                 'success' => false,
+//                 'msg' => esc_html__('الرقم المدخل غير صحيح', 'aqargate') 
+//             ) );
+//         }
+//     wp_die();
+// }
 
 /* -------------------------------------------------------------------------- */
 /*                             register functions                             */
@@ -175,16 +175,16 @@ if ( is_wp_error($user_id) ) {
 } else {
 
     wp_update_user( array( 'ID' => $user_id, 'role' => $user_role ) );
-    $otp_number = onlySendOTPSMS( $code, $phone_number );
+    // $otp_number = onlySendOTPSMS( $code, $phone_number );
 
-    if (!empty( $otp_number ) && is_numeric( $otp_number )) {
-        update_user_meta(  $user_id,'aqar_author_last_otp', $otp_number );
-        $massege = __( 'تم ارسال رقم التحقيق', 'aqargate' ); 
-        $api = true;
-    } else {
-        $massege = $otp_number; 
-        $api = false;
-    }
+    // if (!empty( $otp_number ) && is_numeric( $otp_number )) {
+    //     update_user_meta(  $user_id,'aqar_author_last_otp', $otp_number );
+    //     $massege = __( 'تم ارسال رقم التحقيق', 'aqargate' ); 
+    //     $api = true;
+    // } else {
+    //     $massege = $otp_number; 
+    //     $api = false;
+    // }
 
     if( $enable_password =='yes' ) {
         if( $api ) {
