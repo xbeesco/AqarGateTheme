@@ -10,9 +10,9 @@ class NafathMoudle{
 
     public function __construct() {
 
-        $this->sandbox  = !empty( get_option( '_nafath_sandbox' )) ? get_option( '_nafath_sandbox' ) : true;
+        $this->sandbox  = !empty( get_option( '_nafath_sandbox' )) ? get_option( '_nafath_sandbox' ) : '';
         $this->dummy    = !empty( get_option( '_nafath_dummy' )) ? get_option( '_nafath_dummy' ) : false ;
-        $this->apikey   = !empty(get_option( '_nafath_apikey' )) ? get_option( '_nafath_apikey' ) : '3aeaa1f9-e7ef-4971-af5a-38405a90c808';
+        $this->apikey   = !empty(get_option( '_nafath_apikey' )) ? get_option( '_nafath_apikey' ) : '69efac5a-e1a4-4250-9af2-7aa0a78fc422';
 
         // Production api url .
         $this->BaseUrl = 'https://iamservices.semati.sa/';
@@ -56,11 +56,12 @@ class NafathMoudle{
         $response = curl_exec($curl);
         $httpcode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
         curl_close($curl);
+        
         $data = [];
 
 		$data = json_decode($response);
-        return $data;
-        
+ 
+        return $data;   
     }
     
     public function login( $nafath_id ){

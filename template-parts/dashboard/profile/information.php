@@ -39,6 +39,7 @@ if( houzez_is_agency() ){
 } 
 $brokerage_license_number = get_the_author_meta( 'brokerage_license_number' , $userID );
 $license_expiration_date = get_the_author_meta( 'license_expiration_date' , $userID );
+$license_expiration_date = !empty($license_expiration_date) ? date( "Y-m-d", strtotime( $license_expiration_date ) ) : '';
 
 
 $roles = array('houzez_agent' => 'houzez_agent', 'houzez_agency' => 'houzez_agency', 'houzez_owner' => 'houzez_owner');
@@ -142,7 +143,7 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                 <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
                         <label for="display_name"><?php esc_html_e('اسم الوسيط', 'houzez'); ?></label>
-                        <input type="text" name="display_name" class="selectpicker form-control" id="display_name" value=" <?php echo $display_name; ?>">
+                        <input type="text" name="display_name" class="selectpicker form-control" id="display_name" value=" <?php echo $display_name; ?>" readonly>
                     </div>
                 </div>
                 <div class="col-sm-6 col-xs-12">
@@ -153,16 +154,16 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                         <input type="hidden" name="aqar_author_type_id" value="<?php echo $type_id; ?>">
                         <select name="aqar_author_type_id" data-size="5" id="aqar_author_type_id"
                             class="selectpicker form-control" title="يرجى الاختيار" disabled>
-                            <option <?php echo selected($type_id, '1', false); ?> value="1">مسوق عقاري / مالك</option>
-                            <option <?php echo selected($type_id, '2', false); ?> value="2">شركة / مؤسسة / مكتب عقاري</option>
+                            <option <?php echo selected($type_id, '1', false); ?> value="1">مسوق عقاري فرد</option>
+                            <option <?php echo selected($type_id, '2', false); ?> value="2">منشأة عقارية</option>
                         </select>
-                    </div><!-- form-group -->
+                    </div><!-- form-group --> 
                 </div>
                 <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
                         <label for="id_number"><?php esc_html_e('رقم الهوية / الرقم الموحد للمنشآة','houzez');?></label>
                         <input type="text" name="id_number" value="<?php echo esc_attr( $id_number );?>"
-                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم الهوية','houzez');?>">
+                            class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم الهوية','houzez');?>" readonly>
                     </div>
                 </div>
                 <div class="col-sm-6 col-xs-12">
@@ -171,13 +172,13 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                         <input type="text" name="brokerage_license_number" value="<?php echo esc_attr( $brokerage_license_number );?>"
                             class="form-control" placeholder="<?php esc_html_e('يرجي ادخال رقم رخصة الوساطة العقارية','houzez');?>">
                     </div>
-                </div>
-                <div class="col-sm-6 col-xs-12">
+                </div> 
+                <div class="col-sm-6 col-xs-12"> 
                     <div class="form-group">
-                        <label for="license_expiration_date"><?php esc_html_e('تاريخ انتهاء الرخصة	','houzez');?></label>
-                        <input type="text" name="license_expiration_date" value="<?php echo esc_attr( $license_expiration_date );?>"
+                        <label for="license_expiration_date"><?php esc_html_e('تاريخ انتهاء الرخصة','houzez');?></label>
+                        <input type="date" name="license_expiration_date" value="<?php echo $license_expiration_date ; ?>"
                             class="form-control" placeholder="">
-                    </div>
+                    </div> 
                 </div>
                 <div class="col-sm-6 col-xs-12">
                     <div class="form-group">

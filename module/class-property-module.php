@@ -62,6 +62,9 @@ class PropertyMoudle{
             )
         );
 
+        $userID    = get_current_user_id();
+        $id_number = get_the_author_meta( 'aqar_author_id_number' , $userID );
+        $type_id   = get_the_author_meta( 'aqar_author_type_id' , $userID );
         $formTitle = get_option( '_form_head', 'اكمل البينات المطلوبة للتأكد من معلومات الاعلان' );
         if( empty($formTitle) ) {
             $formTitle = 'اكمل البينات المطلوبة للتأكد من معلومات الاعلان' ;
@@ -79,7 +82,7 @@ class PropertyMoudle{
             </style>
             <form autocomplete="off" id="submit_aqar_isvalid_form" name="new_post" method="post" action="#" enctype="multipart/form-data"
               class="add-frontend-property">
-                <div class="w-100 text-center mb-5">
+              <div class="w-100 text-center mb-5">
                     <h2><?php echo $formTitle; ?></h2>
                 </div>
                 <hr>
@@ -96,31 +99,19 @@ class PropertyMoudle{
                     </button>
                 </div>
                 <div id="isvalid-step" class="dashboard-content-block-wrap mt-5 row">
-                    <div class="form-group col-md-4 col-sm-12">
+                    <div class="form-group col-md-8 col-sm-12">
                         <label for="adLicenseNumber"> * رقم ترخيص الاعلان</label>
-                        <input class="form-control" id="adLicenseNumber" required name="adLicenseNumber" value="" placeholder="7100000031" type="text">
+                        <input class="form-control" id="adLicenseNumber" required name="adLicenseNumber" value="" placeholder="" type="text">
                     </div>
-                    <div class="form-group col-md-4 col-sm-12">
-                        <label for="advertiserId"> * رقم هوية المعلن </label>
-                        <input class="form-control" id="advertiserId" required name="advertiserId" value="" placeholder="1034758704" type="text">
+                
+                    <div class="text-center mb-2 col-md-4 col-sm-12" style="margin-top: 35px;">
+                        <button id="get_ad_info" type="submit" class="btn houzez-submit-js btn-success">
+                                <span class="btn-loader houzez-loader-js"></span>تأكيد المعلومات         
+                        </button>
                     </div>
-                    <div class="col-md-4 col-sm-12">
-                        <div class="form-group">
-                            <label for="idType"> * نوع الهوية </label>
-                            <select class="selectpicker form-group w-100" id="idType" required name="idType">
-                                <option value="1">مسوق عقاري / مالك</option>
-                                <option value="2">شركة / مؤسسة / مكتب عقاري</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
-                <div class="w-100 text-center mb-2 mt-2">
-                    <button id="get_ad_info" type="submit" class="btn houzez-submit-js btn-success">
-                            <span class="btn-loader houzez-loader-js"></span>تأكيد المعلومات         
-                    </button>
                 </div>
 
-                <div id="property-info" class="w-100">
+                <div id="property-info" class="w-100" style="display: none;">
                     <div class="w-100 validate-success alert alert-success" id="property-info-text"></div>
                 </div>
                 <?php wp_nonce_field('aqar_isvalid_api', 'aqar_isvalid_api'); ?>
@@ -219,6 +210,7 @@ class PropertyMoudle{
                                 currnt.find('.houzez-loader-js').addClass('loader-show');
                                 $Message.addClass('houzez-hidden');
                                 $success_messages.addClass('houzez-hidden');
+                                $("#property-info").hide();
                             },
                             complete: function(){
                                 currnt.find('.houzez-loader-js').removeClass('loader-show');
@@ -227,6 +219,7 @@ class PropertyMoudle{
                                 if( response.success ) {
                                     $('#check_aqar_isvalid').removeClass('houzez-hidden');
                                     $('#check_aqar_isvalid').prop('disabled', false);
+                                    $("#property-info").show();
                                     $('html, body').animate({
                                         scrollTop: $("#property-info-text").offset().top
                                     }, 1000);
@@ -253,21 +246,13 @@ class PropertyMoudle{
                                 adLicenseNumber:{
                                     required: true,
                                     minlength: 4,
-                                },
-                                advertiserId:{
-                                    required: true,
-                                    minlength: 4,
-                                },
+                                }
                             },
                             messages:{
                                 adLicenseNumber:{
                                     required: " *  رقم ترخيص الاعلان مطلوب",
                                     minlength: "يجب ألا يقل رقم ترخيص الإعلان عن 5 أرقام",
-                                },
-                                advertiserId:{
-                                    required: " *  رقم هوية المعلن مطلوب",
-                                    minlength: "يجب ألا يقل رقم هوية المعلن عن 5 أرقام",
-                                },
+                                }
                             }
                         });
                 }
@@ -298,16 +283,16 @@ class PropertyMoudle{
             wp_die();
         }
 
-        if ( empty( $advertiserId ) ) {
-            $ajax_response = array( 'success' => false , 'reason' => esc_html__( ' رقم هوية المعلن  مطلوب', 'houzez' ) );
-            echo wp_send_json( $ajax_response );
-            wp_die();
-        }
+        // if ( empty( $advertiserId ) ) {
+        //     $ajax_response = array( 'success' => false , 'reason' => esc_html__( ' رقم هوية المعلن  مطلوب', 'houzez' ) );
+        //     echo wp_send_json( $ajax_response );
+        //     wp_die();
+        // }
 
         require_once ( AG_DIR . 'module/class-rega-module.php' );
         $RegaMoudle = new RegaMoudle();
 
-        $response = $RegaMoudle->AdvertisementValidator($adLicenseNumber, $advertiserId, $idType);
+        $response = $RegaMoudle->AdvertisementValidator($adLicenseNumber);
         $response = json_decode( $response );
 
         if( $response->Body->result->isValid == true ){
@@ -376,17 +361,12 @@ class PropertyMoudle{
             wp_die();
         }
 
-        if ( empty( $advertiserId ) ) {
-            $ajax_response = array( 'success' => false , 'reason' => esc_html__( ' رقم هوية المعلن  مطلوب', 'houzez' ) );
-            echo wp_send_json( $ajax_response );
-            wp_die();
-        }
 
         require_once ( AG_DIR . 'module/class-rega-module.php' );
 
         $RegaMoudle = new RegaMoudle();
 
-        $response = $RegaMoudle->AdvertisementValidator( $adLicenseNumber, $advertiserId, $idType );
+        $response = $RegaMoudle->AdvertisementValidator( $adLicenseNumber );
         $response = json_decode( $response );
         
         // الكلمة هنا موجودة
@@ -494,11 +474,12 @@ class PropertyMoudle{
         $new_property = [];
         $new_property['post_type'] = 'property';
         $new_property['post_author'] = $userID;
-        // Title
-        if( isset( $data->adLicenseNumber ) ) {
-            $new_property['post_title'] = sanitize_text_field( $data->deedNumber );
-        }
 
+        // Title (the post_title could be empty if you use post_name instead);
+        $new_property['post_title'] = '';
+        
+        // $new_property['post_name'] = isset($data->deedNumber) ? 'property-' . $data->deedNumber : 'new-property';
+ 
         if( houzez_is_admin() ) {
             $new_property['post_status'] = 'draft';
         } else {
@@ -517,10 +498,15 @@ class PropertyMoudle{
             }
         }
 
+
             /*
-             * Filter submission arguments before insert into database.
-             */
+            * Filter submission arguments before insert into database.
+            */
+            
             $new_property = apply_filters( 'houzez_before_submit_property', $new_property );
+
+            add_filter( 'wp_insert_post_empty_content', '__return_false' );
+
             $prop_id = wp_insert_post( $new_property );
 
             if( $prop_id > 0 ) {
@@ -529,7 +515,7 @@ class PropertyMoudle{
                     houzez_update_package_listings( $userID );
                 }
             }
-
+  
             // Add price post meta
             if( isset( $data->propertyPrice ) ) {
                 update_post_meta( $prop_id, 'fave_property_price', $data->propertyPrice  );
@@ -556,17 +542,7 @@ class PropertyMoudle{
                 update_post_meta( $prop_id, 'fave_property_zip', $data->location->postalCode );
             }
 
-            // Add property city
-            if( isset( $data->location->city ) ) {
-                $property_city = $data->location->city;
-                $city_id = wp_set_object_terms( $prop_id, $property_city, 'property_city' );
-
-                $houzez_meta = array();
-                $houzez_meta['parent_state'] = isset( $data->location->region ) ? $data->location->region : '';
-                if( !empty( $city_id) && isset( $data->location->region ) ) {
-                    update_option('_houzez_property_city_' . $city_id[0], $houzez_meta);
-                }
-            }
+            
 
             if( isset($data->streetWidth) ) {
                 update_post_meta( $prop_id, 'fave_d8b9d8b1d8b6-d8a7d984d8b4d8a7d8b1d8b9', $data->streetWidth );
@@ -583,29 +559,46 @@ class PropertyMoudle{
                 update_post_meta( $prop_id, 'fave_property_rooms', $data->numberOfRooms );
             }
 
-            
-            // Add property area
-            if( isset( $data->location->district ) ) {
-                $property_area = sanitize_text_field( $data->location->district );
-                $area_id = wp_set_object_terms( $prop_id, $property_area, 'property_area' );
-
-                $houzez_meta = array();
-                $houzez_meta['parent_city'] = isset( $data->location->city ) ? $data->location->city : '';
-                if( !empty( $area_id) && isset( $data->location->city ) ) {
-                    update_option('_houzez_property_area_' . $area_id[0], $houzez_meta);
-                }
-            }
-
+            $state_id = [];
             // Add property state
             if( isset( $data->location->region ) ) {
                 $property_state = $data->location->region;
                 $state_id = wp_set_object_terms( $prop_id, $property_state, 'property_state' );
             }
 
-            //prop_labels
-            if( isset( $data->propertyUsages ) ) {
-                wp_set_object_terms( $prop_id, $data->propertyUsages, 'property_label' );
+            $city_id = [];
+            // Add property city
+            if( isset( $data->location->city ) ) {
+                $property_city = $data->location->city;
+                $city_id = wp_set_object_terms( $prop_id, $property_city, 'property_city' );
+                $term_object = get_term( $state_id[0] );
+                $parent_state = $term_object->slug;
+                $houzez_meta = array();
+                $houzez_meta['parent_state'] = $parent_state;
+                if( !empty( $city_id) && !empty($houzez_meta['parent_state'])  ) {
+                    update_option('_houzez_property_city_' . $city_id[0], $houzez_meta);
+                }
             }
+  
+
+            $area_id = [];
+            // Add property area
+            if( isset( $data->location->district ) ) {
+                $property_area = sanitize_text_field( $data->location->district );
+                $area_id = wp_set_object_terms( $prop_id, $property_area, 'property_area' );
+                $term_object = get_term( $city_id[0] );
+                $parent_city = $term_object->slug;
+                $houzez_meta = array();
+                $houzez_meta['parent_city'] = $parent_city;
+                if( !empty( $area_id) && !empty($houzez_meta['parent_city'])  ) {
+                    update_option('_houzez_property_area_' . $area_id[0], $houzez_meta);
+                }
+            }
+
+            
+
+            
+           
 
             
             //prop_size 
@@ -661,10 +654,10 @@ class PropertyMoudle{
             update_post_meta( $prop_id, 'advertiserId', $data->advertiserId );
             update_post_meta( $prop_id, 'adLicenseNumber', $data->adLicenseNumber );
             update_post_meta( $prop_id, 'deedNumber', $data->deedNumber );
-
-            
+            update_post_meta( $prop_id, 'TitleDeed', $data->deedNumber ); 
+ 
             /*---------------------------------------------------------------------------------*
-            * Save expiration meta
+            * Save expiration meta 
             *----------------------------------------------------------------------------------*/
             update_post_meta( $prop_id, 'creationDate', $data->creationDate );
             update_post_meta( $prop_id, 'endDate', $data->endDate );
@@ -707,6 +700,15 @@ class PropertyMoudle{
                 if( is_array($data->channels) ) {
                     foreach( $data->channels as $channel ) {
                         update_post_meta( $prop_id, 'fave_d982d986d988d8a7d8aa-d8a7d984d8a5d8b9d984d8a7d986', $channel );
+                    }
+                }
+            }
+
+             //prop_labels
+             if( isset( $data->propertyUsages ) ) {
+                if( is_array($data->propertyUsages) ) {
+                    foreach( $data->propertyUsages as $propertyUsage ) {
+                        wp_set_object_terms( $prop_id, $propertyUsage, 'property_label' );
                     }
                 }
             }

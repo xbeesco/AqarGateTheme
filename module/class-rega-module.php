@@ -78,7 +78,12 @@ class RegaMoudle{
         
     }
     
-    public function AdvertisementValidator( $adLicenseNumber ='', $advertiserId='', $idType){
+    public function AdvertisementValidator( $adLicenseNumber =''){
+
+        $userID    = get_current_user_id();
+        $id_number = get_the_author_meta( 'aqar_author_id_number' , $userID );
+        $type_id   = get_the_author_meta( 'aqar_author_type_id' , $userID );
+
         $response = $this->do_request(
             'GET',
             'v1/brokerage/AdvertisementValidator',
@@ -86,13 +91,12 @@ class RegaMoudle{
             array(),
             [
                 'adLicenseNumber' => $adLicenseNumber,
-                'advertiserId'    => $advertiserId,
-                'idType'          => $idType,
+                'advertiserId'    => $id_number,
+                'idType'          => $type_id,
             ]
         );
 
         // $response = $this->test_response();
-
         return $response;
     }
   

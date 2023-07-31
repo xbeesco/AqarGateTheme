@@ -47,7 +47,7 @@ $website_url            =   get_the_author_meta( 'user_url' , $userID );
                         <label for="usermobile"><?php esc_html_e('Mobile','houzez');?></label>
                         <input type="text" name="usermobile" class="form-control"
                             value="<?php echo esc_attr( $user_mobile );?>"
-                            placeholder="<?php esc_html_e('Enter your mobile phone number','houzez');?>">
+                            placeholder="<?php esc_html_e('Enter your mobile phone number','houzez');?>" readonly>
                     </div>
                 </div>
                 <div class="col-sm-6 col-xs-12">

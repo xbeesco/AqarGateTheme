@@ -132,7 +132,7 @@ $show_hide_roles = houzez_option('show_hide_roles');
             </div>
             <div id="timer">60</div>
         </div>
-    </div>
+    </div> 
 </div><!-- /end /register-screen-1 -->
 <div id="register-screen-2" style="display: none;">
     <div class="modal-header-ajax">
@@ -211,8 +211,8 @@ $show_hide_roles = houzez_option('show_hide_roles');
         <div class="col-sm-6 col-xs-12">
             <div class="form-group">
                 <label for="license_expiration_date"><?php esc_html_e('تاريخ انتهاء الرخصة	','houzez');?></label>
-                <input type="text" name="license_expiration_date" value=""
-                    class="form-control" placeholder="">
+                <input type="date" name="license_expiration_date" value=""
+                    class="form-control" placeholder=""> 
             </div>
         </div>
     </div><!-- login-form-wrap -->

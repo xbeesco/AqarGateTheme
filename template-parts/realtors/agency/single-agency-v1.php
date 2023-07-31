@@ -239,7 +239,7 @@ if( houzez_option( 'agency_sidebar', 0 ) == 0 ) {
                         <?php get_template_part('template-parts/realtors/agency/address'); ?>
                     </div>
 
-                    <div class="agent-profile-content">
+                    <div class="agent-profile-content" style="display: none;">
                         <ul class="list-unstyled">
                             <?php get_template_part('template-parts/realtors/agency/license'); ?>
                             <?php get_template_part('template-parts/realtors/agency/tax-number'); ?>

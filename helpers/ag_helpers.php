@@ -2348,3 +2348,12 @@ function ag_urlsafeB64Decode($input)
     }
     return base64_decode(strtr($input, '-_', '+/'));
 }
+
+add_filter('pre_post_title', 'aqargate_mask_empty');
+function aqargate_mask_empty($value)
+{
+    if ( empty($value) ) {
+        return ' ';
+    }
+    return $value;
+}

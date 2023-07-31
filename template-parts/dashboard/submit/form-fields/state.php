@@ -8,7 +8,6 @@ if (houzez_edit_property()) {
 ?>
 <div class="form-group">
 	<label for="administrative_area_level_1"><?php echo houzez_option('cl_state', 'County/State').houzez_required_field('state'); ?></label>
-
 	<?php
 	if(houzez_option('location_dropdowns') == 'yes') { ?>
 		<select name="administrative_area_level_1" data-state="<?php echo urldecode($state); ?>" data-target="houzezThirdList" <?php houzez_required_field_2('state'); ?> id="countyState" class="houzezSelectFilter houzezSecondList selectpicker form-control bs-select-hidden" data-size="5" data-none-results-text="<?php echo houzez_option('cl_no_results_matched', 'No results matched');?> {0}" data-live-search="true" disabled>
