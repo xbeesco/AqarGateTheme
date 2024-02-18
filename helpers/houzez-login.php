@@ -330,26 +330,44 @@ function aqargate_login() {
 		return $sms_text;
 	}
 
-  
+/* -------------------------------------------------------------------------- */
+/*                                  nafathApi                                 */
+/* -------------------------------------------------------------------------- */
 add_action( 'wp_ajax_nafathApi', 'nafathApi' );
 add_action( 'wp_ajax_nopriv_nafathApi', 'nafathApi' );
-
 function nafathApi() {
+
     $id = isset($_POST['id']) ? $_POST['id'] : '';
 
+    /* --------------------- false this line for live site -------------------- */
+        $test = false; 
+        $COMPLETED = ['1000000000', '1000000446'];
+        if( in_array( $id, $COMPLETED ) ) {
+            $test = true;
+        }
+    /* ------------------------------------ . ----------------------------------- */
+
     if( empty($id) ) {
-        wp_send_json( array('success' => false) );
+        wp_send_json( array('success' => false, 'error'=> 'رقم الهوية مطلوب') );
         wp_die();
     }
 
-    
-    $nath_id = get_users('meta_value=' . $id );
-
-    $message = 'رقم الهوية مسجل مسبقا في الموقع , يمكنك تسجيل الدخول';
-    if( is_array( $nath_id ) && count( $nath_id ) > 0 ) {
-        wp_send_json( array('success' => false, 'message' => $message ) );
-        wp_die();
+    if( ! is_user_logged_in() && ! $test ){       
+        $nath_id = get_users('meta_value=' . $id );
+        $message = 'رقم الهوية مسجل مسبقا في الموقع , يمكنك تسجيل الدخول';
+        if( is_array( $nath_id ) && count( $nath_id ) > 0 ) {
+            wp_send_json( array('success' => false, 'message' => $message ) );
+            wp_die();
+        }
     }
+
+    /* ---------------------------------- Test ---------------------------------- */
+        // $trans = 'c6c5085d-13e7-4408-ad11-2afa44fe2e49';
+        // $rand  = '44';
+        // aq_send_nafath_dummy_response($transId, $id);
+        // wp_send_json( array('success' => true, 'number' => $rand, 'transId' => $trans ) );
+        // wp_die();
+   /* ------------------------------------ . ----------------------------------- */ 
 
     require_once ( AG_DIR . 'module/class-nafath-api.php' );
 
@@ -357,15 +375,6 @@ function nafathApi() {
 
     $response = $NafathMoudle->login( $id );
     
-    
-    /**----------------Test--------------------- */
-    // $trans = 'c6c5085d-13e7-4408-ad11-2afa44fe2e49';
-    // $rand  = '44';
-    // wp_send_json( array('success' => true, 'number' => $response->random, 'transId' => $trans ) );
-    // wp_die();
-    /**----------------------------------------- */
-
-
     if( isset( $response->random ) ) {
         $data['userInfo'] = [];
         $data['response'] = $response;
@@ -377,6 +386,10 @@ function nafathApi() {
        
         $NafathDB->update_nafath_callback($data);
 
+        if( $test ) {
+            aq_send_nafath_dummy_response($response->transId, $id);
+        }
+        
         wp_send_json( array('success' => true, 'number' => $response->random , 'transId' => $response->transId ) );
         wp_die();
     }else{
@@ -386,6 +399,41 @@ function nafathApi() {
 } 
 
 
+function aq_send_nafath_dummy_response($transId, $id)
+{
+    $status = 'REJECTED';
+    $COMPLETED = ['1000000000', '1000000446'];
+    if( in_array( $id, $COMPLETED ) ) {
+        $status = 'COMPLETED';
+    }
+    $curl = curl_init();
+    curl_setopt_array($curl, array(
+    CURLOPT_URL => 'https://aqargate.com/nafazcallback',
+    CURLOPT_RETURNTRANSFER => true,
+    CURLOPT_ENCODING => '',
+    CURLOPT_MAXREDIRS => 10,
+    CURLOPT_TIMEOUT => 0,
+    CURLOPT_FOLLOWLOCATION => true,
+    CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+    CURLOPT_CUSTOMREQUEST => 'POST',
+    CURLOPT_POSTFIELDS =>'{
+    "response":"eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2luZm8iOnsiaWQiOjEwMDAwMDA0NDYsImZpcnN0X25hbWUjYXIiOiLZhdit2YXYryIsImZhdGhlcl9uYW1lI2FyIjoi2LnYqNiv2KfZhNmE2YciLCJncmFuZF9uYW1lI2FyIjoi2YXYrdmF2K8iLCJmYW1pbHlfbmFtZSNhciI6Itin2YTYrdmF2LHZiiIsImZpcnN0X25hbWUjZW4iOiJNb2hhbWVkIiwiZmF0aGVyX25hbWUjZW4iOiJBYmR1bGxhaCIsImdyYW5kX25hbWUjZW4iOiJNb2hhbW1lZCIsImZhbWlseV9uYW1lI2VuIjoiQWwtQWhtYXJpIiwidHdvX25hbWVzI2FyIjoi2YXYrdmF2K8g2KfZhNit2YXYsdmKIiwidHdvX25hbWVzI2VuIjoiTW9oYW1lZCBBbC1BaG1hcmkiLCJmdWxsX25hbWUjYXIiOiLZhdit2YXYryDYudio2K_Yp9mE2YTZhyDZhdit2YXYryDYp9mE2K3Zhdix2YoiLCJmdWxsX25hbWUjZW4iOiJNb2hhbWVkIEFiZHVsbGFoIE1vaGFtbWVkIEFsLUFobWFyaSIsImdlbmRlciI6Ik0iLCJkb2IjZyI6IjIwMDEtMDEtMDEiLCJkb2IjaCI6MTQyMTEwMDYsIm5hdGlvbmFsaXR5IjoxMTMsIm5hdGlvbmFsaXR5I2FyIjoi2KfZhNmF2YXZhNmD2Kkg2KfZhNi52LHYqNmK2Kkg2KfZhNiz2LnZiNiv2YrYqSIsIm5hdGlvbmFsaXR5I2VuIjoiS2luZ2RvbSBvZiBTYXVkaSBBcmFiaWEiLCJsYW5ndWFnZSI6IkEifSwiYXVkIjoiVENDX1NQX1RFU1QiLCJpc3MiOiJodHRwczovL3d3dy5pYW0uc2EvbmFmYXRoIiwiaWF0IjoxNjkyMjUyMzgxLCJuYmYiOjE2OTIyNTIzODEsImV4cCI6MTY5MjI1NTg3Nn0.lbfJqGv7t0QDvRw5OYr-8HFcCK1oIim700iSOo2yjMKxCr40097GK6Gx78mKQNasMK_auVJuOayq7H9_p0wz_oTI8Y78gfVr6ugfcj5r8x1KUOnJaG4jujjzdHwJtYLawBCMOrGr2uQNeYt7LfYAmNw7-RGJ4Qs3rrTk8VK_P_rJILpOajgGb0ekVZthB2F_-KMerK8HExyMuA8ZKD4axsueK6a60SOYwWKQATAuPdJlYZpqldkdpo4-oGAk3N1uqy4i1qMuKlxs89PUkrpEPv1Y3vH-kDMSiQ1M_AZA7XmH-Tpd76pPq8UYsHeMUKQ5XLqlwRlUhVJuCHxf_1g",
+    "status": "'. $status .'",
+    "transId": "'.$transId.'",
+    "ServiceName": "DigitalServiceEnrollmentWithoutBio"
+    }',
+    CURLOPT_HTTPHEADER => array(
+        'Content-Type: application/json'
+    ),
+    ));
+
+    $response = curl_exec($curl);
+    curl_close($curl);
+}
+
+/* -------------------------------------------------------------------------- */
+/*                                  fetchdata                                 */
+/* -------------------------------------------------------------------------- */
 add_action( 'wp_ajax_fetchdata', 'fetchdata' );
 add_action( 'wp_ajax_nopriv_fetchdata', 'fetchdata' );
 function fetchdata()
@@ -393,6 +441,7 @@ function fetchdata()
 
     $id = isset($_POST['authorid']) ? $_POST['authorid'] : '';
     $transId = isset($_POST['transId']) ? $_POST['transId'] : '';
+    $aqar_author_type_id = isset($_POST['aqar_author_type_id']) ? $_POST['aqar_author_type_id'] : '1';
 
     if( empty($id) ) {
         wp_send_json( array('success' => false, 'message' => '' ) );
@@ -411,6 +460,7 @@ function fetchdata()
 
     if( $get_status ){
         $get_data = $NafathDB->get_nafath_data($data);
+        if( ! is_user_logged_in() ){  
             wp_send_json( array(
                 'success'    => $get_status,
                 'id'         => $id,
@@ -418,14 +468,168 @@ function fetchdata()
                 'arFirst'    => $get_data['arFirst'],
                 'arGrand'    => $get_data['arGrand'],
                 'arTwoNames' => $get_data['arTwoNames'],
+                'html'       => aqar_register_form($aqar_author_type_id),
+
             ) );
-        wp_die();
+            wp_die();
+        } else {
+            $userID = get_current_user_id();
+            update_user_meta( $userID, 'aqar_author_id_number', $id );
+            wp_update_user( array (
+                'ID' => $userID, 
+                'display_name' => $get_data['arFullName'],
+            ));
+            update_user_meta( $userID, 'display_name', $get_data['arFullName'] );
+            update_user_meta( $userID, 'aqar_author_type_id', $aqar_author_type_id);
+            update_user_meta( $userID, 'first_name', $get_data['arFirst']);
+            update_user_meta( $userID, 'last_name', $get_data['arGrand']);
+            wp_send_json( array('success' => true, 'message' => 'تم الاكتمال', 'reload' => true) );
+        }
     }else{
         wp_send_json( array('success' => false, 'message' => 'لم يتم اكنمال الربط' ) );
         wp_die();
     }
 }
 
+/* -------------------------------------------------------------------------- */
+/*                                Register form                               */
+/* -------------------------------------------------------------------------- */
+function aqar_register_form ($aqar_author_type_id){
+    $author_type = [
+        '1' => 'houzez_agent',
+        '2' => 'houzez_agency',
+        '3' => 'houzez_owner',
+        '4' => 'houzez_buyer',
+    ];
+    $author_type_name = $author_type[$aqar_author_type_id];
+    $class = 'col-md-12';
+    if( $author_type_name === 'houzez_agency' ) {
+        $class = 'col-md-6';
+    }
+    $html = '<div class="modal-header-ajax">
+                <span style="color: #bdb290;font-size: 12px;">انشاء حساب</span>
+                <h5 style="margin-bottom: 40px;">مرحبا بك عميلنا العزيز</h5>
+            </div>';
+    $html .= '<form>
+                <input type="hidden" id="first_name" name="first_name" value="">
+                <input type="hidden" id="last_name" name="last_name" value="">
+                <input type="hidden" id="role" name="role" value="">
+                <input type="hidden" id="transId" name="transId" value="">
+                <div class="register-form row">';
+
+                $html .= '<div class="form-group ' . $class . ' mb-3 col-xs-12">
+                        <div class="form-group-field username-field">
+                            <label for="title">' . __('الاسم بالكامل', 'houzez') . '</label>
+                            <input class="form-control" name="full_name" type="text"
+                                placeholder="' . __('full Name','houzez') . '" readonly />
+                        </div><!-- input-group -->
+                    </div><!-- form-group -->';
+                if( $author_type_name === 'houzez_agency' ) {
+                    $html .= '<div class="col-sm-6 col-xs-12">
+                                <div class="form-group">
+                                    <label for="title">' . __('اسم المؤسسة / الشركة', 'houzez') . '</label>
+                                    <input type="text" name="title" class="selectpicker form-control" id="title">
+                                </div>
+                            </div>';
+                }
+                $html .= '<div class="col-sm-6 col-xs-12">
+                    <div class="form-group">
+                        <label>' . __('رقم الهوية','houzez') . '</label>
+                        <input type="text" name="id_number" value="" class="form-control"
+                            placeholder="' . __('يرجي ادخال رقم الهوية','houzez') . '" readonly>
+                    </div>
+                </div>';
+
+                $html .= '<div class="form-group col-sm-6 col-xs-12 mb-3">
+                    <div class="form-group">
+                        <label for="username">' . __('Username','houzez') . '</label>
+                        <input class="form-control" name="username" type="text"
+                            placeholder="' .  __('Username','houzez') . '" />
+                    </div><!-- input-group -->
+                </div><!-- form-group -->';
+
+
+                $html .= '<div class="form-group col-sm-6 col-xs-12 mb-3">
+                    <div class="form-group">
+                        <label for="useremail">' . __('Email','houzez') . '</label>
+                        <input class="form-control" name="useremail" type="email"
+                            placeholder="' . __('Email','houzez') . '" />
+                    </div><!-- input-group -->
+                </div><!-- form-group --> ';
+
+                if( houzez_option('register_mobile', 0) == 1 ) { 
+                    $html .= '<div class="form-group col-sm-6 col-xs-12">
+                        <div class="form-group">
+                            <label for="phone_number">' . __('Phone','houzez') . '</label>
+                            <input class="form-control" name="phone_number" type="number"
+                                placeholder="' . __('Phone','houzez') . '" />
+                        </div><!-- input-group -->
+                    </div><!-- form-group --> ';
+                } 
+
+                if( houzez_option('enable_password') == 'yes' ) { 
+                    $html .= '<div class="form-group col-sm-6 col-xs-12">
+                        <div class="form-group">
+                            <label for="register_pass">' . __('Password','houzez') . '</label>
+                            <input class="form-control" name="register_pass" placeholder="' . __('Password','houzez') . '"
+                                type="password" />
+                        </div><!-- input-group -->
+                    </div><!-- form-group -->
+                    <div class="form-group col-sm-6 col-xs-12">
+                        <div class="form-group">
+                            <label for="register_pass_retype"> ' . __('Retype Password','houzez') . '</label>
+                            <input class="form-control" name="register_pass_retype"
+                                placeholder="' . __('Retype Password','houzez') . '" type="password" />
+                        </div><!-- input-group -->
+                    </div><!-- form-group --> ';
+                } 
+                if( $author_type_name === 'houzez_agency' || $author_type_name === 'houzez_agent' ) {
+                    $html .= '<div class="col-sm-6 col-xs-12">
+                        <div class="form-group">
+                            <label
+                                for="brokerage_license_number">' . __('رقم رخصة الوساطة العقارية ( فال )','houzez') . '</label>
+                            <input type="text" name="brokerage_license_number" value="" class="form-control"
+                                placeholder="' .__('يرجي ادخال رقم رخصة الوساطة العقارية','houzez') . '">
+                        </div>
+                    </div>';
+
+                    $html .= '<div class="col-sm-6 col-xs-12">
+                            <div class="form-group">
+                                <label for="license_expiration_date">' . __('تاريخ انتهاء الرخصة	','houzez') . '</label>
+                                <input type="date" name="license_expiration_date" value="" class="form-control" placeholder="">
+                            </div>
+                        </div>
+                    </div><!-- login-form-wrap -->';
+                }
+
+                $html .= '<div class="form-tools">
+                    <label class="control control--checkbox">
+                        <input name="term_condition" type="checkbox">
+                        ' . sprintf( __( 'I agree with your <a target="_blank" href="%s">Terms & Conditions</a>', 'houzez' ), 
+                        get_permalink(houzez_option('login_terms_condition') )) . '
+                        <span class="control__indicator"></span>
+                    </label>
+                </div><!-- form-tools --> ';
+
+                if(houzez_option('agent_forms_terms')) {
+                    $html .= '<div class="form-tools">
+                        <label class="control control--checkbox">
+                            <input name="privacy_policy" type="checkbox">' . houzez_option('agent_forms_terms_text') . '
+                            <span class="control__indicator"></span>
+                        </label>
+                    </div><!-- form-tools -->';
+                }
+                $html .= '' . get_template_part('template-parts/google', 'reCaptcha') . '';
+
+        $html .= '<input type="hidden" name="action" value="ag_houzez_register" id="register_action">
+                <button id="houzez-register" class="btn btn-primary btn-full-width">
+                <span class="btn-loader houzez-loader-js"></span>
+                    ' . __('Register','houzez') . '
+                </button>
+            </form>';
+    return $html;   
+    
+}
 /*-----------------------------------------------------------------------------------*/
 // Register
 /*-----------------------------------------------------------------------------------*/
@@ -433,7 +637,9 @@ add_action( 'wp_ajax_nopriv_ag_houzez_register', 'ag_houzez_register' );
 add_action( 'wp_ajax_ag_houzez_register', 'ag_houzez_register' );
 function ag_houzez_register() {
         
-        check_ajax_referer('houzez_register_nonce', 'houzez_register_security');
+        // check_ajax_referer('houzez_register_nonce', 'houzez_register_security');
+        // define( 'WP_DEBUG_DISPLAY', true );
+        // @ini_set( 'display_errors', 1 );
 
         $allowed_html = array();
 
@@ -482,14 +688,21 @@ function ag_houzez_register() {
             wp_die();
         }
 
+        $agency_name = isset( $_POST['title'] ) ? $_POST['title'] : '';
+        if( empty($agency_name) && $user_role === 'houzez_agency' ) {
+            echo json_encode( array( 'success' => false, 'msg' => esc_html__('أسم الشركة / المؤسسة مطلوب', 'houzez-login-register') ) );
+            wp_die();
+        }
+
   
         $brokerage_license_number = isset( $_POST['brokerage_license_number'] ) ? $_POST['brokerage_license_number'] : '';
-        if( empty($brokerage_license_number) ) {
+        if( empty($brokerage_license_number) && in_array($user_role, ['houzez_agent', 'houzez_agency']) ) {
             echo json_encode( array( 'success' => false, 'msg' => esc_html__('رقم رخصة الفال مطلوب', 'houzez-login-register') ) );
             wp_die();
         }
+        
         $license_expiration_date = isset( $_POST['license_expiration_date'] ) ? $_POST['license_expiration_date'] : '';
-        if( empty($license_expiration_date)  ) {
+        if( empty($license_expiration_date) && in_array($user_role, ['houzez_agent', 'houzez_agency']) ) {
             echo json_encode( array( 'success' => false, 'msg' => esc_html__('تاريخ انتهاء الرخصة مطلوب', 'houzez-login-register') ) );
             wp_die();
         }
@@ -568,6 +781,8 @@ function ag_houzez_register() {
             update_user_meta( $user_id, 'last_name', $lastname);
 
             if( $user_role == 'houzez_agency' ) {
+                update_user_meta( $user_id, 'fave_author_title', $agency_name);
+                update_user_meta( $user_id, 'aqar_display_name', $agency_name);
                 update_user_meta( $user_id, 'fave_author_phone', $phone_number);
                 update_user_meta( $user_id, 'fave_author_mobile', $phone_number);
                 update_user_meta( $user_id, 'aqar_author_type_id', 2);
@@ -576,7 +791,6 @@ function ag_houzez_register() {
                 update_user_meta( $user_id, 'fave_author_mobile', $phone_number);
                 update_user_meta( $user_id, 'fave_author_mobile', $phone_number);
                 update_user_meta( $user_id, 'aqar_author_type_id', 1);
-
             }
 
             if ( !empty( $_POST['id_number'] ) ) {
@@ -611,12 +825,13 @@ function ag_houzez_register() {
                 if( !empty($firstname) && !empty($lastname) ) {
                     $usermane = $firstname.' '.$lastname;
                 }
-
+ 
                 if ($user_role == 'houzez_agent' || $user_role == 'author') {
                     houzez_register_as_agent($usermane, $email, $user_id, $phone_number);
 
                 } else if ($user_role == 'houzez_agency') {
-                    houzez_register_as_agency($usermane, $email, $user_id, $phone_number);
+                    $agency_name = !empty($agency_name) ? $agency_name : $usermane;
+                    aq_register_as_agency($agency_name, $email, $user_id, $phone_number);
                 }
             }
             houzez_wp_new_user_notification( $user_id, $user_password, $phone_number );
@@ -624,5 +839,4 @@ function ag_houzez_register() {
             do_action('houzez_after_register', $user_id);
         }
         wp_die();
-
 }

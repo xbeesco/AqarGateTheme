@@ -214,19 +214,22 @@ function houzez_get_agent_info_top($args, $type, $is_single = true)
     $author_id = get_post_field ( 'post_author', $args['agent_id'] );
     if( empty( $author_id ) ){
         $author_id = $post->post_author;
-    }
+    } 
 
     $id_number = get_user_meta( $author_id, 'aqar_author_id_number', true );
     $ad_number = get_user_meta( $author_id, 'aqar_author_ad_number', true);
     $type_id   = get_user_meta( $author_id, 'aqar_author_type_id', true);
+
     $brokerage_license_number = get_user_meta( $author_id, 'brokerage_license_number', true);
+
     $user_role = houzez_user_role_by_user_id( $author_id );
     $Advertiser_character = '';
+
     if( $user_role == "houzez_agent"  ) { $Advertiser_character =  "مفوض";}
     elseif( $user_role == "houzez_agency" ) { $Advertiser_character =  "مفوض"; }
     elseif( $user_role == "houzez_owner"  ) { $Advertiser_character =  "مالك"; } 
     elseif( $user_role == "houzez_buyer"  ) { $Advertiser_character =  "مفوض"; } 
-    elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مفوض" ; }
+    elseif( $user_role == "houzez_seller" ) { $Advertiser_character =  "مفوض" ;}
     elseif( $user_role == "houzez_manager") { $Advertiser_character = "مفوض"; }
 
     if ($type == 'for_grid_list') {
@@ -1621,98 +1624,98 @@ function property_overview_details($options = 'crb_overview_fields', $prop_id = 
  * @param  mixed $package_id
  * @return void
  */
-function ag_free_membership_package( $userID, $package_id ) {
+// function ag_free_membership_package( $userID, $package_id ) {
 
-    $total_price = get_post_meta($package_id, 'fave_package_price', true);
-    $currency = esc_html(houzez_option('currency_symbol'));
-    $where_currency = esc_html(houzez_option('currency_position'));
-    $wire_payment_instruction = houzez_option('direct_payment_instruction');
-    $is_featured = 0;
-    $is_upgrade = 0;
-    $paypal_tax_id = '';
-    $paymentMethod = '';
-    $time = time();
-    $date = date('Y-m-d H:i:s', $time);
+//     $total_price = get_post_meta($package_id, 'fave_package_price', true);
+//     $currency = esc_html(houzez_option('currency_symbol'));
+//     $where_currency = esc_html(houzez_option('currency_position'));
+//     $wire_payment_instruction = houzez_option('direct_payment_instruction');
+//     $is_featured = 0;
+//     $is_upgrade = 0;
+//     $paypal_tax_id = '';
+//     $paymentMethod = '';
+//     $time = time();
+//     $date = date('Y-m-d H:i:s', $time);
 
-    if ($total_price != 0) {
-        if ($where_currency == 'before') {
-            $total_price = $currency . ' ' . $total_price;
-        } else {
-            $total_price = $total_price . ' ' . $currency;
-        }
-    }
+//     if ($total_price != 0) {
+//         if ($where_currency == 'before') {
+//             $total_price = $currency . ' ' . $total_price;
+//         } else {
+//             $total_price = $total_price . ' ' . $currency;
+//         }
+//     }
 
-    // insert invoice
-    $invoiceID = houzez_generate_invoice('package', 'one_time', $package_id, $date, $userID, $is_featured, $is_upgrade, $paypal_tax_id, $paymentMethod, 1);
+//     // insert invoice
+//     $invoiceID = houzez_generate_invoice('package', 'one_time', $package_id, $date, $userID, $is_featured, $is_upgrade, $paypal_tax_id, $paymentMethod, 1);
 
-    // houzez_save_user_packages_record($userID, $package_id);
-    houzez_update_membership_package($userID, $package_id);
-    update_post_meta( $invoiceID, 'invoice_payment_status', 1 );
-    update_user_meta( $userID, 'user_had_free_package', 'yes' );
+//     // houzez_save_user_packages_record($userID, $package_id);
+//     houzez_update_membership_package($userID, $package_id);
+//     update_post_meta( $invoiceID, 'invoice_payment_status', 1 );
+//     update_user_meta( $userID, 'user_had_free_package', 'yes' );
 
-    $args = array(
-        'payzaty_url' => false,
-        'order_id'    => $invoiceID,
-    );
+//     $args = array(
+//         'payzaty_url' => false,
+//         'order_id'    => $invoiceID,
+//     );
     
-    return $args;
+//     return $args;
 
-}
+// }
 
-function houzez_update_membership_package( $user_id, $package_id ) {
+// function houzez_update_membership_package( $user_id, $package_id ) {
 
-    // Get selected package listings
-    $pack_listings            =   get_post_meta( $package_id, 'fave_package_listings', true );
-    $pack_featured_listings   =   get_post_meta( $package_id, 'fave_package_featured_listings', true );
-    $pack_unlimited_listings  =   get_post_meta( $package_id, 'fave_unlimited_listings', true );
+//     // Get selected package listings
+//     $pack_listings            =   get_post_meta( $package_id, 'fave_package_listings', true );
+//     $pack_featured_listings   =   get_post_meta( $package_id, 'fave_package_featured_listings', true );
+//     $pack_unlimited_listings  =   get_post_meta( $package_id, 'fave_unlimited_listings', true );
 
-    $user_current_posted_listings           =   houzez_get_user_num_posted_listings ( $user_id ); // get user current number of posted listings ( no expired )
-    $user_current_posted_featured_listings  =   houzez_get_user_num_posted_featured_listings( $user_id ); // get user number of posted featured listings ( no expired )
-
-    
-
-    if( houzez_check_user_existing_package_status( $user_id, $package_id ) ) {
-        $new_pack_listings           =  $pack_listings - $user_current_posted_listings;
-        $new_pack_featured_listings  =  $pack_featured_listings -  $user_current_posted_featured_listings;
-    } else {
-        $new_pack_listings           =  $pack_listings;
-        $new_pack_featured_listings  =  $pack_featured_listings;
-    }
-
-    if( $new_pack_listings < 0 ) {
-        $new_pack_listings = 0;
-    }
-
-    if( $new_pack_featured_listings < 0 ||  empty($new_pack_featured_listings)) {
-        $new_pack_featured_listings = 0;
-    }
-
-    if ( $pack_unlimited_listings == 1 ) {
-        $new_pack_listings = -1 ;
-    }
-
+//     $user_current_posted_listings           =   houzez_get_user_num_posted_listings ( $user_id ); // get user current number of posted listings ( no expired )
+//     $user_current_posted_featured_listings  =   houzez_get_user_num_posted_featured_listings( $user_id ); // get user number of posted featured listings ( no expired )
 
     
 
-    update_user_meta( $user_id, 'package_listings', $new_pack_listings);
-    update_user_meta( $user_id, 'package_featured_listings', $new_pack_featured_listings);
+//     if( houzez_check_user_existing_package_status( $user_id, $package_id ) ) {
+//         $new_pack_listings           =  $pack_listings - $user_current_posted_listings;
+//         $new_pack_featured_listings  =  $pack_featured_listings -  $user_current_posted_featured_listings;
+//     } else {
+//         $new_pack_listings           =  $pack_listings;
+//         $new_pack_featured_listings  =  $pack_featured_listings;
+//     }
 
-    // Use for user who submit property without having account and membership
-    $user_submit_has_no_membership = get_the_author_meta( 'user_submit_has_no_membership', $user_id );
-    if( !empty( $user_submit_has_no_membership ) ) {
-        houzez_update_package_listings( $user_id );
-        houzez_update_property_from_draft( $user_submit_has_no_membership ); // change property status from draft to pending or publish
-        delete_user_meta( $user_id, 'user_submit_has_no_membership' );
-    }
+//     if( $new_pack_listings < 0 ) {
+//         $new_pack_listings = 0;
+//     }
+
+//     if( $new_pack_featured_listings < 0 ||  empty($new_pack_featured_listings)) {
+//         $new_pack_featured_listings = 0;
+//     }
+
+//     if ( $pack_unlimited_listings == 1 ) {
+//         $new_pack_listings = -1 ;
+//     }
 
 
-    $time = time();
-    $date = date('Y-m-d H:i:s',$time);
-    update_user_meta( $user_id, 'package_activation', $date );
-    update_user_meta( $user_id, 'package_id', $package_id );
-    update_user_meta( $user_id, 'houzez_membership_id', $package_id);
+    
 
-}
+//     update_user_meta( $user_id, 'package_listings', $new_pack_listings);
+//     update_user_meta( $user_id, 'package_featured_listings', $new_pack_featured_listings);
+
+//     // Use for user who submit property without having account and membership
+//     $user_submit_has_no_membership = get_the_author_meta( 'user_submit_has_no_membership', $user_id );
+//     if( !empty( $user_submit_has_no_membership ) ) {
+//         houzez_update_package_listings( $user_id );
+//         houzez_update_property_from_draft( $user_submit_has_no_membership ); // change property status from draft to pending or publish
+//         delete_user_meta( $user_id, 'user_submit_has_no_membership' );
+//     }
+
+
+//     $time = time();
+//     $date = date('Y-m-d H:i:s',$time);
+//     update_user_meta( $user_id, 'package_activation', $date );
+//     update_user_meta( $user_id, 'package_id', $package_id );
+//     update_user_meta( $user_id, 'houzez_membership_id', $package_id);
+
+// }
 
 function houzez_required_field( $field ) {
     $required_fields = houzez_option('required_fields');
@@ -1957,7 +1960,7 @@ function aqar_get_custom_add_listing_field($key)
                     <?php echo $field_title.houzez_required_field($field_name); ?>
                 </label>
 
-                <select name="<?php echo esc_attr($field_name).'[]'; ?>" data-size="5" data-actions-box="true" class="selectpicker <?php houzez_required_field_2($field_name); ?> form-control bs-select-hidden" title="<?php echo esc_attr($placeholder); ?>" data-live-search="false" data-select-all-text="<?php echo houzez_option('cl_select_all', 'Select All'); ?>" data-deselect-all-text="<?php echo houzez_option('cl_deselect_all', 'Deselect All'); ?>" data-count-selected-text="{0}" multiple <?php echo $disabled; ?>>
+                <select name="<?php echo esc_attr($field_name).'[]'; ?>" data-size="5" data-actions-box="true" class="selectpicker <?php houzez_required_field_2($field_name); ?> form-control bs-select-hidden" title="<?php echo esc_attr($placeholder); ?>" data-live-search="false" data-select-all-text="<?php echo houzez_option('cl_select_all', 'Select All'); ?>" data-deselect-all-text="<?php echo houzez_option('cl_deselect_all', 'Deselect All'); ?>" data-count-selected-text="{0}" multiple <?php //echo $disabled; ?>>
                     
                     <?php
                     $options = unserialize($field_options);
@@ -2214,13 +2217,13 @@ function edit_prop_input()
         $fave_property_address     = get_post_meta( $property_data->ID, 'fave_property_address', true );
         $lat                       = get_post_meta( $property_data->ID, 'houzez_geolocation_lat', true );
         $lng                       = get_post_meta( $property_data->ID, 'houzez_geolocation_long', true );
-        $prop_land_area             = get_post_meta( $property_data->ID, 'fave_property_land', true );
+        $prop_land_area            = get_post_meta( $property_data->ID, 'fave_property_land', true );
    ?>
     
     <input type="hidden" name="prop_type[]" id="prop_type" value="<?php echo $property_type[0]; ?>">
     <input type="hidden" name="prop_status[]" value="<?php echo $property_status[0]; ?>">
     <input type="hidden" name="prop_labels[]" value="<?php echo ( isset($property_label[0]) ? $property_label[0] : '' ); ?>">
-    <input type="hidden" name="prop_price" value="<?php echo $prop_price; ?>">
+ 
     <input type="hidden" name="postal_code" value="<?php echo $postal_code; ?>">
 
     <input type="hidden" name="prop_size" value="<?php echo $prop_size; ?>">
@@ -2244,7 +2247,7 @@ function aqar_is_verify_msg($userID)
     if( $userID > 0 ) {
         $is_verify = get_user_meta( $userID, 'aqar_is_verify_user', true );
         $dash_profile_link = houzez_get_template_link_2('template/user_dashboard_profile.php');
-
+       
         if( ! $is_verify ) { ?>
         <div id="errors-messages" class="validate-errors alert alert-danger" role="alert">
             <strong id="messages">
@@ -2349,6 +2352,7 @@ function ag_urlsafeB64Decode($input)
     return base64_decode(strtr($input, '-_', '+/'));
 }
 
+/* ------------------------------- empty title ------------------------------ */
 add_filter('pre_post_title', 'aqargate_mask_empty');
 function aqargate_mask_empty($value)
 {
@@ -2356,4 +2360,278 @@ function aqargate_mask_empty($value)
         return ' ';
     }
     return $value;
+}
+/* -------------- Add Authors to Any WordPress Custom Post Type ------------- */
+function aqar_add_author_support_to_posts() {
+    add_post_type_support( 'houzez_agency', 'author' ); 
+    add_post_type_support( 'houzez_agent', 'author' ); 
+
+ }
+ add_action( 'init', 'aqar_add_author_support_to_posts' );
+ /* --------------------------- aqar_is_verify_user -------------------------- */
+ function aqar_is_verify_user()
+ {
+    global $wpdb;
+    $userID          = get_current_user_id();
+    $nafath_callback = $wpdb->prefix."nafath_callback";
+    $user_meta       = $wpdb->prefix."usermeta";
+
+    $users_ids = $wpdb->get_results( 
+        "SELECT user_id
+         FROM {$user_meta}
+         INNER JOIN {$nafath_callback} ON $nafath_callback.cardId = {$user_meta}.meta_value
+         WHERE meta_key = 'aqar_author_id_number'
+         AND {$nafath_callback}.status = 'COMPLETED';"
+    );
+    $userIDs = [];
+    if( count($users_ids) > 0 ) {
+        foreach ( $users_ids as  $id ) {
+            $userIDs[] = $id->user_id;
+        }
+    }
+
+    if( in_array($userID, $userIDs) ) {
+        return true;
+    }
+    
+    return false ;
+ }
+ /* ---------------------------- validateDateTime ---------------------------- */
+ function validateDate($date, $format = 'Y-m-d')
+ {
+     $d = DateTime::createFromFormat($format, $date);
+     // The Y ( 4 digits year ) returns TRUE for any integer with any number of digits so changing the comparison from == to === fixes the issue.
+     return $d && $d->format($format) === $date;
+ }
+
+function propertyType_select()
+{
+  ?>
+<select name="propertyType" id="propertyType" class="selectpicker labels-select-picker form-control" data-size="5" data-selected-text-format="count > 2" title="يرجى الاختيار" data-none-results-text="لا توجد أي نتائج مطابقة {0}" data-live-search="true" data-actions-box="true" data-select-all-text="أختر الكل" data-deselect-all-text="إلغاء الاختيار" data-count-selected-text="{0} أنوع الاستخدام" required>
+    <option value="Land">أرض</option>
+	<option value="Floor">دور</option>
+	<option value="Apartment">شقة</option>
+	<option value="Villa">فيلا</option>
+	<option value="Studio">شقَّة صغيرة (استوديو)</option>
+	<option value="Room">غرفة</option>
+	<option value="RestHouse">استراحة</option>
+	<option value="Compound">مجمع</option>
+	<option value="Tower">برج</option>
+	<option value="Exhibition">معرض</option>
+	<option value="Office">مكتب</option>
+	<option value="Warehouses">مستودع</option>
+	<option value="Booth">كشك</option>
+	<option value="Cinema">سينما</option>
+	<option value="Hotel">فندق</option>
+	<option value="CarParking">مواقف سيارات</option>
+	<option value="RepairShop">ورشة</option>
+	<option value="Teller">صراف</option>
+	<option value="Factory">مصنع</option>
+	<option value="School">مدرسة</option>
+	<option value="HospitalOrHealthCenter">مستشفى، مركز صحي</option>
+	<option value="ElectricityStation">محطة كهرباء</option>
+	<option value="TelecomTower">برج اتصالات</option>
+	<option value="Station">محطة</option>
+	<option value="Farm">مزرعة</option>
+	<option value="Building">عمارة</option>
+</select>
+  <?php 
+} 
+
+function advertisementType_select()
+{
+ ?>
+ <select name="advertisementType" data-size="5" id="advertisementType" class="selectpicker form-control" title="يرجى الاختيار" data-selected-text-format="count > 2" data-none-results-text="لا توجد أي نتائج مطابقة {0}" data-live-search="true" data-actions-box="true" data-select-all-text="أختر الكل" data-deselect-all-text="إلغاء الاختيار" data-count-selected-text="{0} الحالات" required>
+	<option value="">يرجى الاختيار</option>
+	<option value="Rent"> إيجار</option>
+	<option value="Sell"> بيع</option>
+</select>
+ <?php     
+}
+
+function propertyUsages_select()
+{
+    ?>
+    <select name="propertyUsages[]" id="propertyUsages" class="selectpicker labels-select-picker form-control" data-selected-text-format="count > 2" title="يرجى الاختيار" data-none-results-text="لا توجد أي نتائج مطابقة {0}" data-live-search="false" data-actions-box="true" data-select-all-text="أختر الكل" data-deselect-all-text="إلغاء الاختيار" data-count-selected-text="{0} أنوع الاستخدام" required>
+        <option value="Agricultural"> زراعي</option>
+        <option value="Residential"> سكني</option>
+        <option value="Commercial"> تجاري</option>
+        <option value="Industrial"> صناعي</option>
+        <option value="Healthy"> صحي</option>	
+        <option value="Educational"> تعليمي</option>	
+    </select>
+    <?php 
+    
+}
+
+function theAdThrough_select() {
+    $user_id = get_current_user_id();
+
+    if( houzez_is_agency() ) { ?>
+        <select name="theAdThrough" id="theAdThrough" class="selectpicker labels-select-picker form-control" data-size="5" data-selected-text-format="count > 2" title="يرجى الاختيار" data-none-results-text="لا توجد أي نتائج مطابقة {0}" data-live-search="true" data-actions-box="true" data-select-all-text="أختر الكل" data-deselect-all-text="إلغاء الاختيار" data-count-selected-text="{0} أنوع الاستخدام" required>
+            <option value="OwnerOffice">مالك منشأة</option>
+            <option value="BrokerOffice">وسيط منشأة</option>
+        </select>
+    <?php } else {?>
+        <select name="theAdThrough" id="theAdThrough" class="selectpicker labels-select-picker form-control" data-size="5" data-selected-text-format="count > 2" title="يرجى الاختيار" data-none-results-text="لا توجد أي نتائج مطابقة {0}" data-live-search="true" data-actions-box="true" data-select-all-text="أختر الكل" data-deselect-all-text="إلغاء الاختيار" data-count-selected-text="{0} أنوع الاستخدام" required>
+            <option value="OwnerAgent">وكيل المالك </option>
+            <option value="OwnerIndividual">مالك فرد </option>
+            <option value="BrokerIndividual">وسيط فرد</option>
+        </select>
+
+    <?php }
+}
+/* -------------------------------------------------------------------------- */
+/*                                 for testing                                */
+/* -------------------------------------------------------------------------- */
+
+function aq_register_as_agency( $username, $email, $user_id, $phone_number = null ) {
+    // Create post object
+    $args = array(
+        'post_title'  => $username,
+        'post_type'   => 'houzez_agency',
+        'post_status' => 'publish',
+        'post_author' => $user_id,
+        
+    );
+
+    // Insert the post into the database
+    $post_id =  wp_insert_post( $args );
+    update_post_meta( $post_id, 'houzez_user_meta_id', $user_id);  // used when agent custom post type updated
+    update_user_meta( $user_id, 'fave_author_agency_id', $post_id);
+    update_post_meta( $post_id, 'fave_agency_email', $email) ;
+    update_post_meta( $post_id, 'fave_agency_phone', $phone_number);
+
+    if( houzez_option('realtor_visible', 0) ) {
+        update_post_meta( $post_id, 'fave_agency_visible', 1);
+    }
+}
+
+/* -------------------------------------------------------------------------- */
+/*                         aq_delete_account_function                         */
+/* -------------------------------------------------------------------------- */
+function aq_delete_account_function() {
+    check_ajax_referer('delete_account_nonce', 'security');
+
+    $user_email = sanitize_email($_POST['user_email']);
+    $user_password = sanitize_text_field($_POST['user_password']);
+
+    // Validate user email and password
+    $user = wp_authenticate($user_email, $user_password);
+
+    if ( is_wp_error( $user ) ) {
+        // Display the error message
+        echo 'خطأ : ' . esc_html($user->get_error_message());
+    } else {
+        // Add code here to delete the account
+        wp_delete_user($user->ID);
+        echo 'تم حذف الحساب بنجاح';
+    }
+    die();
+}
+add_action('wp_ajax_aq_delete_account_function', 'aq_delete_account_function');
+add_action('wp_ajax_nopriv_aq_delete_account_function', 'aq_delete_account_function' );
+
+//
+
+// functions.php or your custom plugin file
+add_action("wp_ajax_handle_contract_submission", "handle_contract_submission");
+add_action("wp_ajax_nopriv_handle_contract_submission", "handle_contract_submission");
+
+function handle_contract_submission() {
+
+    global $current_user;
+    $userID = get_current_user_id();
+
+    $username               =   get_the_author_meta( 'user_login' , $userID );
+    $display_name           =   get_the_author_meta( 'aqar_display_name' , $userID );
+
+    if( empty($display_name) ) {
+        $display_name = $current_user->display_name;
+    }
+
+    $form_data = isset($_POST['form_data']) ? urldecode($_POST['form_data']) : '';
+    // Parse form data into associative array
+    mb_parse_str($form_data, $unserialized_data);
+
+    // Translate data and create a simple array
+    $translate = [
+        "owner-id"=> "رقم الهوية",
+        "owner-birth"=> "تاريخ الميلاد",
+        "id-type"=> [
+            "national-id" => "هوية وطنية",
+            "residence-permit" => "اقامة",
+            "commercial-record" => "سجل تجاري",
+        ],
+        "owner-mobile"=> "رقم الموبايل",
+        "property-document"=> [
+            "net-deed" => "صك الكتروني",
+            "paper-deed" => "صك ورقي",
+            "property-deed" => "صك عقار مع حصر ورثة",
+            "inheritance-certificate" => "حجة استحكام",
+        ],
+        "document-number"=> "رقم وثيقة الملكية",
+        "property-type"=> "نوع العقار",
+        "property-area"=> "مساحة العقار",
+        "city"=> "المدينة",
+        "neighborhood"=> "الحي",
+        "parcel-number"=> "رقم القطعة",
+        "price"=> "السعر المطلوب"
+    ];
+    $translated_data = [];
+    foreach ($unserialized_data as $field_name => $field_value) {
+        if( $field_name === 'id-type') {
+            $translated_value = $translate[$field_name][$field_value];
+            $translated_data[] = ["نوع الهوية" => $translated_value ];
+        }elseif( $field_name === 'property-document' ){
+            $translated_value = $translate[$field_name][$field_value];
+            $translated_data[] = ["نوع وثيقة الملكية" => $translated_value ];
+        }else{
+            $translated_value = $translate[$field_name];
+            $translated_data[] = [$translated_value => $field_value ];
+        }
+    }
+
+    $translated_data[] = [
+        "اسم العميل" => $display_name
+    ];
+    
+    $email_content = "طلب عقد تسويق\n";
+    foreach ($translated_data as $data ) {
+        foreach ($data as $key => $value) {
+            $email_content .= "\n {$key}: " . $value;
+        }
+    }
+    $random_number = str_pad(rand(0, 9999999), 8, '0', STR_PAD_LEFT);
+    $req_borkerage_license_number = $random_number.'-'.$userID;
+
+
+    $email_content .="\n نشكر لكم ثقتكم في منصة بوابة العقار";
+
+    // $to = "sherif.ali.sa3d@gmail.com"; 
+    $to = "admin@aqargate.com";
+    $subject = " {$req_borkerage_license_number} - طلب عقد تسويق";
+    $message = $email_content; // The content you generated above
+
+    $headers = array();
+
+    $send = wp_mail($to, $subject, $message, $headers);
+
+    if( $send ){
+        $msg = "<h4>عزيزنا :  {$display_name} </h4><br>";
+        $msg .="<p>تم استلام طلبكم رقم  ({$req_borkerage_license_number})  لانشاء عقد تسويق ورخصة الاعلان للعقار الخاص بكم. سيتم تلقيكم رسالة لتأ كيد عقد التسويق 
+        وتوثيق العقد عن طر يق الهيئة العامة للعقار. </p><br>";
+        $msg .= "<p>نشكر لكم ثقتكم في منصة بوابة العقار.</p>";
+
+        add_user_meta( $userID, 'req_borkerage_license_number', $req_borkerage_license_number);
+        // Send a response back to the client
+        wp_send_json_success(
+            [
+                'html' => $msg
+            ]
+        );
+    }else{
+        wp_send_json(["sucsses" => false, "html" => "هناك خطأ ما في ارسال الميل نرجوا اعادة المحاولة"]);
+    }
+
 }

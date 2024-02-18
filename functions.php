@@ -14,12 +14,13 @@ add_action('wp_enqueue_scripts', 'aqar_enqueue_scripts');
 if( ! function_exists('aqar_enqueue_scripts') ){
     function aqar_enqueue_scripts()
     {
-        wp_enqueue_script( 'aqar_custom', trailingslashit( get_stylesheet_directory_uri() )  .'/assets/js/aqar_custom.js', array(), '1.0', true );
+        wp_enqueue_script( 'aqar_custom', trailingslashit( get_stylesheet_directory_uri() )  .'/assets/js/aqar_custom.js', array(), rand(), true );
         $userID = get_current_user_id();
         $ajax_object = array(
             'ajaxurl' => admin_url( 'admin-ajax.php'),
             'userID'  => $userID, 
-            'verify_file_type' => esc_html__('Valid file formats', 'houzez'),          
+            'verify_file_type' => esc_html__('Valid file formats', 'houzez'), 
+            'add_listing' => houzez_get_template_link_2('template/user_dashboard_submit.php'),         
         );
         wp_localize_script( 'aqar_custom', 'ajax_aqar', $ajax_object );  
     }
@@ -57,6 +58,9 @@ require_once ( AG_DIR . 'module/metaboxes/metaboxes.php' );
 
 require_once ( AG_DIR . 'module/class-nafath-db.php' );
 
+require_once ( AG_DIR . 'module/nafath-log/nafath-log.php' );
+
+
 /* -------------------------------------------------------------------------- */
 /*                             houzez activation                              */
 /* -------------------------------------------------------------------------- */
@@ -80,7 +84,3 @@ define('CITIES',    $Cities);
 define('DISTRICTS1', $Districts_1);
 define('DISTRICTS2', $Districts_2);
 define('DISTRICTS3', $Districts_3);
-
-ini_set('display_errors', 0);
-ini_set('display_startup_errors', 0);
-error_reporting(0);

@@ -2,7 +2,7 @@
 global $current_user;
 wp_get_current_user();
 $userID  = $current_user->ID;
-check_ajax_referer( 'aqargate_profile_ajax_nonce', 'aqargate-security-profile' );
+// check_ajax_referer( 'aqargate_profile_ajax_nonce', 'aqargate-security-profile' );
 
 $agent_id =  $firstname =  $lastname =  $title =  $about =  $userphone =  $usermobile =  $whatsapp =  $userskype =  $facebook =  $twitter =  $linkedin =  $instagram =  $pinterest =  $youtube =  $vimeo =  $googleplus =  $profile_pic =  $profile_pic_id =  $website =  $useremail =  $license =  $tax_number =  $fax_number =  $userlangs =  $user_address =  $user_company =  $service_areas =  $specialties =  $tiktok =  $telegram = '';
 
@@ -65,8 +65,8 @@ if ( !empty( $_POST['title'] ) ) {
 }
 
 // Update About
-if ( !empty( $_POST['about'] ) ) {
-    $about = wp_kses_post(  wpautop( wptexturize( $_POST['about'] ) ) );
+if ( !empty( $_POST['bio'] ) ) {
+    $about = wp_kses_post(  wpautop( wptexturize( $_POST['bio'] ) ) );
     update_user_meta( $userID, 'description', $about );
 } else {
     delete_user_meta( $userID, 'description' );
@@ -111,11 +111,15 @@ if( !empty( $_POST['brokerage_license_number'] ) ){
     delete_user_meta( $userID, 'brokerage_license_number' ); 
 }
 
-if( !empty( $_POST['license_expiration_date'] ) ){
-    $license_expiration_date = $_POST['license_expiration_date'];
-    update_user_meta( $userID, 'license_expiration_date', $license_expiration_date );
-}else{
-    delete_user_meta( $userID, 'license_expiration_date' ); 
+if( in_array('houzez_agent', (array)$current_user->roles) || in_array('houzez_agency', (array)$current_user->roles) ) {
+    if( !empty( $_POST['license_expiration_date'] ) ){
+        $license_expiration_date = $_POST['license_expiration_date'];
+        update_user_meta( $userID, 'license_expiration_date', $license_expiration_date );
+    } else {
+        echo json_encode( array( 'success' => false, 'msg' => esc_html__('تاريخ انتهاء الرخصة خالية', 'houzez') ) );
+        wp_die();
+        delete_user_meta( $userID, 'license_expiration_date' ); 
+    }
 }
 
 if( !empty( $_POST['aqar_state'] ) ){
@@ -166,9 +170,13 @@ if( !empty( $_POST['aqar_Shortcode'] ) ){
 if ( !empty( $_POST['aqar_author_type_id'] ) ) {
     $ad_number = sanitize_text_field( $_POST['aqar_author_type_id'] );
     update_user_meta( $userID, 'aqar_author_type_id', $ad_number );
-} else {
-    delete_user_meta( $userID, 'aqar_author_type_id' );
-}
+} 
+
+if ( !empty( $_POST['unified_number'] ) ) {
+    $unified_number = sanitize_text_field( $_POST['unified_number'] );
+    update_user_meta( $userID, 'aqar_author_unified_number', $unified_number );
+} 
+
 // fave_author_service_areas
 if ( !empty( $_POST['service_areas'] ) ) {
     $service_areas = sanitize_text_field( $_POST['service_areas'] );
@@ -355,12 +363,12 @@ if( !empty( $_POST['useremail'] ) ) {
         $agency_id = get_user_meta( $userID, 'fave_author_agency_id', true );
         $user_as_agent = houzez_option('user_as_agent');
 
-        if (in_array('houzez_agent', ( array ) $current_user->roles)) {
-            houzez_update_user_agent ( $agent_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $fax_number, $userlangs, $user_address, $user_company, $service_areas, $specialties, $tiktok, $telegram);
+        if (in_array('houzez_agent', (array)$current_user->roles)) {
+            houzez_update_user_agent ( $agent_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $fax_number, $userlangs, $user_address, $user_company, $service_areas, $specialties, $tiktok, $telegram );
         } elseif(in_array('houzez_agency', (array)$current_user->roles)) {
-            houzez_update_user_agency ( $agency_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $user_address, $user_location, $latitude, $longitude, $fax_number, $userlangs );
+            houzez_update_user_agency ( $agency_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $user_address, $user_location, $latitude, $longitude, $fax_number, $userlangs, $tiktok, $telegram );
         }
-
+ 
     }
 }
 
@@ -375,6 +383,7 @@ if( !empty( $_POST['useremail'] ) ) {
 //     echo json_encode( array( 'success' => true, 'msg' => $valid_status ) );
 //     die();
 // }
+
 
 wp_update_user( array ('ID' => $userID, 'display_name' => $_POST['display_name'] ) );
 echo json_encode( array( 'success' => true, 'msg' => esc_html__('تم تحديث الملف الشخصي', 'houzez') ) );

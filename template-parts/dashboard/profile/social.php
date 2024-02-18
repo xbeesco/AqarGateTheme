@@ -45,15 +45,15 @@ $website_url            =   get_the_author_meta( 'user_url' , $userID );
                 <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
                         <label for="usermobile"><?php esc_html_e('Mobile','houzez');?></label>
-                        <input type="text" name="usermobile" class="form-control"
+                        <input type="text" name="usermobile" class="form-control" dir="ltr"
                             value="<?php echo esc_attr( $user_mobile );?>"
                             placeholder="<?php esc_html_e('Enter your mobile phone number','houzez');?>" readonly>
                     </div>
                 </div>
-                <div class="col-sm-6 col-xs-12">
+                 <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
                         <label for="userphone"><?php esc_html_e('Phone','houzez');?></label>
-                        <input type="text" name="userphone" class="form-control"
+                        <input type="text" name="userphone" class="form-control" dir="ltr"
                             value="<?php echo esc_attr( $user_phone );?>"
                             placeholder="<?php esc_html_e('Enter your phone number','houzez');?>">
                     </div>
@@ -61,7 +61,7 @@ $website_url            =   get_the_author_meta( 'user_url' , $userID );
                 <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
                         <label for="whatsapp"><?php esc_html_e('WhatsApp','houzez');?></label>
-                        <input type="text" name="whatsapp" class="form-control"
+                        <input type="text" name="whatsapp" class="form-control" dir="ltr"
                             value="<?php echo esc_attr( $user_whatsapp );?>"
                             placeholder="<?php esc_html_e('Enter your whatsapp number with country code','houzez');?>">
                     </div>
@@ -107,7 +107,7 @@ $website_url            =   get_the_author_meta( 'user_url' , $userID );
                         <input class="form-control" name="googleplus" value="<?php echo esc_url( $googleplus );?>" placeholder="<?php esc_html_e( 'Enter the Google Plus URL', 'houzez' ); ?>" type="text">
                     </div>
                 </div>
-
+ 
                 <div class="col-md-6 col-sm-12" style="display: none;">
                     <div class="form-group">
                         <label><?php esc_html_e( 'Youtube', 'houzez' ); ?></label>

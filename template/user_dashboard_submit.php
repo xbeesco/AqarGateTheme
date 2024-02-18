@@ -463,8 +463,8 @@ if( is_user_logged_in() ) { ?>
         </div><!-- dashboard-header-wrap -->
     </header><!-- .header-main-wrap -->
     <section class="dashboard-content-wrap <?php echo esc_attr($dash_main_class); ?>">
-    <?php echo aqar_is_verify_msg($userID); ?>  
-            <?php if( aqar_is_verify($userID) ) { ?>     
+            <?php echo aqar_is_verify_msg( $userID ); ?>  
+            <?php if( aqar_is_verify( $userID ) ) { ?>     
         <?php 
         if(houzez_edit_property()) { ?>
             <div class="d-flex">
@@ -555,7 +555,7 @@ if(houzez_get_map_system() == 'google') {
     }
     
 } else {
-    wp_enqueue_script('houzez-submit-osm', get_theme_file_uri('/js/submit-property-osm.js'), array('jquery'), HOUZEZ_THEME_VERSION, true);
+    wp_enqueue_script('houzez-submit-osm', trailingslashit( get_stylesheet_directory_uri() )  .'/assets/js/submit-property-osm.js', array('jquery'), rand(), true);
 }
 ?>
 

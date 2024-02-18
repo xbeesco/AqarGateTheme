@@ -19,10 +19,10 @@ if( ! empty($entityBody) ) {
      $userInfo       = ag_urlsafeB64Decode($response[1]);
      $userInfo       = json_decode($userInfo);
 
-     $data['userInfo'] = $userInfo->userInfo;
+     $data['userInfo'] = $userInfo->user_info;
      $data['response'] = $nafath_respons->response;
      $data['transId']  = $nafath_respons->transId;
-     $data['cardId']   = isset($userInfo->userInfo->id) ? $userInfo->userInfo->id : '';
+     $data['cardId']   = isset($userInfo->user_info->id) ? $userInfo->user_info->id : '';
      $data['status']   = $nafath_respons->status;
     
      $NafathDB = new NafathDB();

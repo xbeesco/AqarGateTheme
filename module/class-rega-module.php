@@ -27,38 +27,44 @@ class RegaMoudle{
 		$credential = array(
 			'X-IBM-Client-Id: ' . get_option( '_client_id' ),
 			'X-IBM-Client-Secret: ' . get_option( '_client_secret' ),
-		  );
+            'RefId: ' . get_option( '_client_id' ),
+            'CallerReqTime: ' . strtotime( date('Y-m-d') ) ,
+		);
 
         return $credential;
     }
 
-    public function do_request( $type, $endpoint, $headers = array(), $body = array() , $params = array() )
+    public function do_request($url='', $type, $endpoint, $headers = array(), $body = array() , $params = array() )
     {
-        $url = $this->BaseUrl . $endpoint;
+        if( empty($url) ) {
+            $url = $this->BaseUrl . $endpoint;
+            $url .= !empty( $params ) ? '?'.http_build_query($params) : '';
+        }
 
-        $url .= !empty( $params ) ? '?'.http_build_query($params) : '';
         $curl = curl_init();
         curl_setopt_array($curl, array(
 		  CURLOPT_URL => $url,
-		  CURLOPT_RETURNTRANSFER => true,
-		//   CURLOPT_ENCODING => '',
-		  CURLOPT_MAXREDIRS => 10,
-		  CURLOPT_TIMEOUT => 0,
-		  CURLOPT_FOLLOWLOCATION => true,
-		  CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-		  CURLOPT_CUSTOMREQUEST => 'GET',
+          CURLOPT_RETURNTRANSFER => true,
+          CURLOPT_ENCODING => '',
+          CURLOPT_MAXREDIRS => 10,
+          CURLOPT_TIMEOUT => 0,
+          CURLOPT_FOLLOWLOCATION => true,
+          CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+          CURLINFO_HEADER_OUT => true,
+		  CURLOPT_CUSTOMREQUEST => $type,
+          CURLOPT_POSTFIELDS => $body,
 		  CURLOPT_HTTPHEADER => $headers,
-        //   CURLOPT_SSL_VERIFYHOST => 0,
-        //   CURLOPT_SSL_VERIFYPEER => 0,
 		));
 
         $response = curl_exec($curl);
+
         $httpcode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
+
         curl_close($curl);
-        
+
         $data = [];
 		
-        if( $this->dummy ) {
+        if( $this->dummy && $endpoint === 'v1/brokerage/AdvertisementValidator' ) {
             if ($httpcode == '200') {
                 $data = $this->valid_response();
             // local test only
@@ -74,7 +80,7 @@ class RegaMoudle{
             $data = $response;
         }
         
-        return $data;
+        return $response;
         
     }
     
@@ -83,8 +89,15 @@ class RegaMoudle{
         $userID    = get_current_user_id();
         $id_number = get_the_author_meta( 'aqar_author_id_number' , $userID );
         $type_id   = get_the_author_meta( 'aqar_author_type_id' , $userID );
+        // check the id if it start with 7 use it [user type agency] :bool
+        $is_unified_number = $this->numberStartsWith($type_id, '7');
+                
+        if( $type_id === '2' && ! $is_unified_number ){
+            $id_number = get_the_author_meta( 'aqar_author_unified_number' ,$userID );
+        }
 
         $response = $this->do_request(
+            '',
             'GET',
             'v1/brokerage/AdvertisementValidator',
             $this->credential(),
@@ -99,6 +112,48 @@ class RegaMoudle{
         // $response = $this->test_response();
         return $response;
     }
+
+    public function CreateADLicense( $bodyData = array() )
+    {
+        $testUrl = 'https://integration-gw.housingapps.sa/nhc/dev/v1/brokerage/CreateADLicense';
+        $response = $this->do_request(
+            $testUrl,
+            'POST',
+            'v1/brokerage/CreateADLicense',
+            array(
+                'X-IBM-Client-Id: 7170eb897cb971a3a35a55a887121d42',
+                'X-IBM-Client-Secret: 7bd077b49b8238ef23c6ee05215cf9f7',
+                'RefId: 7170eb897cb971a3a35a55a887121d42',
+                'CallerReqTime: ' . strtotime( date('Y-m-d') ),
+              ),
+            json_encode($bodyData),
+            array(),
+        );
+
+        return $response;
+    }
+
+    public function SendAttachment( $bodyData = array() )
+    {
+        $testUrl = 'https://integration-gw.housingapps.sa/nhc/dev/v1/brokerage/SendAttachment';
+        $response = $this->do_request(
+            $testUrl,
+            'POST',
+            'v1/brokerage/SendAttachment',
+            array(
+                'X-IBM-Client-Id: 7170eb897cb971a3a35a55a887121d42',
+                'X-IBM-Client-Secret: 7bd077b49b8238ef23c6ee05215cf9f7',
+                'RefId: 7170eb897cb971a3a35a55a887121d42',
+                'CallerReqTime: ' . strtotime( date('Y-m-d') ),
+              ), 
+            $bodyData,
+            array(),
+        );
+
+        return $response;
+    }
+    
+
   
     public function rega_errors( $response ){
         $errors = [];
@@ -139,11 +194,11 @@ class RegaMoudle{
                "result":{
                   "isValid":true,
                   "advertisement":{
-                     "advertiserId":"1034758704",
-                     "adLicenseNumber":"7100000031",
+                     "advertiserId":"1034758700",
+                     "adLicenseNumber":"8200000082",
                      "deedNumber":311010000240,
-                     "advertiserName":"خالد بن عبدالعزيز بن عبدالرحمن المحسن",
-                     "phoneNumber":"0583727427",
+                     "advertiserName":"شريف علي سعد",
+                     "phoneNumber":"05123456789",
                      "brokerageAndMarketingLicenseNumber":"1100000139",
                      "isConstrained":false,
                      "isPawned":false,
@@ -226,5 +281,9 @@ class RegaMoudle{
             }
          }
         ';
+    }
+
+    public function numberStartsWith($number, $prefix) {
+        return substr($number, 0, strlen($prefix)) === $prefix;
     }
 }

@@ -38,13 +38,14 @@ Version:        4.5.0
     border-color: #dce0e0 !important;
 }
 form#submit_aqar_isvalid_form {
-    max-width: 75%;
+    /* max-width: 75%; */
     margin: auto;
     background: #050333;
     color: #fff;
     padding: 2rem 2rem 4rem 2rem;
     border-radius: 8px;
 }
+
 @media (max-width: 767.98px){
     form#submit_aqar_isvalid_form {
         max-width: 100%;

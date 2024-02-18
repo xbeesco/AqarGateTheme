@@ -19,6 +19,12 @@ class AqarGate{
         add_action( 'wp_ajax_nopriv_AqarGat_ajax_update_profile', array( $this,'AqarGat_ajax_update_profile' ));
         add_action( 'wp_ajax_AqarGat_ajax_update_profile', array( $this,'AqarGat_ajax_update_profile' ));
 
+        /* ------------------------------------------------------------------------------
+        * Ajax Update Profile By Nafath function
+        /------------------------------------------------------------------------------ */
+        add_action( 'wp_ajax_nopriv_Aq_nafath_update_profile', array( $this,'Aq_nafath_update_profile' ));
+        add_action( 'wp_ajax_Aq_nafath_update_profile', array( $this,'Aq_nafath_update_profile' ));
+
         /*-----------------------------------------------------------------------------------*/
         //  Ajax Register
         /*-----------------------------------------------------------------------------------*/
@@ -44,7 +50,7 @@ class AqarGate{
         }
    
     }
-
+ 
     public function AqarGate_custom_user_profile_fields($user){
         include plugin_dir_path( __FILE__ ) . '/profile-fields.php';
     }
@@ -66,6 +72,11 @@ class AqarGate{
     public function AqarGat_ajax_update_profile(){
         include plugin_dir_path( __FILE__ ) . '/profile-ajax-update.php';
     }
+
+    public function Aq_nafath_update_profile(){
+        include plugin_dir_path( __FILE__ ) . '/profile-ajax-nafath-update.php';
+    }
+    
 
     public function AqarGat_register(){
         include plugin_dir_path( __FILE__ ) . '/register-ajax-update.php';

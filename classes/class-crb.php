@@ -38,19 +38,22 @@ class AG_CF
             array(
                 Field::make( 'text', 'client_id', __( 'XIBM Client Id', 'ag' ) ),
                 Field::make( 'text', 'client_secret', __( 'XIBM Client Secret', 'ag' ) ),
+                Field::make( 'text', 'platformownerid', __( 'Platform Owner Id', 'ag' ) ),
+                Field::make( 'text', 'platformid', __( 'Platform Id', 'ag' ) ),
                 Field::make( 'text', 'form_head', __( 'عنوان نموذج اضافة الاعلان', 'ag' ) )
                 ->set_attribute( 'placeholder', 'اكمل البينات المطلوبة للتأكد من معلومات الاعلان' ),
                 Field::make( 'checkbox', 'repeat_prop', 'السماح بتكرار الاعلان' ),
                 Field::make( 'checkbox', 'aq_show_api', 'Enable Api' ),
                 Field::make( 'checkbox', 'sandbox', 'Enable sandbox' ),
                 Field::make( 'checkbox', 'dummy', 'Enable dummy data' ),
+                Field::make( 'rich_text', 'add_propery_info', __( 'تعليمات نشر اعلان وترخيص' ) ),
                
             )
-        )
+        ) 
         ->add_tab( __( 'Property Export' ), array(
             Field::make( 'html', 'crb_information_text' )
             ->set_html( $export_btn )
-        ) )
+        ) ) 
 
         ->add_tab( __( 'نفاذ' ), array(
             Field::make( 'text', 'nafath_apikey', __( 'Nafath Apikey', 'ag' ) ),

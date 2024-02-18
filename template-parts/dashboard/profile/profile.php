@@ -38,7 +38,12 @@ if( !empty( $id_for_permalink ) ) {
 <section class="dashboard-content-wrap">
     <div class="dashboard-content-inner-wrap">
         <div class="dashboard-content-block-wrap">
-            
+            <?php  
+            $is_verify = aqar_is_verify_user();
+             if( ! $is_verify && ! current_user_can( 'manage_options' ) && ! houzez_is_agency() ) {
+                include_once ( AG_DIR . 'module/profile-nafath.php' );
+            ?>
+            <?php } else { ?>
             <form method="post">
                 <?php get_template_part('template-parts/dashboard/profile/information'); ?>
 
@@ -65,6 +70,7 @@ if( !empty( $id_for_permalink ) ) {
             // get_template_part('template-parts/dashboard/profile/delete-account');
 
             ?>
+            <?php } ?>
         </div><!-- dashboard-content-block-wrap -->
     </div><!-- dashboard-content-inner-wrap -->
 </section><!-- dashboard-content-wrap -->

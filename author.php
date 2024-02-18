@@ -168,10 +168,32 @@ if( houzez_option( 'agent_sidebar', 0 ) == 0 ) {
 
                 <div class="col-lg-8 col-md-8 col-sm-12">
                     <div class="agent-profile-top-wrap">
-                        <div class="agent-profile-header">
+                        <div class="agent-profile-header row">
+                            <div class="col-lg-6 col-md-6 col-sm-12">
                             <?php if( !empty( $agent_name ) ) { ?>
 								<h1><?php echo esc_attr( $agent_name ); ?></h1>
+                                <?php 
+                                
+                                if( isset($current_author_meta['brokerage_license_number'][0]) && !empty($current_author_meta['brokerage_license_number'][0]) ) { ?>
+                                    <h1>
+                                        <strong><?php echo __('رقم رخصة الفال'); ?> : </strong> 
+                                        <?php echo esc_attr( $current_author_meta['brokerage_license_number'][0] ); ?>
+                                    </h1>
+                                <?php 
+                                } ?>
 							<?php } ?>
+                            </div>
+                            <div class="col-lg-6 col-md-6 col-sm-12">
+                            <?php 
+                            if( isset($current_author_meta['license_expiration_date'][0]) && !empty($current_author_meta['license_expiration_date'][0]) ) { ?>
+								<h1>
+									<strong><?php echo __('تاريخ انتهاء الرخصة'); ?> : </strong> 
+									<?php echo esc_attr( $current_author_meta['license_expiration_date'][0] ); ?>
+                                </h1>
+							<?php 
+							} ?>
+                            </div>
+                            
                             
                             <?php 
                             if( houzez_option( 'agent_review', 0 ) != 0 ) {
@@ -196,22 +218,7 @@ if( houzez_option( 'agent_sidebar', 0 ) == 0 ) {
                     <div class="agent-profile-content">
                         <ul class="list-unstyled">
                             
-                            <?php 
-                            if( isset($current_author_meta['fave_author_license'][0]) && !empty($current_author_meta['fave_author_license'][0]) ) { ?>
-								<li>
-									<strong><?php echo $houzez_local['agent_license']; ?>:</strong> 
-									<?php echo esc_attr( $current_author_meta['fave_author_license'][0] ); ?>
-								</li>
-							<?php 
-							} ?>
-                            <?php 
-                            if( isset($current_author_meta['aqar_author_ad_number'][0]) && !empty($current_author_meta['aqar_author_ad_number'][0]) ) { ?>
-								<li>
-									<strong><?php echo __('رقم المعلن'); ?>:</strong> 
-									<?php echo esc_attr( $current_author_meta['aqar_author_ad_number'][0] ); ?>
-								</li>
-							<?php 
-							} ?>
+                           
 							<?php 
                             if( isset($current_author_meta['fave_author_tax_no'][0]) && !empty($current_author_meta['fave_author_tax_no'][0]) ) { ?>
 								<li>

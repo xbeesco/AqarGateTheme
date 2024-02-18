@@ -37,7 +37,46 @@ class NafathDB {
                 PRIMARY KEY (id)
                 ) $charset_collate;";
             dbDelta( $sql ); 
-        }     
+        }    
+        
+        $table_name = $wpdb->prefix . 'nafath_callback';
+        $column_name  = 'date_created';
+        $date_updated = 'date_updated';
+
+        // Check if the column exists
+        $column_exists = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = %s AND column_name = %s",
+                $table_name,
+                $column_name
+            )
+        );
+
+        $column_exists_2 = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT COUNT(*) FROM information_schema.columns WHERE table_name = %s AND column_name = %s",
+                $table_name,
+                $date_updated
+            )
+        );
+
+        if (!$column_exists) {
+            // Add the column if it doesn't exist
+            $wpdb->query(
+                $wpdb->prepare(
+                    "ALTER TABLE $table_name ADD COLUMN $column_name DATETIME DEFAULT CURRENT_TIMESTAMP"
+                )
+            );
+        }
+
+        if (!$column_exists_2) {
+            // Add the column if it doesn't exist
+            $wpdb->query(
+                $wpdb->prepare(
+                    "ALTER TABLE $table_name ADD COLUMN $date_updated DATETIME "
+                )
+            );
+        }
     }
 
     public function update_nafath_callback( $data = array() )
@@ -54,11 +93,12 @@ class NafathDB {
         $nafath_callback_id = $wpdb->get_results( "SELECT id FROM `{$table_name}` WHERE `transId` = '{$transId}' AND `cardId` = '{$cardId}'");
         
         $nafath_data = [
-            'transId'  => $transId,
-            'cardId'   => $cardId,
-            'userInfo' => maybe_serialize( $userInfo ) ,
-            'response' => maybe_serialize( $data ),
-            'status'   => $status
+            'transId'      => $transId,
+            'cardId'       => $cardId,
+            'userInfo'     => maybe_serialize( $userInfo ),
+            'response'     => maybe_serialize( $data ),
+            'status'       => $status,
+            'date_updated' => date('Y-m-d H:m:s'),
         ];
          
         //If nothing found to update, it will try and create the record.
@@ -110,12 +150,12 @@ class NafathDB {
         $nafath_callback = $wpdb->get_results( "SELECT * FROM `{$table_name}` WHERE `transId` = '{$transId}' AND `cardId` = '{$cardId}'");
         $data = [];
         if( !empty( $nafath_callback ) ) {
-            $userInfo = unserialize($nafath_callback[0]->userInfo); 
+            $userInfo = unserialize( $nafath_callback[0]->userInfo ); 
             $data = [
-                'arFullName' => $userInfo->arFullName,
-                'arFirst' => $userInfo->arFirst,
-                'arGrand' => $userInfo->arFamily,
-                'arTwoNames' => $userInfo->arTwoNames,
+                'arFullName' => $userInfo->{'full_name#ar'},
+                'arFirst'    => $userInfo->{'first_name#ar'},
+                'arGrand'    => $userInfo->{'grand_name#ar'},
+                'arTwoNames' => $userInfo->{'two_names#ar'},
             ];
         }
         return $data;

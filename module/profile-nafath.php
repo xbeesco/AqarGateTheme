@@ -1,30 +1,33 @@
-<?php
-$allowed_html_array = array(
-    'a' => array(
-        'href'   => array(),
-        'target' => array(),
-        'title'  => array()
-    )
-);
-$user_show_roles = houzez_option('user_show_roles');
-$show_hide_roles = houzez_option('show_hide_roles');
+<?php 
+$userID                   = get_current_user_id();
+$id_number                = get_the_author_meta( 'aqar_author_id_number' , $userID );
+$brokerage_license_number = get_the_author_meta( 'brokerage_license_number' , $userID );
+$license_expiration_date  = get_the_author_meta( 'license_expiration_date' , $userID );
+$validateDateTime         = strtotime($license_expiration_date);
+$license_expiration_date  = (!empty($license_expiration_date) && $validateDateTime ) ? date( "Y-m-d", strtotime( $license_expiration_date ) ) : '';
+$user_email               = get_the_author_meta( 'user_email' , $userID );
+$user_mobile              =   get_the_author_meta( 'fave_author_mobile' , $userID );
 ?>
 <div id="hz-register-messages" class="hz-social-messages"></div>
-<?php if( get_option('users_can_register') ) { ?>
 <div id="register-screen-1">
     <form id="register-screen-form">
+        <input type="hidden" name="user-id" value="<?php echo $userID; ?>">
         <div class="modal-header-ajax text-center">
-            <span class="text-center" style="color: #bdb290;font-size: 12px;">انشاء حساب</span>
-            <h5 style="margin-bottom: 40px;">اختيار نوع التسجيل</h5>
+            <span class="text-center" style="color: #bdb290;font-size: 12px;">الربط بنفاذ</span>
+            <h5 style="margin-bottom: 40px;">اكمل الربط بنفاذ للوصول الي حسابك</h5>
         </div>
-        <style>
+        <style> 
         .control__indicator_img {
             position: absolute;
             top: 2px;
-            right: auto;
+            right: 0;
             height: 50px;
             width: 50px;
             background: #fff;
+        }
+
+        .control.img {
+            padding-right: 70px;
         }
 
         .control input:checked~.control__indicator_img {
@@ -69,47 +72,31 @@ $show_hide_roles = houzez_option('show_hide_roles');
             margin: 25%;
         }
         </style>
-        <fieldset id="aqar_author_type_id" class="p-3">
-            <div class="form-control-wrap row">
-                <a href="#" id="nic" class="control img control--radio text-center w-100 mb-5">
-                    <h5>التوثيق عن طريق نفاذ الوطني</h5>
-                    <span class="radio-sub" style="color: #bdb290;font-size: 12px;"> التسجيل عن طريق الدخول بحساب النفاذ
-                        الوطني الموحد </span>
-                    <img src="<?php echo trailingslashit( get_stylesheet_directory_uri() ) .'assets/img/NIC-logo.png'; ?>"
-                        alt="NIC" class="control__indicator_img">
-                </a>
-                <label class="control control--radio col-md-6 mb-3">
+        <fieldset id="aqar_author_type_id">
+            <div class="form-control-wrap d-flex flex-column">
+                <label class="control control--radio">
                     <input type="radio" name="aqar_author_type_id" value="1" checked>
                     <h5>حساب أفراد</h5>
                     <span class="radio-sub" style="color: #bdb290;font-size: 12px;">التسجيل كمسوق عقاري فرد</span>
                     <span class="control__indicator"></span>
                 </label>
-                <label class="control control--radio col-md-6 mb-3">
+                <label class="control control--radio">
                     <input type="radio" name="aqar_author_type_id" value="2">
                     <h5>حساب منشأة عقارية</h5>
                     <span class="radio-sub" style="color: #bdb290;font-size: 12px;">التسجيل للشركات والؤسسات
                         العقارية</span>
                     <span class="control__indicator"></span>
                 </label>
-                <label class="control control--radio col-md-6 mb-3">
-                    <input type="radio" name="aqar_author_type_id" value="3">
-                    <h5>حساب ملاك</h5>
-                    <span class="radio-sub" style="color: #bdb290;font-size: 12px;">
-                    التسجيل للملاك</span>
-                    <span class="control__indicator"></span>
-                </label>
-                <label class="control control--radio col-md-6 mb-3">
-                    <input type="radio" name="aqar_author_type_id" value="4">
-                    <h5>حساب  المشتريين</h5>
-                    <span class="radio-sub" style="color: #bdb290;font-size: 12px;">التسجيل  
-                        للمشتريين</span>
-                    <span class="control__indicator"></span>
-                </label>
-
-                
-                <div class="form-group col-md-12" id="nafath_id"> 
+                <a href="#" id="nic" class="control img control--radio">
+                    <h5>التوثيق عن طريق نفاذ الوطني</h5>
+                    <span class="radio-sub" style="color: #bdb290;font-size: 12px;"> التسجيل عن طريق الدخول بحساب النفاذ
+                        الوطني الموحد </span>
+                    <img src="<?php echo trailingslashit( get_stylesheet_directory_uri() ) .'assets/img/NIC-logo.png'; ?>"
+                        alt="NIC" class="control__indicator_img">
+                </a>
+                <div class="form-group" id="nafath_id"> 
                     <label id="change-lable" for=""> رقم الهوية </label>
-                    <input name="id" id="id" type="text" class="form-control" value="" placeholder="">
+                    <input name="id" id="id" type="text" class="form-control" value="<?php echo esc_attr( $id_number );?>" placeholder="">
                 </div>
             </div>
             <button id="next-register-btn" type="submit" class="btn btn-primary btn-full-width">
@@ -142,14 +129,7 @@ $show_hide_roles = houzez_option('show_hide_roles');
                 <span>رقم التاكيد</span>
                 <span id="nafathNumber">00</span>
             </div>
-            <div id="timer">180</div>
+            <div id="timer">60</div>
         </div>
     </div> 
 </div><!-- /end /register-screen-1 -->
-<div id="register-screen">
-    <form id="aq-register-form">
-    </form>
-</div><!-- /end /register-screen -->
-<?php } else {
-    esc_html_e('User registration is disabled for demo purpose.', 'houzez');
-} ?>

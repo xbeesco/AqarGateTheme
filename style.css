@@ -30,11 +30,12 @@ Version:        5.1.0
     max-width: 265px;
 }
 
-.houzez-hidden,
+/* .houzez-hidden,
 #otp-form,
 #otp-form-1{
     display: none !important;
-}
+} */
+
 .bootstrap-select .btn {
     border: 1px solid !important;
     border-color: #dce0e0 !important;
@@ -42,14 +43,22 @@ Version:        5.1.0
 form#submit_aqar_isvalid_form {
     max-width: 75%;
     margin: auto;
-    background: #050333;
-    color: #fff;
+    background: #ffffff;
     padding: 2rem 2rem 4rem 2rem;
-    border-radius: 8px;
+    border: 1px solid #eee;
 }
 @media (max-width: 767.98px){
     form#submit_aqar_isvalid_form {
         max-width: 100%;
+    }
+    .addProperty_card.mobile{
+        flex-direction: column-reverse;
+    }
+    .addProperty_card.mobile .addProperty_line{
+        display: none;
+    }
+    .addPropert-wrap.mobile{
+        padding: 0px !important;
     }
 }
 form#submit_aqar_isvalid_form hr {
@@ -59,8 +68,19 @@ form#submit_aqar_isvalid_form hr {
 #property-info-text {
     margin: 3rem 0;
 }
+ 
+.control--radio{
+    padding-left: 15px;
+}
 
-.map-wrap::after {
+span.required-field {
+    color: #b19b5a;
+    margin-right: 5px;
+}
+button.btn.dropdown-toggle.bs-invalid {
+    border-color: red !important;
+}
+/* .map-wrap::after {
     content: '';
     position: absolute;
     background: #fff0;
@@ -70,4 +90,65 @@ form#submit_aqar_isvalid_form hr {
     bottom: 0;
     width: 100%;
     z-index: 99;
+}
+.page-template-property-listings-map .map-wrap::after{
+    content: none !important;
+} */
+.addPropert-wrap{
+    height: 100%;
+    padding: 2rem;
+    border: 1px dashed #d7d7d7;
+}
+.addProperty-header {
+    display: flex;
+    margin-bottom: 3rem;
+}
+.addProperty_container {
+    max-width: 450px;
+    display: flex;
+    margin: auto auto 2rem;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.addProperty_container_ad {
+    display: flex;
+    margin: auto auto 2rem;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+.addProperty_container h3 {
+    text-align: center;
+    font-weight: 400;
+}
+.addProperty_card {
+    cursor: pointer;
+    background-color: #fff;
+    border: 1px solid #d7d7d7;
+    border-radius: 0.2rem;
+    padding: 0 1.5rem;
+    display: flex;
+    align-items: center;
+    transition: background-color 0.3s ease;
+}
+a.addProperty_card:hover{
+   background-color: var(--e-a-btn-bg-success-hover);
+}
+.addProperty_card img {
+    width: 3rem;
+    height: 3rem;
+}
+.addProperty_card .addProperty_line {
+    width: 1px;
+    flex: none;
+    height: 5.5rem;
+    margin-right: 1.5rem;
+    margin-left: 0.5rem;
+    background: #d7d7d7;
+}
+.addProperty_card p {
+    margin: 0;
+}
+.addProperty_card p:last-child {
+    color: #bebebe;
+    font-size: .9em;
 }

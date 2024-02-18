@@ -16,7 +16,7 @@ $enable_paid_submission = houzez_option('enable_paid_submission');
 $remaining_listings = houzez_get_remaining_listings( $userID );
 $select_packages_link = houzez_get_template_link('template/template-packages.php'); 
 
-$cancel_link = houzez_dashboard_listings();
+$cancel_link = houzez_get_template_link_2('template/user_dashboard_submit.php');
 if( !is_user_logged_in() ) {
   $cancel_link = home_url('/');  
 }
@@ -36,7 +36,7 @@ $allowed_html = array(
 
 if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
 
-    if (!houzez_is_admin() && $enable_paid_submission == 'membership' && $remaining_listings != -1 && $remaining_listings < 1 && is_user_logged_in() ) {
+    if ( $enable_paid_submission == 'membership' && $remaining_listings != -1 && $remaining_listings < 1 && is_user_logged_in() ) {
 
         echo '<div class="dashboard-content-block-wrap">
                 <div class="dashboard-content-block">';
@@ -51,10 +51,22 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
         </div>';
 
     } else { ?>
-         
-         <?php  /* --------- get property data from api ----- */
+         <?php echo aqar_is_verify_msg($userID); ?>  
+         <?php  
+            if( get_option( '_aq_show_api' ) == 'yes' &&  aqar_is_verify($userID) ) {
+                /* --------- get property data from api ----- */
+                    // echo '<div class="dashboard-content-block-wrap"><div class="dashboard-content-block">';
+                    // echo '<div id="success-messages" class="validate-success alert alert-success"
+                    // role="alert" style="display: flex;justify-content: space-between;align-content: center;">
+                    //     <strong id="messages"> الاعلانات المتبقية : ' . $remaining_listings . ' </strong>
+                    //     <a class="btn btn-info" href="' . $select_packages_link . '">' . esc_html__('Upgrade Package', 'houzez') . '</a>
+                    //     </div>';
+                    // echo '</div></div>';
+                
                    do_action( 'aqar_isvalid', $userID );
-                /* ------------------------------------------ */  ?>
+                /* ------------------------------------------ */ 
+            } else {
+          ?>
 
         <form autocomplete="off" id="submit_property_form" name="new_post" method="post" action="#" enctype="multipart/form-data"
               class="add-frontend-property" novalidate>
@@ -117,7 +129,7 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
                         break;
 
                     case 'agent_info':
-                        if(houzez_show_agent_box()) {
+                        if( houzez_show_agent_box() ) {
                             get_template_part('template-parts/dashboard/submit/contact-information');
                         }
                         break;
@@ -192,7 +204,7 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
 
             
         </form>
-
+        <?php } ?>
         <?php
     }
 }

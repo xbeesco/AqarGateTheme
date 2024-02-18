@@ -6,8 +6,20 @@ $user = get_users(array(
     'meta_value' => get_the_ID()
 ));
 $agent_id = isset($user[0]) ? $user[0]->data->ID : false;
+
+/* ------------------------- get user realstate info ------------------------ */
 $brokerage_license_number = get_the_author_meta( 'brokerage_license_number' , $agent_id );
 $license_expiration_date = get_the_author_meta( 'license_expiration_date' , $agent_id );
+$agency_id = get_post_meta( get_the_ID(), 'fave_agent_agencies', true );
+
+$user_agency_id = get_the_author_meta('fave_author_agency_id', $agent_id);
+
+if( !empty( $user_agency_id ) ) {
+    $user_agency_id = get_post_field( 'post_author', $user_agency_id );
+    $brokerage_license_number = get_the_author_meta( 'brokerage_license_number' , $user_agency_id );
+    $license_expiration_date  = get_the_author_meta( 'license_expiration_date' , $user_agency_id );
+}
+/* ----------------------------- end custom work ---------------------------- */
 
 $is_sticky = '';
 $sticky_sidebar = houzez_option('sticky_sidebar');

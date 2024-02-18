@@ -38,7 +38,7 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
     if ( ! empty( $property_data ) && ( $property_data->post_type == 'property' ) ) {
         $prop_meta_data = get_post_custom( $property_data->ID );
 
-        if ( $property_data->post_author == $current_user->ID ) {
+        if ( $property_data->post_author == $current_user->ID || current_user_can( 'manage_options' ) ) {
         
         if ( !houzez_is_admin() && $property_data->post_status == 'draft' && $enable_paid_submission == 'membership' && $remaining_listings != -1 && $remaining_listings < 1 && is_user_logged_in() ) {
         if (!houzez_user_has_membership($userID)) {
