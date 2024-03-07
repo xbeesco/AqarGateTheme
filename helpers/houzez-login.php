@@ -346,11 +346,15 @@ function nafathApi() {
             $test = true;
         }
     /* ------------------------------------ . ----------------------------------- */
+     
+    
 
     if( empty($id) ) {
-        wp_send_json( array('success' => false, 'error'=> 'رقم الهوية مطلوب') );
+        wp_send_json( array('success' => false, 'message'=> 'رقم الهوية مطلوب') );
         wp_die();
     }
+
+    aq_black_list($id);
 
     if( ! is_user_logged_in() && ! $test ){       
         $nath_id = get_users('meta_value=' . $id );

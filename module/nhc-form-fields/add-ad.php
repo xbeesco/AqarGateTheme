@@ -26,7 +26,7 @@
                 <div class="addProperty_container_ad">
                     <div class="addProperty_card mobile">
                         <button id="get_ad_info" type="submit" class="btn houzez-submit-js btn-success">
-                            <span class="btn-loader houzez-loader-js"></span>تأكيد المعلومات
+                            <span class="btn-loader houzez-loader-js"></span>عرض الاعلان
                         </button>
                         <div class="addProperty_line"></div>
                         <div class="form-group col-md-9 col-sm-12">

@@ -4,6 +4,8 @@ class NafathMoudle{
 
     protected $BaseUrl;
 
+    protected $apikey;
+
     protected $sandbox = true;
 
     protected $dummy = true;

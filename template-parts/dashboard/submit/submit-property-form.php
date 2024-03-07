@@ -51,8 +51,8 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
         </div>';
 
     } else { ?>
-         <?php echo aqar_is_verify_msg($userID); ?>  
-         <?php  
+         <?php 
+             $is_verify = get_user_meta( $userID, 'aqar_is_verify_user', true );
             if( get_option( '_aq_show_api' ) == 'yes' &&  aqar_is_verify($userID) ) {
                 /* --------- get property data from api ----- */
                     // echo '<div class="dashboard-content-block-wrap"><div class="dashboard-content-block">';
@@ -62,8 +62,12 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
                     //     <a class="btn btn-info" href="' . $select_packages_link . '">' . esc_html__('Upgrade Package', 'houzez') . '</a>
                     //     </div>';
                     // echo '</div></div>';
-                
-                   do_action( 'aqar_isvalid', $userID );
+                    if( $is_verify && ! aq_is_black_list() ) {
+                        do_action( 'aqar_isvalid', $userID );
+                    } else {
+                        aqar_is_verify_msg($userID); 
+                        return;
+                    }
                 /* ------------------------------------------ */ 
             } else {
           ?>

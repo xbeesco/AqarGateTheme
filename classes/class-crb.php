@@ -74,14 +74,37 @@ class AG_CF
             ->set_html( $area_btn_3 )
         ) )
 
-        ->add_tab( __( 'Twilio Settings' ), array(
-            Field::make( 'text', 'twilio-account-sid' ),
-            Field::make( 'text', 'twilio-auth-token' ),
-            Field::make( 'text', 'twilio-sender-number' ),
-            Field::make( 'textarea', 'r-sms-txt' )
-            ->set_attribute( 'placeholder', __("[otp] is your One Time Verification(OTP) to confirm your phone no at AqarGate.",'aqargate') ),
-
-        ) );
+        ->add_tab( __( 'Black List' ), [
+                Field::make('checkbox', 'can_login', __('لا يستطيع التسجيل '))
+                    ->set_option_value('yes'),
+                    Field::make( 'textarea', 'can_login_content', 'محتوي رسالة التسجيل' )
+                    ->set_conditional_logic([
+                        [
+                            'field' => 'can_login',
+                            'value' => true,
+                        ]
+                    ] ),
+                    Field::make('checkbox', 'can_add_property', __('لا يستطيع  اضافة عقار'))
+                    ->set_option_value('yes'),
+                    Field::make( 'textarea', 'can_add_property_content', 'محتوي رسالة اضافة العقار' )
+                    ->set_conditional_logic([
+                        [
+                            'field' => 'can_add_property',
+                            'value' => true,
+                        ]
+                    ] ),
+                    Field::make( 'complex', 'id_black_list', __( 'اضافة هوية الاشخاص في القائمة السوداء' ) )
+                    ->set_layout( 'tabbed-vertical' )
+                    ->add_fields([
+                        // Field::make('text', 'name', __('الاسم')),
+                        Field::make('text', 'id', __('رقم الهوية')),
+                    ] )
+                    ->set_header_template( '
+                        <% if (id) { %>
+                            [ <%- id %> ]
+                        <% } %>
+                    ' )
+            ] );
 
 
              // Display container on Book Category taxonomy

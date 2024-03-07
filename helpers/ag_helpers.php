@@ -2247,12 +2247,28 @@ function aqar_is_verify_msg($userID)
     if( $userID > 0 ) {
         $is_verify = get_user_meta( $userID, 'aqar_is_verify_user', true );
         $dash_profile_link = houzez_get_template_link_2('template/user_dashboard_profile.php');
-       
         if( ! $is_verify ) { ?>
+            <style>
+                #submit_property_form, #save_as_draft, .dashboard-header-wrap {
+                        display: none;
+                }
+            </style>
         <div id="errors-messages" class="validate-errors alert alert-danger" role="alert">
             <strong id="messages">
             غير مسموح لك الدخول الي هذه الصفحه قبل ملأ الداتا <a href="<?php echo $dash_profile_link ; ?>"> الملف الشخصي </a>
             </strong> 
+        </div>
+        <?php }  
+        if ( aq_is_black_list() ) { 
+            $error = !empty(carbon_get_theme_option( 'can_add_property_content' )) ? carbon_get_theme_option( 'can_add_property_content' ) : 'غير مسموح لك الدخول الي هذه الصفحه';
+            ?>
+            <style>
+                #submit_property_form, #save_as_draft, .dashboard-header-wrap {
+                        display: none;
+                }
+            </style>
+            <div id="errors-messages" class="validate-errors alert alert-danger" role="alert">
+            <strong id="messages"><?php echo $error ; ?></strong> 
         </div>
         <?php }
         return;
@@ -2634,4 +2650,60 @@ function handle_contract_submission() {
         wp_send_json(["sucsses" => false, "html" => "هناك خطأ ما في ارسال الميل نرجوا اعادة المحاولة"]);
     }
 
+}
+
+
+
+function aq_black_list($id){
+    if( get_option( '_can_login' ) === 'yes' ) {
+        $id_black_list = carbon_get_theme_option( 'id_black_list' );
+        $can_login_content = !empty(carbon_get_theme_option( 'can_login_content' )) ? carbon_get_theme_option( 'can_login_content' ) : 'رقم الهوية غير مسموح به';
+
+        if( ! empty( $id_black_list ) ) { 
+            $ids = [];
+            foreach( $id_black_list as $key => $value ) {
+                 $ids[] = $value['id'];
+            }
+            if( in_array( $id, $ids ) ) {
+                wp_send_json(['success' => false, 'message' => $can_login_content] );
+                wp_die();
+            }
+        }
+    }
+}
+
+
+function aq_is_black_list(){
+    $userID    = get_current_user_id();
+    $id_number = get_the_author_meta( 'aqar_author_id_number' , $userID );
+    $type_id   = get_the_author_meta( 'aqar_author_type_id' , $userID );
+
+    // check the id if it start with 7 use it [user type agency] :bool
+    $is_unified_number = aq_numberStartsWith($type_id, '7');
+    
+    if( $type_id === '2' && ! $is_unified_number ){
+        $id_number = get_the_author_meta( 'aqar_author_unified_number' ,$userID );
+    }
+
+    if( get_option( '_can_add_property' ) === 'yes' ) {
+        $id_black_list = carbon_get_theme_option( 'id_black_list' );
+        $can_login_content = !empty(carbon_get_theme_option( 'can_login_content' )) ? carbon_get_theme_option( 'can_login_content' ) : 'رقم الهوية غير مسموح به';
+        if( ! empty( $id_black_list ) ) { 
+            $ids = [];
+            foreach( $id_black_list as $key => $value ) {
+                 $ids[] = $value['id'];
+            }
+            if( in_array( $id_number, $ids ) ) {
+                return true;
+            }
+        } else {
+            return false;
+        }
+
+    }
+    return false;
+}
+
+function aq_numberStartsWith($number, $prefix) {
+    return substr($number, 0, strlen($prefix)) === $prefix;
 }
