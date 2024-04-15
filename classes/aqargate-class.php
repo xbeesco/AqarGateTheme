@@ -113,6 +113,13 @@ class AqarGate{
         // if device has no task link to device .
         $current_post_title = get_the_title($current_post_id);
         $current_post_url   = urlencode(get_the_permalink($current_post_id));
+
+        $advertisement_response = get_post_meta($current_post_id, 'advertisement_response', true);
+        if( !empty($advertisement_response) && isset($advertisement_response['qrCodeUrl'])) {
+            $current_post_url = $advertisement_response['qrCodeUrl'];
+        } else if( !empty(get_post_meta($current_post_id, 'qrCodeUrl', true)) ) {
+            $current_post_url = get_post_meta($current_post_id, 'qrCodeUrl', true);
+        }
             
         $current_post_type  = get_post_type($current_post_id);
 
@@ -130,8 +137,7 @@ class AqarGate{
         $image_attributes = apply_filters('jas_image_attributes', null);
 
         $image_src = sprintf('https://api.qrserver.com/v1/create-qr-code/?size=%s&data=%s', $dimension, $current_post_url);
-        $content   .= sprintf("<div id='section-to-print' class='qrcode'><img %s  src='%s' alt='%s' /></div>", $image_attributes, $image_src, $current_post_title);
-
+        $content   .= sprintf("<div id='section-to-print' class='qrcode'><a href='%s' target='_blank'><img %s  src='%s' alt='%s' /></a></div>",$current_post_url, $image_attributes, $image_src, $current_post_title);
             return $content;
         }else{
             return $content;

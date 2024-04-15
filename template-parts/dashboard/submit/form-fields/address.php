@@ -1,4 +1,13 @@
-<?php global $houzez_local; ?>
+<?php 
+global $houzez_local; 
+$disabled = 'disabled';
+$readonly = 'readonly';
+
+if( aqar_can_edit() ) {
+    $disabled = '';
+    $readonly = '';
+}
+?>
 <div class="form-group">
 	<label for="property_map_address">
 		<?php echo houzez_option('cl_address', 'Address').houzez_required_field('property_map_address'); ?>		
@@ -8,5 +17,5 @@
     if (houzez_edit_property()) {
         houzez_field_meta('property_map_address');
     }
-    ?>" autocomplete="off" placeholder="<?php echo houzez_option('cl_address_plac', 'Enter your property address'); ?>" type="text" readonly>
+    ?>" autocomplete="off" placeholder="<?php echo houzez_option('cl_address_plac', 'Enter your property address'); ?>" type="text" <?php echo $readonly; ?>>
 </div>

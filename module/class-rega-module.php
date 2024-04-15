@@ -99,7 +99,7 @@ class RegaMoudle{
         $response = $this->do_request(
             '',
             'GET',
-            'v1/brokerage/AdvertisementValidator',
+            'v2/brokerage/AdvertisementValidator',
             $this->credential(),
             array(),
             [
@@ -113,19 +113,29 @@ class RegaMoudle{
         return $response;
     }
 
+    public function PlatformCompliance( $bodyData = array() ){
+        
+        $response = $this->do_request(
+            '',
+            'POST',
+            'v1/brokerage/PlatformCompliance',
+            $this->credential(),
+            json_encode($bodyData),
+            array(),
+        );
+
+        // $response = $this->test_response();
+        return $response;
+    }
+
     public function CreateADLicense( $bodyData = array() )
     {
-        $testUrl = 'https://integration-gw.housingapps.sa/nhc/dev/v1/brokerage/CreateADLicense';
+  
         $response = $this->do_request(
-            $testUrl,
+            '',
             'POST',
-            'v1/brokerage/CreateADLicense',
-            array(
-                'X-IBM-Client-Id: 7170eb897cb971a3a35a55a887121d42',
-                'X-IBM-Client-Secret: 7bd077b49b8238ef23c6ee05215cf9f7',
-                'RefId: 7170eb897cb971a3a35a55a887121d42',
-                'CallerReqTime: ' . strtotime( date('Y-m-d') ),
-              ),
+            'v2/brokerage/CreateADLicense',
+            $this->credential(),
             json_encode($bodyData),
             array(),
         );

@@ -1,3 +1,12 @@
+<?php 
+$disabled = 'disabled';
+$readonly = 'readonly';
+
+if( aqar_can_edit() ) {
+    $disabled = '';
+    $readonly = '';
+}
+?>
 <div class="form-group">
 	<label for="prop_land_area">
 		<?php echo houzez_option('cl_land_size', 'Land Area').houzez_required_field( 'land_area' ); ?>
@@ -7,6 +16,6 @@
     if (houzez_edit_property()) {
         houzez_field_meta('property_land');
     }
-    ?>" placeholder="<?php echo houzez_option('cl_land_size_plac', 'Enter property land area size'); ?>" type="text" readonly>
+    ?>" placeholder="<?php echo houzez_option('cl_land_size_plac', 'Enter property land area size'); ?>" type="text" <?php echo $readonly; ?>>
 	<small class="form-text text-muted"><?php echo houzez_option('cl_only_digits', 'Only digits'); ?></small>
 </div>

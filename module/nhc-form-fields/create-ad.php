@@ -55,8 +55,8 @@
                             <span class="required-field">*</span> 
                             </label>
                             <input class="form-control" id="brokerageContractNumber" name="brokerageContractNumber"
-                                value="" placeholder="6200000027" type="text" required>
-                                <p>عقد وساطة صحيح تجريبي : 6200000027</p>
+                                value="" placeholder="6100000267" type="text" required>
+                                <p>عقد وساطة صحيح تجريبي : 6100000267</p>
                         </div>
                     </div>
                     <div id="create-brokerage-Contract-Number" class="col-md-12 col-sm-12" style="background: #fff;padding: 2rem;">

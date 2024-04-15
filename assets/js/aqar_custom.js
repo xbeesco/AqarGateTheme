@@ -237,4 +237,286 @@ jQuery(document).ready(function($){
 		$(elements_link).attr('href', add_listing);
 	}
 
+	/* ------------------------------------------------------------------------ */
+        /*  Property additional Features
+         /* ------------------------------------------------------------------------ */
+		 $( "#rer-borders" ).sortable({
+            revert: 100,
+            placeholder: "detail-placeholder",
+            handle: ".sort-additional-row",
+            cursor: "move"
+        });
+
+        $( '.add-additional-row' ).click(function( e ){
+            e.preventDefault();
+
+            var numVal = $(this).data("increment") + 1;
+            $(this).data('increment', numVal);
+            $(this).attr({
+                "data-increment" : numVal
+            });
+
+            var newAdditionalDetail = '<tr>'+
+                '<td class="table-q-width">'+
+                '<input class="form-control" type="text" name="rerBorders['+numVal+'][direction]" id="direction_'+numVal+'" value="">'+
+                '</td>'+
+                '<td class="table-q-width">'+
+                '<input class="form-control" type="text" name="rerBorders['+numVal+'][type]" id="type_'+numVal+'" value="">'+
+                '</td>'+
+				'<td class="table-q-width">'+
+                '<input class="form-control" type="text" name="rerBorders['+numVal+'][length]" id="length_'+numVal+'" value="">'+
+                '</td>'+
+                '<td class="">'+
+                '<a class="sort-additional-row btn btn-light-grey-outlined"><i class="houzez-icon icon-navigation-menu"></i></a>'+
+                '</td>'+
+                '<td>'+
+                '<button data-remove="'+numVal+'" class="remove-additional-row btn btn-light-grey-outlined"><i class="houzez-icon icon-close"></i></button>'+
+                '</td>'+
+                '</tr>';
+
+            $( '#rer-borders').append( newAdditionalDetail );
+            removeAdditionalDetails();
+        });
+
+        var removeAdditionalDetails = function (){
+
+            $( '.remove-additional-row').click(function( event ){
+                event.preventDefault();
+                var $this = $( this );
+                $this.closest( 'tr' ).remove();
+            });
+        }
+        removeAdditionalDetails();
+
+
+		var processing_text = houzezProperty.processing_text;
+		var are_you_sure_text = houzezProperty.are_you_sure_text;
+		/*--------------------------------------------------------------------------
+         *  update property
+         * -------------------------------------------------------------------------*/
+        $( 'a.update-property' ).on( 'click', function (){
+            
+			var $this = $( this );
+			var propID = $this.data('id');
+			var propNonce = $this.data('nonce');
+			var editLink = $this.data('edit');
+
+			bootbox.confirm({
+			title: "سبب التعديل ?",
+			message: '<textarea id="update-notes" rows="4" style="width:100%;"></textarea>',
+			buttons: {
+				confirm: {
+				label: 'موافقة',
+				className: 'btn-primary'
+				},
+				cancel: {
+				label: 'الغاء',
+				className: 'btn-secondary'
+				}
+			},
+			callback: function (result) {
+				if(result==true) {
+					fave_processing_modal( processing_text );
+					// User clicked the confirm button
+					var textareaValue = document.getElementById('update-notes').value;
+					if (textareaValue.trim() !== '') {
+					  console.log('Textarea value:', textareaValue);
+					  // Perform further actions with the textarea value
+					} else {
+					  // Textarea is empty, display an error message or take appropriate action
+					  	jQuery('#fave_modal').modal('hide');
+					  	alert( 'من فضلك اكتب سبب التعديل' );
+						return false;
+					}
+					$.ajax({
+						type: 'POST',
+						dataType: 'json',
+						url: ajax_aqar.ajaxurl,
+						data: {
+							'action': 'aqar_update_property',
+							'prop_id': propID,
+							'security': propNonce,
+							'content': textareaValue,
+							'edit_link': editLink
+						},
+						success: function(data) {
+							if ( data.success == true ) {
+								window.location = data.redirect;
+							} else {
+								jQuery('#fave_modal').modal('hide');
+								alert( data.reason );
+							}
+						},
+						error: function(errorThrown) {
+
+						}
+					}); // $.ajax
+				} // result
+			} // Callback
+		});
+
+		return false;
+		
+		});
+
+		/*--------------------------------------------------------------------------
+         *  cancel property
+         * -------------------------------------------------------------------------*/
+        $( 'a.cancel-property' ).on( 'click', function (){
+            
+			var $this = $( this );
+			var propID = $this.data('id');
+			var propNonce = $this.data('nonce');
+			var editLink = $this.data('edit');
+
+			bootbox.confirm({
+			title: "سبب الالغاء ?",
+			message: '<textarea id="cancel-notes" rows="4" style="width:100%;"></textarea>',
+			buttons: {
+				confirm: {
+				label: 'موافقة',
+				className: 'btn-primary'
+				},
+				cancel: {
+				label: 'الغاء',
+				className: 'btn-secondary'
+				}
+			},
+			callback: function (result) {
+				if(result==true) {
+					// User clicked the confirm button
+					var textareaValue = document.getElementById('cancel-notes').value;
+					if (textareaValue.trim() !== '') {
+					  console.log('Textarea value:', textareaValue);
+					  // Perform further actions with the textarea value
+					} else {
+					  // Textarea is empty, display an error message or take appropriate action
+					  	jQuery('#fave_modal').modal('hide');
+					  	alert( 'من فضلك اكتب سبب الالغاء .' );
+						return false;
+					}
+					$.ajax({
+						type: 'POST',
+						dataType: 'json',
+						url: ajax_aqar.ajaxurl,
+						data: {
+							'action': 'aqar_cancel_property',
+							'prop_id': propID,
+							'security': propNonce,
+							'content': textareaValue,
+							'edit_link': editLink
+						},
+						success: function(data) {
+							if ( data.success == true ) {
+								window.location = data.redirect;
+							} else {
+								var response = '<br><strong>'+data.reason+'</strong>';
+								jQuery('#fave_modal .houzez_messages_modal').html(response);
+							}
+						},
+						error: function(errorThrown) {
+
+						}
+					}); // $.ajax
+				} // result
+			} // Callback
+		});
+
+		return false;
+		
+		});
+
+
+		/*--------------------------------------------------------------------------
+         *  draft property
+         * -------------------------------------------------------------------------*/
+        $( '.draft-property' ).on( 'click', function( e ) {
+            e.preventDefault();
+            var $this = $( this );
+            var propid = $this.data( 'property' );
+            $.ajax({
+                url: ajax_aqar.ajaxurl,
+                data: {
+                    'action': 'aqargate_property_draft',
+                    'propID': propid
+                },
+                method: 'POST',
+                dataType: "JSON",
+
+                beforeSend: function( ) {
+                    houzez_processing_modal(processing_text);
+                },
+                success: function( response ) {
+                    window.location.reload();
+                },
+                complete: function(){
+                }
+            });
+
+        });
+
+		/*--------------------------------------------------------------------------
+         *  edit property
+         * -------------------------------------------------------------------------*/
+        $( '#edit-property' ).on( 'click', function( e ) {
+            e.preventDefault();
+			var $this    = $( this );
+			var propID   = $this.data('property');
+			var form     = $("#submit_property_form");
+			var editLink = $this.data('edit');
+
+			bootbox.confirm({
+			message: "<p><strong>"+are_you_sure_text+"</strong></p>",
+			buttons: {
+				confirm: {
+				label: 'موافقة',
+				className: 'btn-primary'
+				},
+				cancel: {
+				label: 'الغاء',
+				className: 'btn-secondary'
+				}
+			},
+			callback: function (result) {
+				if(result==true) {
+					// User clicked the confirm button
+					fave_processing_modal( processing_text );
+					$.ajax({
+						type: 'POST',
+						dataType: 'json',
+						url: ajax_aqar.ajaxurl,
+						data: {
+							'action': 'aqargate_edit_api_property',
+							'propID': propID,
+							'edit_link': editLink,
+							'formData': form.serialize()
+						},
+						success: function(data) {
+							if ( data.success == true ) {
+								form.submit();
+							} else {
+								var response = '<br><strong>'+data.reason+'</strong>';
+								jQuery('#fave_modal .houzez_messages_modal').html(response);
+								// jQuery('#fave_modal').modal('hide');
+								// alert( data.reason );
+							}
+						},
+						error: function(errorThrown) {
+
+						}
+					}); // $.ajax
+				} // result
+			} // Callback
+		});
+
+		return false;
+
+        });
+
+		var houzez_processing_modal = function ( msg ) {
+            var process_modal ='<div class="modal fade" id="fave_modal" tabindex="-1" role="dialog" aria-labelledby="faveModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-body houzez_messages_modal">'+msg+'</div></div></div></div></div>';
+            jQuery('body').append(process_modal);
+            jQuery('#fave_modal').modal();
+        };
+
 });

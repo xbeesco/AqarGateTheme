@@ -1,4 +1,13 @@
-<?php global $houzez_local; ?>
+<?php 
+global $houzez_local; 
+$disabled = 'disabled';
+$readonly = 'readonly';
+
+if( aqar_can_edit() ) {
+    $disabled = '';
+    $readonly = '';
+}
+?>
 <div class="form-group">
 	<label for="postal_code"><?php echo houzez_option('cl_zip', 'Postal Code / Zip'); ?></label>
 
@@ -6,5 +15,5 @@
     if (houzez_edit_property()) {
         houzez_field_meta('property_zip');
     }
-    ?>" placeholder="<?php echo houzez_option('cl_zip_plac', 'Enter your property zip code'); ?>" type="text" readonly>
+    ?>" placeholder="<?php echo houzez_option('cl_zip_plac', 'Enter your property zip code'); ?>" type="text" <?php echo $readonly; ?>>
 </div>

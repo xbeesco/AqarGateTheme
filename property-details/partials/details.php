@@ -16,10 +16,22 @@ $additional_features = get_post_meta( get_the_ID(), 'additional_features', true)
 $advertiserId = get_post_meta( get_the_ID(), 'adLicenseNumber', true );
 $creationDate = get_post_meta( get_the_ID(), 'creationDate', true );
 $endDate = get_post_meta( get_the_ID(), 'endDate', true );
-
+$borders = get_post_meta( get_the_ID(), 'borders', true );
+$northLimitName = $borders['northLimitName'] ?? '';
+$northLimitDescription = $borders['northLimitDescription'] ?? '';
+$northLimitLengthChar = $borders['northLimitLengthChar'] ?? '';
+$eastLimitName = $borders['eastLimitName'] ?? '';
+$eastLimitDescription = $borders['eastLimitDescription'] ?? '';
+$eastLimitLengthChar = $borders['eastLimitLengthChar'] ?? '';
+$westLimitName = $borders['westLimitName'] ?? '';
+$westLimitDescription = $borders['westLimitDescription'] ?? '';
+$westLimitLengthChar = $borders['westLimitLengthChar'] ?? '';
+$southLimitName = $borders['southLimitName'] ?? '';
+$southLimitDescription = $borders['southLimitDescription'] ?? '';
+$southLimitLengthChar = $borders['southLimitLengthChar'] ?? '';
 
 ?>
-<div class="detail-wrap ddd">
+<div class="detail-wrap">
 	<ul class="<?php echo houzez_option('prop_details_cols', 'list-2-cols'); ?> list-unstyled">
 		<?php
         if( !empty( $prop_id ) && $hide_fields['prop_id'] != 1 ) {
@@ -163,6 +175,25 @@ $endDate = get_post_meta( get_the_ID(), 'endDate', true );
 	                <strong> تاريخ انتهاء ترخيص الاعلان :   </strong> 
 	                <span>'.$endDate .'</span>
                 </li>';
+        }
+
+        if( !empty( $borders )  ) {
+            echo '<li>
+	                <strong>  الحد الشمالي :  </strong> 
+	                <span>'.$northLimitName . ' / ' . $northLimitDescription . ' / ' . $northLimitLengthChar .'</span>
+                </li>';
+            echo '<li>
+                <strong>  الحد الشرقي :  </strong> 
+                <span>'.$eastLimitName . ' / ' . $eastLimitDescription . ' / ' . $eastLimitLengthChar .'</span>
+            </li>';
+            echo '<li>
+                <strong>  الحد الغربي :  </strong> 
+                <span>'.$westLimitName . ' / ' . $westLimitDescription . ' / ' . $westLimitLengthChar .'</span>
+            </li>';
+            echo '<li>
+                <strong>  الحد الجنوبي :  </strong> 
+                <span>'.$southLimitName . ' / ' . $southLimitDescription . ' / ' . $southLimitLengthChar .'</span>
+            </li>';
         }
         ?>
         

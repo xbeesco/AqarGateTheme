@@ -1,4 +1,13 @@
-<?php global $houzez_local; ?>
+<?php 
+global $houzez_local; 
+$disabled = 'disabled';
+$readonly = 'readonly';
+
+if( aqar_can_edit() ) {
+    $disabled = '';
+    $readonly = '';
+}
+?>
 <div class="form-group col-md-6 col-sm-12">
 	<label for="lng"><?php echo houzez_option( 'cl_longitude', 'Longitude' ); ?></label>
 	<input class="form-control" id="longitude" name="lng" value="<?php
@@ -9,5 +18,5 @@
         	echo sanitize_text_field($lng[1]);
         }
     }
-    ?>" placeholder="<?php echo houzez_option('cl_longitude_plac', 'Enter address longitude'); ?>" type="text" readonly>
+    ?>" placeholder="<?php echo houzez_option('cl_longitude_plac', 'Enter address longitude'); ?>" type="text" <?php echo $readonly; ?>>
 </div>

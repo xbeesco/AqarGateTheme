@@ -6,12 +6,19 @@ if (houzez_edit_property()) {
 
 	$city = houzez_get_post_term_slug($property_data->ID, 'property_city');
 }
+$disabled = 'disabled';
+$readonly = 'readonly';
+
+if( aqar_can_edit() ) {
+    $disabled = '';
+    $readonly = '';
+}
 ?>
 <div class="form-group">
 	<label for="locality"><?php echo houzez_option( 'cl_city', 'City' ).houzez_required_field('city'); ?></label>
 	<?php
 	if(houzez_option('location_dropdowns') == 'yes') { ?>
-		<select name="locality" id="city" data-city="<?php echo urldecode($city); ?>" data-target="houzezFourthList" <?php houzez_required_field_2('city'); ?> class="houzezSelectFilter houzezThirdList selectpicker form-control bs-select-hidden"  data-size="5" data-none-results-text="<?php echo houzez_option('cl_no_results_matched', 'No results matched');?> {0}" data-live-search="true" disabled>
+		<select name="locality" id="city" data-city="<?php echo urldecode($city); ?>" data-target="houzezFourthList" <?php houzez_required_field_2('city'); ?> class="houzezSelectFilter houzezThirdList selectpicker form-control bs-select-hidden"  data-size="5" data-none-results-text="<?php echo houzez_option('cl_no_results_matched', 'No results matched');?> {0}" data-live-search="true" <?php echo $disabled; ?>>
             <?php
 	        if (houzez_edit_property()) {
 	            global $property_data;

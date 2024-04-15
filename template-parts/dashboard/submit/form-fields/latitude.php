@@ -1,4 +1,13 @@
-<?php global $houzez_local; ?>
+<?php 
+global $houzez_local; 
+$disabled = 'disabled';
+$readonly = 'readonly';
+
+if( aqar_can_edit() ) {
+    $disabled = '';
+    $readonly = '';
+}
+?>
 <div class="form-group col-md-6 col-sm-12">
 	<label for="lat"><?php echo houzez_option( 'cl_latitude', 'Latitude' ); ?></label>
 
@@ -10,5 +19,5 @@
         	echo sanitize_text_field($lat[0]);
         }
     }
-    ?>" placeholder="<?php echo houzez_option('cl_latitude_plac', 'Enter address latitude'); ?>" type="text" readonly>
+    ?>" placeholder="<?php echo houzez_option('cl_latitude_plac', 'Enter address latitude'); ?>" type="text" <?php echo $readonly; ?>>
 </div>

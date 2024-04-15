@@ -1,4 +1,7 @@
 <?php
+if( ! defined('AGDEBUG') ) {
+    define( 'AGDEBUG', true );
+}
 // add_action( 'wp_enqueue_scripts', 'ag_enqueue_styles' );
 function ag_enqueue_styles() {
     wp_enqueue_style( 'aqar-child', get_stylesheet_uri() );
@@ -7,7 +10,6 @@ function ag_enqueue_styles() {
 /*                                // Constants                                */
 /* -------------------------------------------------------------------------- */
 define('AG_DIR', __DIR__.'/');
-
 
 add_action('wp_enqueue_scripts', 'aqar_enqueue_scripts');
 
@@ -34,6 +36,8 @@ include_once ( AG_DIR . 'helpers/houzez-login.php' );
 include_once ( AG_DIR . 'helpers/ag_helpers.php' );
 include_once ( AG_DIR . 'helpers/ag_get_array_property_data.php' );
 require_once ( AG_DIR . 'helpers/api-fields-controller.php' );
+require_once ( AG_DIR . 'helpers/aqar-ajax.php' );
+
 /* -------------------------------------------------------------------------- */
 /*                                 // Classes                                 */
 /* -------------------------------------------------------------------------- */

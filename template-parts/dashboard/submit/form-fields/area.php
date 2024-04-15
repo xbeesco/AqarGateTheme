@@ -5,13 +5,20 @@ if (houzez_edit_property()) {
 
 	$area = houzez_get_post_term_slug($property_data->ID, 'property_area');
 }
+$disabled = 'disabled';
+$readonly = 'readonly';
+
+if( aqar_can_edit() ) {
+    $disabled = '';
+    $readonly = '';
+}
 ?>
 <div class="form-group">
 	<label for="neighborhood"><?php echo houzez_option( 'cl_area', 'Area' ).houzez_required_field('area'); ?></label>
 
 	<?php
 	if(houzez_option('location_dropdowns') == 'yes') { ?>
-		<select name="neighborhood" data-area="<?php echo urldecode($area); ?>" data-size="5" id="neighborhood" <?php houzez_required_field_2('area'); ?> class=" houzezSelectFilter houzezFourthList selectpicker form-control bs-select-hidden" data-live-search="true" data-none-results-text="<?php echo houzez_option('cl_no_results_matched', 'No results matched');?> {0}" disabled>
+		<select name="neighborhood" data-area="<?php echo urldecode($area); ?>" data-size="5" id="neighborhood" <?php houzez_required_field_2('area'); ?> class=" houzezSelectFilter houzezFourthList selectpicker form-control bs-select-hidden" data-live-search="true" data-none-results-text="<?php echo houzez_option('cl_no_results_matched', 'No results matched');?> {0}" <?php echo $disabled; ?>>
             <?php
 	        if (houzez_edit_property()) {
 	            global $property_data;

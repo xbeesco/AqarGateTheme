@@ -1,3 +1,12 @@
+<?php 
+$disabled = 'disabled';
+$readonly = 'readonly';
+
+if( aqar_can_edit() ) {
+    $disabled = '';
+    $readonly = '';
+}
+?>
 <div class="form-group">
 	<label for="prop_size">
 		<?php echo houzez_option('cl_area_size', 'Area Size').houzez_required_field('area_size'); ?>		
@@ -7,6 +16,6 @@
     if (houzez_edit_property()) {
         houzez_field_meta('property_size');
     }
-    ?>" placeholder="<?php echo houzez_option('cl_area_size_plac', 'Enter property area size'); ?>" type="text" readonly>
+    ?>" placeholder="<?php echo houzez_option('cl_area_size_plac', 'Enter property area size'); ?>" type="text" <?php echo $readonly; ?>>
 	<small class="form-text text-muted"><?php echo houzez_option('cl_only_digits', 'Only digits'); ?></small>
 </div>

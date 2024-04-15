@@ -151,7 +151,7 @@ class AG_CF
     /**
      * ag_fields_array
      *
-     * @return void
+     * @return array
      */
     public function ag_fields_array(){
         //get Fields
@@ -167,7 +167,7 @@ class AG_CF
     /**
      * prop_multi_step_fileds
      *
-     * @return void
+     * @return array
      */
     public function prop_multi_step_fileds(){      
         $main_fields  = ag_get_property_fields();

@@ -34,7 +34,7 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
 
     $edit_prop_id = intval( trim( $_GET['edit_property'] ) );
     $property_data    = get_post( $edit_prop_id );
-
+    
     if ( ! empty( $property_data ) && ( $property_data->post_type == 'property' ) ) {
         $prop_meta_data = get_post_custom( $property_data->ID );
 
@@ -119,6 +119,8 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
                         break;
 
                     case 'location':
+                        get_template_part('template-parts/dashboard/submit/borders');
+                        // get_template_part('template-parts/dashboard/submit/form-fields/rerBorders');
                         get_template_part('template-parts/dashboard/submit/location');
                         break;
                     
@@ -173,10 +175,13 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
             }?>
 
             <div class="d-flex add-new-listing-bottom-nav-wrap justify-content-end">
-                <button type="submit" class="btn btn-success houzez-submit-js">
+                <button type="submit" class="btn btn-success houzez-submit-js" style="display:none;">
                     <?php get_template_part('template-parts/loader'); ?>
                     <?php echo houzez_option('fal_save_changes', esc_html__('Save Changes', 'houzez')); ?>
                 </button>
+                <a href="#" id="edit-property" class="btn btn-success" data-property="<?php echo intval($edit_prop_id); ?>"> 
+                    <?php echo houzez_option('fal_save_changes', esc_html__('Save Changes', 'houzez')); ?>
+                </a>
             </div>
         </form>
 

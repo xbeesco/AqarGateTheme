@@ -149,8 +149,8 @@ class PropertyMoudle{
                         <p>لدي رقم ترخيص الاعلان</p>
                     </div>
                 </a>
-                <?php if( ! houzez_is_agency() ) : ?>
-                <a href="<?php echo $licensing_by_aqargate; ?>" class="addProperty_card"  style="display: none;">
+                <?php if( AGDEBUG  ) : ?>
+                <a href="<?php echo $licensing_by_aqargate; ?>" class="addProperty_card">
                     <img src="<?php echo trailingslashit( get_stylesheet_directory_uri() ) .'assets/img/add.png'; ?>" class="" loading="lazy" width="25" height="25">
                     <div class="addProperty_line"></div>
                     <div>
@@ -293,7 +293,7 @@ class PropertyMoudle{
             $ajax_response = array( 'success' => false , 'reason' => $msg );
             echo wp_send_json( $ajax_response );
             wp_die();
-        }else{
+        } else {
             $translate = [
                 'advertiserId' => 'المعلن',
                 'adLicenseNumber' => 'رقم الترخيص',
@@ -322,7 +322,6 @@ class PropertyMoudle{
                 "districtCode" => "كود الحي",
                 "street" => "الشارع",
                 "postalCode" => "الرمز البريدي",
-                "buildingNumber" => "رقم المبني",
                 "additionalNumber" => "رقم اضافي",
                 'propertyFace' => 'واجهة العقار',
                 'planNumber' => 'رقم المخطط',
@@ -336,8 +335,37 @@ class PropertyMoudle{
                 'creationDate' => 'تاريخ إنشاء ترخيص الاعلان ',
                 'endDate' => 'تاريخ انتهاء ترخيص الاعلان',
                 'qrCodeUrl' => 'رابط رمز الاستجابة السريع',
+                'northLimitName'=> 'نوع الحد الشمالي',
+                'northLimitDescription'=> 'وصف الحد الشمالي',
+                'northLimitLengthChar'=> 'طول الحد الشمالي',
+                'eastLimitName'=> 'نوع الحد الشرقي',
+                'eastLimitDescription'=> 'وصف الحد الشرقي',
+                'eastLimitLengthChar'=> 'طول الحد الشرقي',
+                'westLimitName'=> 'نوع الحد الغربي',
+                'westLimitDescription'=> 'وصف الحد الغربي',
+                'westLimitLengthChar'=> 'طول الحد الغربي',
+                'southLimitName'=> 'نوع الحد الجنوبي',
+                'southLimitDescription'=> 'وصف الحد الجنوبي',
+                'southLimitLengthChar'=> 'طول الحد الجنوبي',
+                'adSource' => 'مصدر رخصة الاعلان',
+                'titleDeedTypeName' => 'نوع وثيقة الملكية',
+                'LocationDescriptionOnMOJDeed' => 'وصف موقع العقار ',
+                'isHalted' => 'وجود وقف؟',
+                'isTestment' => 'وجود وصية؟',
+                'landTotalPrice' => 'اجمالي سعر البيع',
+                'LandTotalAnnualRent' => 'اجمالي الايجار السنوي',
+                'landNumber' => 'رقم القطعة',
+                'adLicenseURL' => 'رابط ترخيص الاعلان',
+                'marketingLicenseNumber' => 'الوساطة والتسويق',
+                'nationalCrNumber' => 'رقم الهوية الوطنية',
+                'propertyTotalPrice'=> 'اجمالي السعر',
+                'notes' => 'ملاحظات',
+                'locationDescriptionOnMOJDeed' => 'الوصف حسب الصك',
+                'landTotalAnnualRent' => 'الايجار السنوي'
+
             ];
             $data = [];
+            // var_export($response);
             if( isset($response->Body->result->advertisement) ) {
 
                 // في حالة رقم العلن موجود بالفعل اظهار رسالة بذلك
@@ -355,7 +383,11 @@ class PropertyMoudle{
                  
               
                 foreach( $response->Body->result->advertisement as $key => $advertisement ) {
-                    if( $key == 'location' 
+                    if( $key == 'rerBorders' || $key == 'rerConstraints' ) {
+                        continue;
+                    }
+                    else if( $key == 'location' ||
+                        $key == 'borders'
                       ){
                         foreach ($advertisement as $k => $v) {
                             $data[]= $translate[$k] . ' : '  . $v . '<br>';
@@ -363,17 +395,27 @@ class PropertyMoudle{
                     }else if (
                         $key == 'propertyUsages' ||
                         $key == 'propertyUtilities' ||
-                        $key == 'channels'
+                        $key == 'channels' 
                     ){ 
                         $data[]= $translate[$key] . ' : '  . $advertisement[0] . '<br>';
                     }else{
                         $data[]= $translate[$key] . ' : '  . $advertisement . '<br>';
                     }
                 }
+                
+                $ajax_response = array( 'success' => true , 'reason' => $data );
+                echo wp_send_json( $ajax_response );
+                wp_die();
+
+            } else if ($response->Body->result->isValid === false ) {
+                $ajax_response = array( 'success' => false , 'reason' => $response->Body->result->message );
+                echo wp_send_json( $ajax_response );
+                wp_die();
+            } else{
+                $ajax_response = array( 'success' => false , 'reason' => $response->Body->result->message );
+                echo wp_send_json( $ajax_response );
+                wp_die();
             }
-            $ajax_response = array( 'success' => true , 'reason' => $data );
-            echo wp_send_json( $ajax_response );
-            wp_die();
         }
     }
 
@@ -397,7 +439,7 @@ class PropertyMoudle{
         
         // $new_property['post_name'] = isset($data->deedNumber) ? 'property-' . $data->deedNumber : 'new-property';
             
-        
+        $user_submit_has_no_membership = get_the_author_meta( 'user_submit_has_no_membership', $userID  );
         if( houzez_is_admin() ) {
             $new_property['post_status'] = 'publish';
         } else {
@@ -433,6 +475,76 @@ class PropertyMoudle{
                     houzez_update_package_listings( $userID );
                 }
             }
+
+            /**
+             * all data
+             * -----------------------------------------------------
+             */
+                $advertisement_response = json_decode(json_encode($data), true);
+                update_post_meta( $prop_id, 'advertisement_response', $advertisement_response );
+
+            /** -----------------------------------------------------------------------
+             *  new fields 
+             * ----------------------------------------------------------------------*/
+                // حدود واطوال العقار من وزارة العدل
+                if( isset( $data->borders ) ) {
+                    $borders = json_decode(json_encode($data->borders), true);
+                    update_post_meta( $prop_id, 'borders', $borders );
+                }
+
+                // وجود وقف ؟
+                if( isset( $data->isHalted ) ) {
+                    update_post_meta( $prop_id, 'fave_d988d8acd988d8af-d988d982d981', $data->isHalted );
+                }
+
+                // وجود وصية ؟
+                if( isset( $data->isTestment ) ) {
+                    update_post_meta( $prop_id, 'fave_d988d8acd988d8af-d988d8b5d98ad8a9', $data->isTestment );
+                }
+
+                // قيود السجل العيني
+                if( isset( $data->rerConstraints ) ) {
+                    update_post_meta( $prop_id, 'fave_d982d98ad988d8af-d8a7d984d8b3d8acd984-d8a7d984d8b9d98ad986d98a', $data->rerConstraints );
+                }
+
+                //  رقم   القطعة
+                if( isset( $data->landNumber ) ) {
+                    update_post_meta( $prop_id, 'fave_d8b1d982d985-d8a7d984d982d8b7d8b9d8a9', $data->landNumber );
+                }
+
+                // رابط ترخيص الاعلان
+                if( isset( $data->adLicenseURL ) ) {
+                    update_post_meta( $prop_id, 'fave_d8b1d8a7d8a8d8b7-d8aad8b1d8aed98ad8b5-d8a7d984d8a7d8b9d984d8a7d986', $data->adLicenseURL );
+                }
+
+                //   مصدر ترخيص الاعلان
+                if( isset( $data->adSource ) ) {
+                    update_post_meta( $prop_id, 'fave_d985d8b5d8afd8b1-d8aad8b1d8aed98ad8b5-d8a7d984d8a7d8b9d984d8a7d986', $data->adSource );
+                }
+
+                //  نوع وثيقة الملكية
+                if( isset( $data->titleDeedTypeName ) ) {
+                    update_post_meta( $prop_id, 'fave_d986d988d8b9-d988d8abd98ad982d8a9-d8a7d984d985d984d983d98ad8a9', $data->titleDeedTypeName );
+                }
+
+                // وصف موقع العقار حسب الصك
+                if( isset( $data->LocationDescriptionOnMOJDeed ) ) {
+                    update_post_meta( $prop_id, 'fave_d988d8b5d981-d985d988d982d8b9-d8a7d984d8b9d982d8a7d8b1', $data->LocationDescriptionOnMOJDeed );
+                }
+                
+                // ملاحظات
+                if( isset( $data->Notes ) ) {
+                    update_post_meta( $prop_id, 'fave_d8a7d984d985d984d8a7d8add8b8d8a7d8aa', $data->Notes );
+                }
+
+                if( isset( $data->qrCodeUrl ) ) {
+                    update_post_meta( $prop_id, 'qrCodeUrl', $data->qrCodeUrl );
+                }
+
+                
+            /** 
+             * end new fields 
+             * --------------------------------------------------------*/ 
   
             // Add price post meta
             if( isset( $data->propertyPrice ) ) {
@@ -588,17 +700,28 @@ class PropertyMoudle{
             /*---------------------------------------------------------------------------------*
             * Save expiration meta 
             *----------------------------------------------------------------------------------*/
+            
+            $options = [];
+            
             update_post_meta( $prop_id, 'creationDate', $data->creationDate );
             update_post_meta( $prop_id, 'endDate', $data->endDate );
-            update_post_meta( $prop_id, 'houzez_manual_expire', 1 );
-
-            $options = array();
-            $timestamp = get_gmt_from_date($data->endDate,'U');
-
+            update_post_meta( $prop_id, 'houzez_manual_expire', 'checked' );
+            
             // Schedule/Update Expiration
             $options['id'] = $prop_id;
+            $datetime  = DateTime::createFromFormat('d/m/Y', $data->endDate);
+            $timestamp = $datetime->getTimestamp();
 
-            _houzezScheduleExpiratorEvent( $prop_id, $timestamp, $options );
+            if (wp_next_scheduled('houzez_property_expirator_expire', [$prop_id]) !== false) {
+                wp_clear_scheduled_hook('houzez_property_expirator_expire', [$prop_id]); //Remove any existing hooks
+            }
+        
+            wp_schedule_single_event( $timestamp, 'houzez_property_expirator_expire', [$prop_id] );
+        
+            // Update Post Meta
+            update_post_meta( $prop_id, '_houzez_expiration_date', $timestamp );
+            update_post_meta( $prop_id, '_houzez_expiration_date_options', $options );
+
             /*---------------------------------------------------------------------------------*
             * End expiration meta
             *----------------------------------------------------------------------------------*/
@@ -609,12 +732,11 @@ class PropertyMoudle{
             if( isset( $data->guaranteesAndTheirDuration ) ) {
                 update_post_meta( $prop_id, 'fave_d8a7d984d8b6d985d8a7d986d8a7d8aa-d988d985d8afd8aad987d8a7', $data->guaranteesAndTheirDuration );
             }
+
             if( isset( $data->theBordersAndLengthsOfTheProperty ) ) {
                 update_post_meta( $prop_id, 'fave_d8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1', $data->theBordersAndLengthsOfTheProperty );
             } 
-            if( isset( $data->complianceWithTheSaudiBuildingCode ) ) {
-                update_post_meta( $prop_id, 'fave_d985d8b7d8a7d8a8d982d8a9-d983d988d8af-d8a7d984d8a8d986d8a7d8a1-d8a7d984d8b3d8b9d988d8afd98a', $data->complianceWithTheSaudiBuildingCode );
-            }
+
             if( isset( $data->complianceWithTheSaudiBuildingCode ) ) {
                 update_post_meta( $prop_id, 'fave_d985d8b7d8a7d8a8d982d8a9-d983d988d8af-d8a7d984d8a8d986d8a7d8a1-d8a7d984d8b3d8b9d988d8afd98a', $data->complianceWithTheSaudiBuildingCode );
             }
@@ -650,7 +772,7 @@ class PropertyMoudle{
      * search_deedNumber_property
      *
      * @param  mixed $deedNumber
-     * @return void
+     * @return bool
      */
     public function search_deedNumber_property($deedNumber)
     {
@@ -670,6 +792,10 @@ class PropertyMoudle{
     }
 
 
+    /**
+     * Summary of CreateADLicense
+     * @return void
+     */
     public function CreateADLicense()
     {
         $dataArray = [];
@@ -682,7 +808,9 @@ class PropertyMoudle{
             wp_die();
         }
 
+        $dataArray["advertiserType"] = $_POST['theAdThrough'];
         $dataArray["theAdThrough"] = $_POST['theAdThrough'];
+
 
         global $current_user;
         $userID       = get_current_user_id();
@@ -710,9 +838,10 @@ class PropertyMoudle{
             $dataArray["advertiserName"] = $display_name;
         }
 
-        
+        $dataArray["deedNumber"] = 'deedNumber';
         $dataArray["userIdNumber"] = $id_number;
         $dataArray["fullName"]     = $display_name;
+        $dataArray['advertiserMobileNumber'] = '222222222222222222222';
     
         /* ------------------------------- رقم الوكالة ------------------------------ */
         if( isset( $_POST['attorneyCode'] )  && !empty( $_POST['attorneyCode'] ) ) {
@@ -762,7 +891,7 @@ class PropertyMoudle{
 
         $dataArray["complianceWithTheSaudiBuildingCode"] = (isset( $_POST['complianceWithTheSaudiBuildingCode'] ) && $_POST['complianceWithTheSaudiBuildingCode'] === 'yes' ) ? true : null;
         
-        $dataArray["adType"] = isset( $_POST['adType'] ) ? $_POST['adType'] : '';
+        $dataArray["advertisementType"] = isset( $_POST['adType'] ) ? $_POST['adType'] : '';
 
         $dataArray["channels"] = ["licensedPlatform"];
 
@@ -797,7 +926,6 @@ class PropertyMoudle{
         $RegaMoudle = new RegaMoudle();
         $response = $RegaMoudle->CreateADLicense( $dataArray );
         
-
         $response = json_decode($response);
 
         $reason = 'تم العثور علي الاخطاء الاتية : <br>';
@@ -868,6 +996,11 @@ class PropertyMoudle{
         wp_die();
     }
 
+    /**
+     * Summary of add_property_CreateADLincense
+     * @param mixed $data
+     * @return int|WP_Error
+     */
     public function add_property_CreateADLincense($data)
     {
         $prop_id  = '';
@@ -887,7 +1020,7 @@ class PropertyMoudle{
         $new_property['post_title'] = $title;
         
         // $new_property['post_name'] = isset($data->deedNumber) ? 'property-' . $data->deedNumber : 'new-property';
- 
+        $user_submit_has_no_membership = get_the_author_meta( 'user_submit_has_no_membership', $userID );
         if( houzez_is_admin() ) {
             $new_property['post_status'] = 'draft';
         } else {
@@ -1096,18 +1229,19 @@ class PropertyMoudle{
             if( isset( $data->obligationsOnTheProperty ) ) {
                 update_post_meta( $prop_id, 'fave_d8a7d984d8a7d984d8aad8b2d8a7d985d8a7d8aa-d8a7d984d8a3d8aed8b1d989-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1', $data->obligationsOnTheProperty  );
             }
+
             if( isset( $data->guaranteesAndTheirDuration ) ) {
                 update_post_meta( $prop_id, 'fave_d8a7d984d8b6d985d8a7d986d8a7d8aa-d988d985d8afd8aad987d8a7', $data->guaranteesAndTheirDuration );
             }
+            
             if( isset( $data->theBordersAndLengthsOfTheProperty ) ) {
                 update_post_meta( $prop_id, 'fave_d8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1', $data->theBordersAndLengthsOfTheProperty );
-            } 
+            }
+
             if( isset( $data->complianceWithTheSaudiBuildingCode ) ) {
                 update_post_meta( $prop_id, 'fave_d985d8b7d8a7d8a8d982d8a9-d983d988d8af-d8a7d984d8a8d986d8a7d8a1-d8a7d984d8b3d8b9d988d8afd98a', $data->complianceWithTheSaudiBuildingCode );
             }
-            if( isset( $data->complianceWithTheSaudiBuildingCode ) ) {
-                update_post_meta( $prop_id, 'fave_d985d8b7d8a7d8a8d982d8a9-d983d988d8af-d8a7d984d8a8d986d8a7d8a1-d8a7d984d8b3d8b9d988d8afd98a', $data->complianceWithTheSaudiBuildingCode );
-            }
+            
             if( isset( $data->propertyUtilities ) ) {
                 if( is_array($data->propertyUtilities) ) {
                     foreach( $data->propertyUtilities as $propertyUtiliti ) {
@@ -1197,42 +1331,47 @@ class PropertyMoudle{
 
     }
     
+
     /**
-     * search_adress
-     *
-     * @param  mixed $adress
-     * @return void
+     * Summary of search_adress
+     * @param mixed $adress
+     * @return mixed
      */
     public function search_adress($adress)
     {
-        if ( empty( $adress ) ) {
-            return;
+        if ( !empty( $adress ) ) {
+    
+            $adress_search = urlencode($adress);
+
+            $data = [];
+            $curl = curl_init();
+
+            curl_setopt_array($curl, array(
+            CURLOPT_URL => 'https://nominatim.openstreetmap.org/search?email=admin@aqargate.com&format=json&q=' . $adress_search,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_ENCODING => '',
+            CURLOPT_MAXREDIRS => 10,
+            CURLOPT_TIMEOUT => 0,
+            CURLOPT_FOLLOWLOCATION => true,
+            CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+            CURLOPT_CUSTOMREQUEST => 'GET',
+            ));
+
+            $response = curl_exec($curl);
+
+            $data = json_decode($response);
+
+            return $data;
         }
-
-        $adress_search = urlencode($adress);
-
-        $data = [];
-        $curl = curl_init();
-
-        curl_setopt_array($curl, array(
-        CURLOPT_URL => 'https://nominatim.openstreetmap.org/search?email=admin@aqargate.com&format=json&q=' . $adress_search,
-        CURLOPT_RETURNTRANSFER => true,
-        CURLOPT_ENCODING => '',
-        CURLOPT_MAXREDIRS => 10,
-        CURLOPT_TIMEOUT => 0,
-        CURLOPT_FOLLOWLOCATION => true,
-        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
-        CURLOPT_CUSTOMREQUEST => 'GET',
-        ));
-
-        $response = curl_exec($curl);
-
-        $data = json_decode($response);
-
-        return $data;
 
     }
 
+    /**
+     * Summary of numberStartsWith
+     * @param mixed $number
+     * @param mixed $prefix
+     * @return bool
+     */
     public function numberStartsWith($number, $prefix) {
         return substr($number, 0, strlen($prefix)) === $prefix;
     }
