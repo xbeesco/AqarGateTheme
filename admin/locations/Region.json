@@ -1,0 +1,80 @@
+[
+    {
+        "LKRegionId": "1",
+        "LKRegionCode": "01",
+        "LKRegionAr": "الرياض",
+        "LKRegionEn": "Riyadh"
+    },
+    {
+        "LKRegionId": "2",
+        "LKRegionCode": "02",
+        "LKRegionAr": "مكة المكرمة",
+        "LKRegionEn": "Makkah Al Mukarramah"
+    },
+    {
+        "LKRegionId": "3",
+        "LKRegionCode": "03",
+        "LKRegionAr": "المدينة المنورة",
+        "LKRegionEn": "Al Madinah Al Munawwarah"
+    },
+    {
+        "LKRegionId": "4",
+        "LKRegionCode": "04",
+        "LKRegionAr": "القصيم",
+        "LKRegionEn": "Al Qassim"
+    },
+    {
+        "LKRegionId": "5",
+        "LKRegionCode": "05",
+        "LKRegionAr": "المنطقة الشرقية",
+        "LKRegionEn": "Eastern"
+    },
+    {
+        "LKRegionId": "6",
+        "LKRegionCode": "06",
+        "LKRegionAr": "عسير",
+        "LKRegionEn": "Asir"
+    },
+    {
+        "LKRegionId": "7",
+        "LKRegionCode": "07",
+        "LKRegionAr": "تبوك",
+        "LKRegionEn": "Tabuk"
+    },
+    {
+        "LKRegionId": "8",
+        "LKRegionCode": "08",
+        "LKRegionAr": "حائل",
+        "LKRegionEn": "Hail"
+    },
+    {
+        "LKRegionId": "9",
+        "LKRegionCode": "09",
+        "LKRegionAr": "الحدود الشماليه",
+        "LKRegionEn": "Northern Borders"
+    },
+    {
+        "LKRegionId": "10",
+        "LKRegionCode": "10",
+        "LKRegionAr": "جازان",
+        "LKRegionEn": "Jazan"
+    },
+    {
+        "LKRegionId": "11",
+        "LKRegionCode": "11",
+        "LKRegionAr": "نجران",
+        "LKRegionEn": "Najran"
+    },
+    {
+        "LKRegionId": "12",
+        "LKRegionCode": "12",
+        "LKRegionAr": "الباحة",
+        "LKRegionEn": "Al Bahah"
+    },
+    {
+        "LKRegionId": "13",
+        "LKRegionCode": "13",
+        "LKRegionAr": "الجوف",
+        "LKRegionEn": "Al Jawf"
+    }
+]

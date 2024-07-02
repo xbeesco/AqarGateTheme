@@ -73,7 +73,7 @@ require_once ( AG_DIR . 'module/class-nafath-db.php' );
 
 require_once ( AG_DIR . 'module/nafath-log/nafath-log.php' );
 
-
+require_once ( AG_DIR . 'helpers/aqargate-functionality.php' );
 /* -------------------------------------------------------------------------- */
 /*                             houzez activation                              */
 /* -------------------------------------------------------------------------- */
