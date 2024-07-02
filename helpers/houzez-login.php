@@ -504,6 +504,8 @@ function aqar_register_form ($aqar_author_type_id){
         '2' => 'houzez_agency',
         '3' => 'houzez_owner',
         '4' => 'houzez_buyer',
+        '5' => 'houzez_seller',
+
     ];
     $author_type_name = $author_type[$aqar_author_type_id];
     $class = 'col-md-12';

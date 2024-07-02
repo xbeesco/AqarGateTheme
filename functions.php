@@ -1,6 +1,6 @@
 <?php
 if( ! defined('AGDEBUG') ) {
-    define( 'AGDEBUG', true );
+    define( 'AGDEBUG', false );
 }
 // add_action( 'wp_enqueue_scripts', 'ag_enqueue_styles' );
 function ag_enqueue_styles() {
@@ -25,31 +25,40 @@ if( ! function_exists('aqar_enqueue_scripts') ){
             'add_listing' => houzez_get_template_link_2('template/user_dashboard_submit.php'),         
         );
         wp_localize_script( 'aqar_custom', 'ajax_aqar', $ajax_object );  
+        wp_enqueue_script('bootbox-min', HOUZEZ_JS_DIR_URI . 'vendors/bootbox.min.js', array('jquery'), '4.4.0', true);
     }
 }
 
+function aqar_enqueue_custom_scripts() {
+    wp_enqueue_script('aqar-script', trailingslashit( get_stylesheet_directory_uri() ) . 'assets/js/admin-script.js', array('jquery'), rand(), true);
+    wp_localize_script('aqar-script', 'ajax_params', array('ajax_url' => admin_url('admin-ajax.php')));
+}
+add_action('admin_enqueue_scripts', 'aqar_enqueue_custom_scripts');
 
 /* -------------------------------------------------------------------------- */
 /*                                 // Helpers                                 */
 /* -------------------------------------------------------------------------- */
-include_once ( AG_DIR . 'helpers/houzez-login.php' );
-include_once ( AG_DIR . 'helpers/ag_helpers.php' );
-include_once ( AG_DIR . 'helpers/ag_get_array_property_data.php' );
+require_once ( AG_DIR . 'helpers/houzez-login.php' );
+require_once ( AG_DIR . 'helpers/ag_helpers.php' );
+require_once ( AG_DIR . 'helpers/ag_get_array_property_data.php' );
 require_once ( AG_DIR . 'helpers/api-fields-controller.php' );
 require_once ( AG_DIR . 'helpers/aqar-ajax.php' );
 
 /* -------------------------------------------------------------------------- */
 /*                                 // Classes                                 */
 /* -------------------------------------------------------------------------- */
-include_once ( AG_DIR . 'classes/class-crb.php' );
+require_once ( AG_DIR.'libs/cf/vendor/autoload.php' );
+require_once ( AG_DIR . 'classes/class-crb.php' );
 new AG_CF;
 // include_once ( AG_DIR .'classes/class-prop.php' );
 // new AG_Prop;
-require_once ( AG_DIR . 'classes/class-otp-twilio.php' );
-include_once ( AG_DIR . 'classes/aqargate-class.php' );
+// require_once ( AG_DIR . 'classes/class-otp-twilio.php' );
+require_once ( AG_DIR . 'classes/REDFBrokerageAPI.php' );
+require_once ( AG_DIR . 'classes/aqargate-class.php' );
 new AqarGate();
-// require_once ( AG_DIR . 'rest-api/class-aqargate-api.php' );
-include_once ( AG_DIR . 'classes/aqargate-export.php' );
+require_once AG_DIR . 'classes/CustomTableDatastore.php';
+require_once ( AG_DIR . 'classes/property-request.php' );
+require_once ( AG_DIR . 'classes/aqargate-export.php' );
 
 /* -------------------------------------------------------------------------- */
 /*                                   Module                                   */

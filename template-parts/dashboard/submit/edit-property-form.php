@@ -5,6 +5,8 @@
  * Date: 07/10/15
  * Time: 3:45 PM
  */
+
+
 global $current_user, $hide_add_prop_fields, $required_fields, $is_multi_steps, $prop_meta_data;
 
 wp_get_current_user();
@@ -52,7 +54,11 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
             </div>';
         }
     } else { ?>
+        <?php 
+            $adverst_can_edit = get_post_meta($edit_prop_id, 'adverst_can_edit', true);
 
+            // prr($adverst_can_edit); 
+        ?>
         <form id="submit_property_form" name="new_post" method="post" action="" enctype="multipart/form-data" class="update-frontend-property">
             <input type="hidden" name="draft_prop_id" value="<?php echo intval($edit_prop_id); ?>">
             

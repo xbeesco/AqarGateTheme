@@ -135,7 +135,6 @@ class AqarGate{
 
         //Image Attributes
         $image_attributes = apply_filters('jas_image_attributes', null);
-
         $image_src = sprintf('https://api.qrserver.com/v1/create-qr-code/?size=%s&data=%s', $dimension, $current_post_url);
         $content   .= sprintf("<div id='section-to-print' class='qrcode'><a href='%s' target='_blank'><img %s  src='%s' alt='%s' /></a></div>",$current_post_url, $image_attributes, $image_src, $current_post_title);
             return $content;

@@ -149,7 +149,7 @@ class PropertyMoudle{
                         <p>لدي رقم ترخيص الاعلان</p>
                     </div>
                 </a>
-                <?php if( AGDEBUG  ) : ?>
+                <?php if( AGDEBUG === true  ) : ?>
                 <a href="<?php echo $licensing_by_aqargate; ?>" class="addProperty_card">
                     <img src="<?php echo trailingslashit( get_stylesheet_directory_uri() ) .'assets/img/add.png'; ?>" class="" loading="lazy" width="25" height="25">
                     <div class="addProperty_line"></div>
@@ -176,6 +176,10 @@ class PropertyMoudle{
     }
 
     
+    /**
+     * Summary of aqar_isvalid_api
+     * @return void
+     */
     public function aqar_isvalid_api()
     {
         $nonce = isset($_POST['aqar_isvalid_api']) ? $_POST['aqar_isvalid_api'] : '';
@@ -253,6 +257,10 @@ class PropertyMoudle{
         
     }
 
+    /**
+     * Summary of get_ad_info
+     * @return void
+     */
     public function get_ad_info()
     {
         $nonce = isset($_POST['aqar_isvalid_api']) ? $_POST['aqar_isvalid_api'] : '';
@@ -280,16 +288,22 @@ class PropertyMoudle{
 
         $response = $RegaMoudle->AdvertisementValidator( $adLicenseNumber );
         $response = json_decode( $response );
-        
+        // prr($response);
         // الكلمة هنا موجودة
         // var_export($response);
          
   
         if( $response->Header->Status->Code != 200  ) {  
-            $msg = 'هنالك مشكلة في الاتصال مع هيئة العقار';
+            $msg = 'هنالك مشكلة في الاتصال مع هيئة العقار' . '<br>';
             if( isset($response->Body->error->message) ) {
-                $msg = $response->Body->error->message;
+                $msg .= $response->Body->error->message . '<br>';
             } 
+            if( isset($response->Header->Status->Description) ) {
+                $msg .= $response->Header->Status->Description . '<br>';
+            }
+            if( isset($response->Body->error->message) ) {
+                $msg .= $response->Body->error->message . '<br>';
+            }
             $ajax_response = array( 'success' => false , 'reason' => $msg );
             echo wp_send_json( $ajax_response );
             wp_die();
@@ -365,7 +379,7 @@ class PropertyMoudle{
 
             ];
             $data = [];
-            // var_export($response);
+             
             if( isset($response->Body->result->advertisement) ) {
 
                 // في حالة رقم العلن موجود بالفعل اظهار رسالة بذلك
@@ -419,6 +433,21 @@ class PropertyMoudle{
         }
     }
 
+    public function removeLeadingZero($string) {
+        // Check if the string starts with '0' and the second character is a digit
+        if (substr($string, 0, 1) === '0' && ctype_digit(substr($string, 1, 1))) {
+            // Remove the leading '0'
+            return substr($string, 1);
+        }
+        // Return the original string if no leading zero to remove
+        return $string;
+    }
+
+    /**
+     * Summary of add_property_advertisement
+     * @param mixed $data
+     * @return int|WP_Error
+     */
     public function add_property_advertisement($data)
     {
         $prop_id  = '';
@@ -476,6 +505,7 @@ class PropertyMoudle{
                 }
             }
 
+                update_post_meta($prop_id, 'fave_property_id', $prop_id);
             /**
              * all data
              * -----------------------------------------------------
@@ -592,21 +622,35 @@ class PropertyMoudle{
             $state_id = [];
             // Add property state
             if( isset( $data->location->region ) ) {
-                $property_state = $data->location->region;
-                $state_id = wp_set_object_terms( $prop_id, $property_state, 'property_state' );
+                $state_code     = $this->removeLeadingZero($data->location->regionCode);
+                $property_state = str_replace(' ', '-', $data->location->region) . '-' . $state_code;
+                $term_id = get_term_id_by_meta('REGION_ID', $state_code, 'property_state');
+                if ($term_id !== null) {
+                    $state_id = wp_set_object_terms( $prop_id, $term_id, 'property_state' );
+                } else {
+                    $state_id = wp_set_object_terms( $prop_id, $property_state, 'property_state' );
+                    update_term_meta( $state_id[0], 'REGION_ID', $state_code );
+                }
             }
 
             $city_id = [];
             // Add property city
             if( isset( $data->location->city ) ) {
-                $property_city = $data->location->city;
-                $city_id = wp_set_object_terms( $prop_id, $property_city, 'property_city' );
+                $city_code     = $this->removeLeadingZero($data->location->cityCode);
+                $property_city = str_replace(' ', '-',$data->location->city) . '-' . $city_code;
+                $term_id = get_term_id_by_meta('CITY_ID', $state_code, 'property_city');
+                if ($term_id !== null) {
+                    $city_id = wp_set_object_terms( $prop_id, $term_id, 'property_city' );
+                } else {
+                    $city_id = wp_set_object_terms( $prop_id, $property_city, 'property_city' );
+                }
                 $term_object = get_term( $state_id[0] );
                 $parent_state = $term_object->slug;
                 $houzez_meta = array();
                 $houzez_meta['parent_state'] = $parent_state;
                 if( !empty( $city_id) && !empty($houzez_meta['parent_state'])  ) {
                     update_option('_houzez_property_city_' . $city_id[0], $houzez_meta);
+                    update_term_meta( $city_id[0], 'CITY_ID', $city_code );
                 }
             }
   
@@ -614,14 +658,21 @@ class PropertyMoudle{
             $area_id = [];
             // Add property area
             if( isset( $data->location->district ) ) {
-                $property_area = sanitize_text_field( $data->location->district );
-                $area_id = wp_set_object_terms( $prop_id, $property_area, 'property_area' );
+                $area_code     = $this->removeLeadingZero($data->location->districtCode);
+                $property_area = str_replace(' ', '-',$data->location->district) . '-' . $area_code;
+                $term_id = get_term_id_by_meta('DISTRICT_ID', $area_code, 'property_area');
+                if ($term_id !== null) {
+                    $area_id = wp_set_object_terms( $prop_id, $term_id, 'property_area' );
+                } else {
+                    $area_id = wp_set_object_terms( $prop_id, $property_area, 'property_area' );
+                }
                 $term_object = get_term( $city_id[0] );
                 $parent_city = $term_object->slug;
                 $houzez_meta = array();
                 $houzez_meta['parent_city'] = $parent_city;
                 if( !empty( $area_id) && !empty($houzez_meta['parent_city'])  ) {
                     update_option('_houzez_property_area_' . $area_id[0], $houzez_meta);
+                    update_term_meta( $area_id[0], 'DISTRICT_ID', $area_code );
                 }
             }
 
@@ -763,6 +814,8 @@ class PropertyMoudle{
                     }
                 }
             }
+
+            update_post_meta($prop_id, 'adverst_can_edit', 0);
             
 
         return $prop_id;

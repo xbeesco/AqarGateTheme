@@ -1,0 +1,23 @@
+{
+    "name": "aqar-gate",
+    "host": "141.147.132.208",
+    "protocol": "ftp",
+    "port": 21,
+    "username": "yassin_aqargate.com",
+    "remotePath": "/",
+    "uploadOnSave": true,
+    "password": "Alsaudi@76",
+    "ignore": [".vscode", ".git", ".DS_Store", ".gitignore"]
+}
+
+{
+    "name": "aqar-gate",
+    "host": "132.145.17.149",
+    "protocol": "ftp",
+    "port": 21,
+    "username": "sherif_aqar",
+    "remotePath": "/public_html/wp-content/themes/aqar-gate",
+    "uploadOnSave": true,
+    "password": "iiq9OFw8ByGpx^xh",
+    "ignore": [".vscode", ".git",".DS_Store"]
+}

@@ -40,7 +40,7 @@ class RegaMoudle{
             $url = $this->BaseUrl . $endpoint;
             $url .= !empty( $params ) ? '?'.http_build_query($params) : '';
         }
-
+        // prr($url);
         $curl = curl_init();
         curl_setopt_array($curl, array(
 		  CURLOPT_URL => $url,
@@ -59,7 +59,7 @@ class RegaMoudle{
         $response = curl_exec($curl);
 
         $httpcode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
-
+        
         curl_close($curl);
 
         $data = [];
@@ -76,11 +76,17 @@ class RegaMoudle{
             }
         }elseif ( $httpcode == '403' ){
             $data = $response; 
-        }else{
+        }elseif ($httpcode == '502') {
+            $data = '{
+                "httpCode": "502",
+                "httpMessage": "502 bad gateway",
+                "moreInformation": null
+            }'; 
+        } else {
             $data = $response;
         }
         
-        return $response;
+        return $data;
         
     }
     
@@ -94,8 +100,15 @@ class RegaMoudle{
                 
         if( $type_id === '2' && ! $is_unified_number ){
             $id_number = get_the_author_meta( 'aqar_author_unified_number' ,$userID );
+            if( empty($id_number) ) {
+                $id_number = get_the_author_meta( 'aqar_author_id_number' , $userID ); 
+            }
         }
-
+        // prr([
+        //     'adLicenseNumber' => $adLicenseNumber,
+        //     'advertiserId'    => $id_number,
+        //     'idType'          => $type_id,
+        // ]);
         $response = $this->do_request(
             '',
             'GET',
@@ -113,14 +126,129 @@ class RegaMoudle{
         return $response;
     }
 
+    public function sysnc_AdvertisementValidator( $adLicenseNumber ='' , $id_number=''){
+
+        $userID    = get_current_user_id();
+
+        // check the id if it start with 7 use it [user type agency] :bool
+        $is_unified_number = $this->numberStartsWith($id_number, '7');
+                
+        if( ! $is_unified_number ){
+            $type_id = '1';
+        } else {
+            $type_id = '2';
+        }
+        // prr([
+        //     'adLicenseNumber' => $adLicenseNumber,
+        //     'advertiserId'    => $id_number,
+        //     'idType'          => $type_id,
+        // ]);
+        $response = $this->do_request(
+            '',
+            'GET',
+            'v2/brokerage/AdvertisementValidator',
+            $this->credential(),
+            array(),
+            [
+                'adLicenseNumber' => $adLicenseNumber,
+                'advertiserId'    => $id_number,
+                'idType'          => $type_id,
+            ]
+        );
+
+        // $response = $this->test_response();
+        return $response;
+    }
     public function PlatformCompliance( $bodyData = array() ){
-        
+
+        $testJson = '{
+            "adLicenseNumber": "7200001037",
+            "adLinkInPlatform": "url",
+            "adSource": "REGA",
+            "adType": "Sell",
+            "advertiserId": "1101588869",
+            "advertiserMobile": "0548241599",
+            "advertiserName": "بدر حمد محمد اليحياء",
+            "borders": [
+                {
+                    "direction": "رقم /8461 1",
+                    "length": "30",
+                    "type": "قطعة"
+                }
+            ],
+            "brokerageAndMarketingLicenseNumber": "6200000341",
+            "channels": [
+                "LicensedPlatform"
+            ],
+            "complianceWithTheSaudiBuildingCode": true,
+            "constraints": "True",
+            "creationDate": "2024-02-15T09:44:34.057Z",
+            "eastLimitDescription": "القطعه رقم 8460",
+            "eastLimitLengthChar": "سبعة عشر متر و خمسون سنتمتر",
+            "eastLimitName": "جزء من",
+            "endDate": "2024-08-01T09:44:34.057Z",
+            "guaranteesAndTheirDuration": "452543857",
+            "landNumber": "8461 / 2",
+            "landTotalPrice": null,
+            "locationDescriptionAccordingToDeed": "string",
+            "nationalAddress": {
+                "additionalNo": 1111,
+                "adMapLatitude": null,
+                "adMapLongitude": null,
+                "buildingNo": 1231,
+                "city": "ام خنرص",
+                "district": "ام خنرص",
+                "postalCode": 99999,
+                "region": "منطقة الحدود الشماليه",
+                "streetName": "مكة"
+            },
+            "northLimitDescription": "رقم /8461 1",
+            "northLimitLengthChar": "ثالثون متر",
+            "northLimitName": "قطعة",
+            "notes": "452543857",
+            "obligationsOnTheProperty": "452543857",
+            "operationReason": "Other",
+            "operationType": "DisplayAd",
+            "planNumber": "2351",
+            "platformId": "08dbc98d-c1b8-43ed-87f1-503766822382",
+            "platformOwnerId": "7033987871",
+            "price": 12000,
+            "propertyAge": "FiveYears",
+            "propertyArea": 525,
+            "propertyFace": "Western",
+            "propertyType": "Hotel",
+            "propertyUsage": [
+                "Commercial"
+            ],
+            "propertyUtilities": [
+                "Electricity",
+                "Waters",
+                "Sanitation",
+                "FixedPhone",
+                "FibreOptics",
+                "FloodDrainage"
+            ],
+            "qrCode": "",
+            "roomsNumber": 5,
+            "southLimitDescription": "رقم 8463",
+            "southLimitLengthChar": "ثالثون متر",
+            "southLimitName": "قطعة",
+            "streetWidth": 1564,
+            "titleDeedNumber": "810117041224",
+            "titleDeedType": "ElectronicDeed",
+            "totalAnnualRentForTheLand": null,
+            "westLimitDescription": "عرض 20 متر",
+            "westLimitLengthChar": "سبعة عشر متر و خمسون سنتمتر",
+            "westLimitName": "شارع"
+        }
+        ';
+        $data = json_encode($bodyData);
         $response = $this->do_request(
             '',
             'POST',
             'v1/brokerage/PlatformCompliance',
             $this->credential(),
-            json_encode($bodyData),
+            $data,
             array(),
         );
 
@@ -136,7 +264,7 @@ class RegaMoudle{
             'POST',
             'v2/brokerage/CreateADLicense',
             $this->credential(),
-            json_encode($bodyData),
+            $bodyData,
             array(),
         );
 

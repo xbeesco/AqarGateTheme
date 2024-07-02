@@ -303,7 +303,7 @@ jQuery(document).ready(function($){
 
 			bootbox.confirm({
 			title: "سبب التعديل ?",
-			message: '<textarea id="update-notes" rows="4" style="width:100%;"></textarea>',
+			message: '<select class="form-control" id="update-notes"><option value="newMarketing">تسويق جديد</option><option value="Other">اخري</option></select>',
 			buttons: {
 				confirm: {
 				label: 'موافقة',
@@ -371,7 +371,7 @@ jQuery(document).ready(function($){
 
 			bootbox.confirm({
 			title: "سبب الالغاء ?",
-			message: '<textarea id="cancel-notes" rows="4" style="width:100%;"></textarea>',
+			message: '<select class="form-control" id="cancel-notes"><option value="SoldProperty">تم بيع العقار</option><option value="RentedProperty">تم تأجير العقار</option><option value="TransferredProperty">تم نقل ملكية العقار</option><option value="IncorrectAdvertising">بيانات ترخيص الإعلان العقاري غير صحيحة</option><option value="Other">اخري</option></select>',
 			buttons: {
 				confirm: {
 				label: 'موافقة',
@@ -406,11 +406,20 @@ jQuery(document).ready(function($){
 							'content': textareaValue,
 							'edit_link': editLink
 						},
+						beforeSend: function( ) {
+							houzez_processing_modal(processing_text);
+						},
 						success: function(data) {
 							if ( data.success == true ) {
-								window.location = data.redirect;
+								var response = '<br><strong>'+data.reason+'</strong>';
+								jQuery('#fave_modal .houzez_messages_modal').empty();
+								jQuery('#fave_modal .houzez_messages_modal').html(response);
+								setTimeout(function() {
+									window.location.reload()
+								}, 1000);
 							} else {
 								var response = '<br><strong>'+data.reason+'</strong>';
+								jQuery('#fave_modal .houzez_messages_modal').empty();
 								jQuery('#fave_modal .houzez_messages_modal').html(response);
 							}
 						},
@@ -466,21 +475,20 @@ jQuery(document).ready(function($){
 			var editLink = $this.data('edit');
 
 			bootbox.confirm({
-			message: "<p><strong>"+are_you_sure_text+"</strong></p>",
-			buttons: {
-				confirm: {
-				label: 'موافقة',
-				className: 'btn-primary'
+				message: "<p><strong>"+are_you_sure_text+"</strong></p>",
+				buttons: {
+					confirm: {
+					label: 'موافقة',
+					className: 'btn-primary'
+					},
+					cancel: {
+					label: 'الغاء',
+					className: 'btn-secondary'
+					}
 				},
-				cancel: {
-				label: 'الغاء',
-				className: 'btn-secondary'
-				}
-			},
-			callback: function (result) {
-				if(result==true) {
+				callback: function (result) {
+					if(result==true) {
 					// User clicked the confirm button
-					fave_processing_modal( processing_text );
 					$.ajax({
 						type: 'POST',
 						dataType: 'json',
@@ -491,11 +499,24 @@ jQuery(document).ready(function($){
 							'edit_link': editLink,
 							'formData': form.serialize()
 						},
+						beforeSend: function( ) {
+							houzez_processing_modal(processing_text);
+							jQuery('#fave_modal .houzez_messages_modal').empty();
+							var response = '<br><strong>'+processing_text+'</strong>';
+							jQuery('#fave_modal .houzez_messages_modal').html(response);
+						},
 						success: function(data) {
 							if ( data.success == true ) {
-								form.submit();
+								var response = '<br><strong>'+data.reason+'</strong>';
+								jQuery('#fave_modal .houzez_messages_modal').empty();
+								jQuery('#fave_modal .houzez_messages_modal').html(response);
+								// Delay form submission
+								setTimeout(function() {
+									form.submit();  // Submit after 2000ms (2 seconds)
+								}, 1000);
 							} else {
 								var response = '<br><strong>'+data.reason+'</strong>';
+								jQuery('#fave_modal .houzez_messages_modal').empty();
 								jQuery('#fave_modal .houzez_messages_modal').html(response);
 								// jQuery('#fave_modal').modal('hide');
 								// alert( data.reason );

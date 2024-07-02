@@ -1,6 +1,6 @@
 <?php 
-$disabled = 'disabled';
-$readonly = 'readonly';
+$disabled = '';
+$readonly = '';
 
 if( aqar_can_edit() ) {
     $disabled = '';

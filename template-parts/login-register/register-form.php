@@ -105,8 +105,6 @@ $show_hide_roles = houzez_option('show_hide_roles');
                         للمشتريين</span>
                     <span class="control__indicator"></span>
                 </label>
-
-                
                 <div class="form-group col-md-12" id="nafath_id"> 
                     <label id="change-lable" for=""> رقم الهوية </label>
                     <input name="id" id="id" type="text" class="form-control" value="" placeholder="">

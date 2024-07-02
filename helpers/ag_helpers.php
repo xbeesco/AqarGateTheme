@@ -2167,7 +2167,7 @@ if( ! function_exists('prr') ){
 		max-width: 95%;'>$title(".get_line_info().")</h3>";
 
 		if( $echo ){
-			echo "<div class='d-debug' style='margin: 20px 0;'>$title<pre style='
+			echo "<div dir='ltr' class='d-debug' style='margin: 20px 0;text-align: left;'>$title<pre style='
 			background: #1d2327;
 			max-width: 95%;
 			padding: 20px;
@@ -2246,7 +2246,7 @@ function edit_prop_input()
    ?>
     
     <input type="hidden" name="prop_type[]" id="prop_type" value="<?php echo $property_type[0]; ?>">
-    <input type="hidden" name="prop_status[]" value="<?php echo $property_status[0]; ?>">
+    <!-- <input type="hidden" name="prop_status[]" value="<?php echo $property_status[0]; ?>"> -->
     <input type="hidden" name="prop_labels[]" value="<?php echo ( isset($property_label[0]) ? $property_label[0] : '' ); ?>">
  
     <input type="hidden" name="postal_code" value="<?php echo $postal_code; ?>">
@@ -2678,7 +2678,6 @@ function handle_contract_submission() {
 }
 
 
-
 function aq_black_list($id){
     if( get_option( '_can_login' ) === 'yes' ) {
         $id_black_list = carbon_get_theme_option( 'id_black_list' );
@@ -2699,27 +2698,34 @@ function aq_black_list($id){
 
 
 function aq_is_black_list(){
-    $userID    = get_current_user_id();
-    $id_number = get_the_author_meta( 'aqar_author_id_number' , $userID );
-    $type_id   = get_the_author_meta( 'aqar_author_type_id' , $userID );
+    $check_number = [];
+    $userID         = get_current_user_id();
+    $id_number      = get_the_author_meta( 'aqar_author_id_number' , $userID );
+    $type_id        = get_the_author_meta( 'aqar_author_type_id' , $userID );
+    $user_mobile    = get_the_author_meta( 'fave_author_mobile' , $userID );
 
     // check the id if it start with 7 use it [user type agency] :bool
     $is_unified_number = aq_numberStartsWith($type_id, '7');
     
     if( $type_id === '2' && ! $is_unified_number ){
         $id_number = get_the_author_meta( 'aqar_author_unified_number' ,$userID );
+        if( empty($id_number) ) {
+            $id_number = get_the_author_meta( 'aqar_author_id_number' , $userID ); 
+        }
     }
+    $check_number[] =  $id_number ;
+    $check_number[] =  $user_mobile ;
 
+    
     if( get_option( '_can_add_property' ) === 'yes' ) {
         $id_black_list = carbon_get_theme_option( 'id_black_list' );
-        $can_login_content = !empty(carbon_get_theme_option( 'can_login_content' )) ? carbon_get_theme_option( 'can_login_content' ) : 'رقم الهوية غير مسموح به';
         if( ! empty( $id_black_list ) ) { 
             $ids = [];
             foreach( $id_black_list as $key => $value ) {
-                 $ids[] = $value['id'];
-            }
-            if( in_array( $id_number, $ids ) ) {
-                return true;
+                $ids[] = $value['id'];
+                if( in_array( $value['id'], $check_number ) ) {
+                    return true;
+                }
             }
         } else {
             return false;
@@ -3361,3 +3367,101 @@ function houzez_submit_listing($new_property) {
     return $prop_id;
     }
 }
+
+function get_term_id_by_meta($meta_key, $meta_value, $taxonomy) {
+    global $wpdb;
+    $term_id = $wpdb->get_var($wpdb->prepare("
+        SELECT term_id 
+        FROM $wpdb->termmeta 
+        WHERE meta_key = %s AND meta_value = %s
+    ", $meta_key, $meta_value));
+    
+    return $term_id ? intval($term_id) : null;
+}
+
+
+/** -------------------------------------------------------------------------
+ * add_registration_date_column 
+ *-------------------------------------------------------------------------*/
+
+// إضافة عمود جديد
+function add_registration_date_column($columns) {
+    $columns['registration_date'] = __('Registration Date', 'your-textdomain');
+    return $columns;
+}
+add_filter('manage_users_columns', 'add_registration_date_column');
+/** -------------------------------------------------------------------------
+ * ملء البيانات في العمود الجديد  
+ *-------------------------------------------------------------------------*/
+function show_registration_date_column_content($value, $column_name, $user_id) {
+    if ($column_name == 'registration_date') {
+        $user = get_userdata($user_id);
+        return date('Y/m/d', strtotime($user->user_registered));
+    }
+    return $value;
+}
+add_action('manage_users_custom_column', 'show_registration_date_column_content', 10, 3);
+/** -------------------------------------------------------------------------
+ * جعل العمود قابلاً للترتيب  
+ *-------------------------------------------------------------------------*/
+function make_registration_date_column_sortable($columns) {
+    $columns['registration_date'] = 'user_registered';
+    return $columns;
+}
+add_filter('manage_users_sortable_columns', 'make_registration_date_column_sortable');
+/** -------------------------------------------------------------------------
+ * ترتيب البيانات 
+ *-------------------------------------------------------------------------*/
+function sort_users_by_registration_date($query) {
+    if (!is_admin() || !$query->is_main_query()) {
+        return;
+    }
+
+    if ('user_registered' === $query->get('orderby')) {
+        $query->set('orderby', 'user_registered');
+    }
+}
+add_action('pre_get_users', 'sort_users_by_registration_date');
+
+function update_agency_users_from_meta($role) {
+    // استعلام المستخدمين الذين لديهم الدور المحدد
+    $args = array(
+        'role'    => $role,
+        'orderby' => 'display_name',
+        'order'   => 'ASC'
+    );
+    $user_query = new WP_User_Query($args);
+
+    // تحقق إذا كان هناك مستخدمين
+    if (!empty($user_query->get_results())) {
+        foreach ($user_query->get_results() as $user) {
+            // الحصول على الميتا fave_author_title
+            $fave_author_title = get_user_meta($user->ID, 'fave_author_title', true);
+            if( empty( $fave_author_title ) ) {
+                continue;
+            } else if (!empty($fave_author_title)) {
+                // تقسيم الاسم الكامل إلى الاسم الأول والاسم الأخير
+                list($first_name, $last_name) = split_full_name($fave_author_title);
+
+                // تحديث الاسم الأول والاسم الأخير واسم العرض
+                wp_update_user(array(
+                    'ID' => $user->ID,
+                    'first_name' => $first_name,
+                    'last_name' => $last_name,
+                    'display_name' => $fave_author_title,
+                ));
+            } 
+        }
+    } 
+}
+
+// دالة لتقسيم الاسم الكامل إلى الاسم الأول والاسم الأخير
+function split_full_name($full_name) {
+    $parts = explode(' ', $full_name);
+    $first_name = array_shift($parts);
+    $last_name = implode(' ', $parts);
+    return array($first_name, $last_name);
+}
+
+// استدعاء الدالة لتحديث المستخدمين الذين لديهم الدور houzez_agency بناءً على الميتا fave_author_title
+// update_agency_users_from_meta('houzez_agency');
