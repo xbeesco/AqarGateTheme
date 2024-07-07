@@ -4,11 +4,11 @@
  */
 
  if ( !is_user_logged_in() ) {
-    wp_redirect( home_url() );
-    exit;
+    wp_redirect(  home_url() );
 }
+get_header(); 
 
-get_header();
+
 
 global $wpdb, $current_user, $paged;
 wp_get_current_user();
@@ -55,6 +55,20 @@ $request_types = array(
     'rent' => 'إيجار'
 );
 ?>
+
+<header class="header-main-wrap dashboard-header-main-wrap">
+    <div class="dashboard-header-wrap">
+        <div class="d-flex align-items-center">
+            <div class="dashboard-header-left flex-grow-1">
+                <h1><?php the_title(); ?></h1>         
+            </div><!-- dashboard-header-left -->
+
+            <div class="dashboard-header-right">
+                
+            </div><!-- dashboard-header-right -->
+        </div><!-- d-flex -->
+    </div><!-- dashboard-header-wrap -->
+</header><!-- .header-main-wrap -->
 <style>
  .dashboard-content {
     padding: 20px;
@@ -100,6 +114,12 @@ $request_types = array(
     border: 4px solid #fff;
     border-radius: 4px;
 }
+.btn {
+    border: 4px solid #fff;
+    box-shadow: 0px 0px 7px 3px #0000002b;
+    border-radius: 4px;
+    transition: box-shadow 0.5s linear;
+}
 .pagination {
     margin-top: 20px;
     text-align: center;
@@ -132,7 +152,6 @@ $request_types = array(
 } */
 </style>
 <div class="dashboard-content container mt-5 pt-5 mb-5 pb-5">
-    <h1 class="mb-5">طلباتي العقارية</h1>
     <?php if ( !empty($requests) ) : ?>
         <table class="dashboard-table">
             <thead>
@@ -144,6 +163,7 @@ $request_types = array(
                     <th>المساحة</th>
                     <th>السعر</th>
                     <th>التفاصيل</th>
+                    <th>الإجراءات</th>
                 </tr>
             </thead>
             <tbody>
@@ -159,6 +179,14 @@ $request_types = array(
                             <td><?php echo esc_html($request->land_area); ?></td>
                             <td><?php echo esc_html(number_format($request->price)); ?></td>
                             <td><a href="<?php echo get_permalink($request->post_id); ?>" class="btn btn-primary">عرض التفاصيل</a></td>
+                            <td>
+                                <div class="action-buttons" style="display: flex;flex-direction: row;justify-content: space-evenly;">
+                                    <button class="btn btn-success contract-button d-flex align-items-center" data-id="<?php echo esc_attr($request->post_id); ?>"><span class="btn-loader houzez-loader-js"></span>
+                                        تم التعاقد</button>
+                                    <button class="btn btn-danger delete-button d-flex align-items-center" data-id="<?php echo esc_attr($request->post_id); ?>"><span class="btn-loader houzez-loader-js"></span>
+                                        حذف الطلب</button>
+                                </div>
+                            </td>
                         </tr>
                     <?php endif; ?>
                 <?php endforeach; ?>
@@ -184,5 +212,90 @@ $request_types = array(
         <p>لا توجد طلبات عقارات متاحة.</p>
     <?php endif; ?>
 </div>
+<section class="dashboard-side-wrap">
+    <?php get_template_part('template-parts/dashboard/side-wrap'); ?>
+</section>
+<script>
+jQuery(document).ready(function($) {
+    $('.contract-button').on('click', function() {
+        var postId = $(this).data('id');
+        var currnt = $(this);
+        bootbox.confirm({
+            message: "هل أنت متأكد أنك تريد التعاقد على هذا الطلب؟",
+            buttons: {
+                confirm: {
+                    label: 'نعم',
+                    className: 'btn-success'
+                },
+                cancel: {
+                    label: 'لا',
+                    className: 'btn-danger'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+                    currnt.find('.houzez-loader-js').addClass('loader-show');
+                    $.ajax({
+                        type: 'POST',
+                        url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                        data: {
+                            action: 'contract_property_request',
+                            post_id: postId
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                bootbox.alert("تم التعاقد بنجاح", function() {
+                                    location.reload();
+                                });
+                            } else {
+                                bootbox.alert("حدث خطأ أثناء التعاقد.");
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    });
 
+    $('.delete-button').on('click', function() {
+        var postId = $(this).data('id');
+        var currnt = $(this);
+        bootbox.confirm({
+            message: "هل أنت متأكد أنك تريد حذف هذا الطلب؟",
+            buttons: {
+                confirm: {
+                    label: 'نعم',
+                    className: 'btn-success'
+                },
+                cancel: {
+                    label: 'لا',
+                    className: 'btn-danger'
+                }
+            },
+            callback: function (result) {
+                if (result) {
+                    currnt.find('.houzez-loader-js').addClass('loader-show');
+                    $.ajax({
+                        type: 'POST',
+                        url: '<?php echo admin_url('admin-ajax.php'); ?>',
+                        data: {
+                            action: 'delete_property_request',
+                            post_id: postId
+                        },
+                        success: function(response) {
+                            if (response.success) {
+                                bootbox.alert("تم حذف الطلب بنجاح", function() {
+                                    location.reload();
+                                });
+                            } else {
+                                bootbox.alert("حدث خطأ أثناء حذف الطلب.");
+                            }
+                        }
+                    });
+                }
+            }
+        });
+    });
+});
+</script>
 <?php get_footer(); ?>

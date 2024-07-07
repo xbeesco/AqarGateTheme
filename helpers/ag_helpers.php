@@ -3423,45 +3423,28 @@ function sort_users_by_registration_date($query) {
 }
 add_action('pre_get_users', 'sort_users_by_registration_date');
 
-function update_agency_users_from_meta($role) {
-    // استعلام المستخدمين الذين لديهم الدور المحدد
-    $args = array(
-        'role'    => $role,
-        'orderby' => 'display_name',
-        'order'   => 'ASC'
-    );
-    $user_query = new WP_User_Query($args);
+function houzez_is_dashboard() {
 
-    // تحقق إذا كان هناك مستخدمين
-    if (!empty($user_query->get_results())) {
-        foreach ($user_query->get_results() as $user) {
-            // الحصول على الميتا fave_author_title
-            $fave_author_title = get_user_meta($user->ID, 'fave_author_title', true);
-            if( empty( $fave_author_title ) ) {
-                continue;
-            } else if (!empty($fave_author_title)) {
-                // تقسيم الاسم الكامل إلى الاسم الأول والاسم الأخير
-                list($first_name, $last_name) = split_full_name($fave_author_title);
+    $files = apply_filters( 'houzez_is_dashboard_filter', array(
+        'template/user_dashboard_profile.php',
+        'template/user_dashboard_insight.php',
+        'template/user_dashboard_crm.php',
+        'template/user_dashboard_properties.php',
+        'template/user_dashboard_favorites.php',
+        'template/user_dashboard_invoices.php',
+        'template/user_dashboard_saved_search.php',
+        'template/user_dashboard_floor_plans.php',
+        'template/user_dashboard_multi_units.php',
+        'template/user_dashboard_membership.php',
+        'template/user_dashboard_gdpr.php',
+        'template/user_dashboard_submit.php',
+        'template/user_dashboard_messages.php',
+        'template/user_property_request.php'
+        
+    ) );
 
-                // تحديث الاسم الأول والاسم الأخير واسم العرض
-                wp_update_user(array(
-                    'ID' => $user->ID,
-                    'first_name' => $first_name,
-                    'last_name' => $last_name,
-                    'display_name' => $fave_author_title,
-                ));
-            } 
-        }
-    } 
+    if ( is_page_template($files) ) {
+        return true;
+    }
+    return false;
 }
-
-// دالة لتقسيم الاسم الكامل إلى الاسم الأول والاسم الأخير
-function split_full_name($full_name) {
-    $parts = explode(' ', $full_name);
-    $first_name = array_shift($parts);
-    $last_name = implode(' ', $parts);
-    return array($first_name, $last_name);
-}
-
-// استدعاء الدالة لتحديث المستخدمين الذين لديهم الدور houzez_agency بناءً على الميتا fave_author_title
-// update_agency_users_from_meta('houzez_agency');

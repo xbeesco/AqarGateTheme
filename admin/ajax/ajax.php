@@ -5,6 +5,10 @@ add_action('wp_ajax_add_property_location', 'handle_add_property_location');
 add_action('wp_ajax_sync_locations', 'handle_sync_property_locations');
 add_action('wp_ajax_sync_property_data_rega', 'handle_sync_property_data_rega');
 add_action('wp_ajax_fetch_agency_users', 'fetch_agency_users');
+/**
+ * Summary of handle_add_property_location
+ * @return void
+ */
 function handle_add_property_location() {
     $location_type = sanitize_text_field($_POST['location_type']);
     
@@ -142,6 +146,10 @@ function handle_add_property_location() {
     wp_die();
 }
 
+/**
+ * Summary of handle_sync_property_locations
+ * @return void
+ */
 function handle_sync_property_locations() {
     //@ini_set( 'display_errors', 1 );
     $properties = get_posts(array(
@@ -258,12 +266,20 @@ function handle_sync_property_locations() {
     wp_die();
 }
 
+/**
+ * Summary of handle_sync_property_data_rega
+ * @return void
+ */
 function handle_sync_property_data_rega() {
     // Sync property data to REGA logic (this is just an example, adjust as needed)
     echo 'Property data synced to REGA successfully!';
     wp_die();
 }
 
+/**
+ * Summary of fetch_agency_users
+ * @return void
+ */
 function fetch_agency_users() {
     
     $role = 'houzez_agency'; // Specify the role
@@ -307,6 +323,13 @@ function fetch_agency_users() {
 }
 
 // Helper function to get term ID by meta
+/**
+ * Summary of _get_term_id_by_meta
+ * @param mixed $meta_key
+ * @param mixed $meta_value
+ * @param mixed $taxonomy
+ * @return int|null
+ */
 function _get_term_id_by_meta($meta_key, $meta_value, $taxonomy) {
     global $wpdb;
     $term_id = $wpdb->get_var($wpdb->prepare("
@@ -318,6 +341,12 @@ function _get_term_id_by_meta($meta_key, $meta_value, $taxonomy) {
     return $term_id ? intval($term_id) : null;
 }
 
+/**
+ * Summary of _get_term_name_by_id
+ * @param mixed $term_id
+ * @param mixed $taxonomy
+ * @return string|null
+ */
 function _get_term_name_by_id($term_id, $taxonomy) {
     $term = get_term($term_id, $taxonomy);
     if (!is_wp_error($term) && $term) {
@@ -326,6 +355,11 @@ function _get_term_name_by_id($term_id, $taxonomy) {
     return null;
 }
 
+/**
+ * Summary of removeLeadingZero
+ * @param mixed $string
+ * @return mixed
+ */
 function removeLeadingZero($string) {
     // Check if the string starts with '0' and the second character is a digit
     if (substr($string, 0, 1) === '0' && ctype_digit(substr($string, 1, 1))) {
@@ -335,3 +369,113 @@ function removeLeadingZero($string) {
     // Return the original string if no leading zero to remove
     return $string;
 }
+
+function handle_contract_property_request() {
+    if (!isset($_POST['post_id']) || !is_user_logged_in()) {
+        wp_send_json_error();
+    }
+
+    $post_id = intval($_POST['post_id']);
+    $user_id = get_current_user_id();
+    $post = get_post($post_id);
+
+    if ($post->post_author != $user_id || $post->post_type != 'property_request') {
+        wp_send_json_error();
+    }
+
+    // تحديث حالة المنشور إلى 'تم التعاقد'
+    wp_update_post(array(
+        'ID' => $post_id,
+        'post_status' => 'contracted' // يمكنك تحديد حالة مخصصة إذا كنت قد أضفتها
+    ));
+
+    wp_send_json_success();
+}
+add_action('wp_ajax_contract_property_request', 'handle_contract_property_request');
+
+function handle_delete_property_request() {
+    if (!isset($_POST['post_id']) || !is_user_logged_in()) {
+        wp_send_json_error();
+    }
+
+    $post_id = intval($_POST['post_id']);
+    $user_id = get_current_user_id();
+    $post = get_post($post_id);
+
+    if ($post->post_author != $user_id || $post->post_type != 'property_request') {
+        wp_send_json_error();
+    }
+
+    // تحديث حالة المنشور إلى 'draft'
+    wp_update_post(array(
+        'ID' => $post_id,
+        'post_status' => 'draft'
+    ));
+
+    wp_send_json_success();
+}
+add_action('wp_ajax_delete_property_request', 'handle_delete_property_request');
+
+
+// إضافة حالة منشور جديدة
+function add_contracted_post_status() {
+    register_post_status('contracted', array(
+        'label'                     => _x('Contracted', 'post'),
+        'public'                    => true,
+        'exclude_from_search'       => false,
+        'show_in_admin_all_list'    => true,
+        'show_in_admin_status_list' => true,
+        'label_count'               => _n_noop('Contracted <span class="count">(%s)</span>', 'Contracted <span class="count">(%s)</span>'),
+    ));
+}
+add_action('init', 'add_contracted_post_status');
+
+// إضافة الحالة الجديدة إلى القائمة المنسدلة لتصفية المنشورات في لوحة التحكم
+function append_post_status_list() {
+    global $post;
+    $complete = '';
+    $label = '';
+
+    if ($post->post_type == 'property_request') {
+        if ($post->post_status == 'contracted') {
+            $complete = ' selected="selected"';
+            $label = '<span id="post-status-display"> Contracted</span>';
+        }
+        echo '
+        <script>
+        jQuery(document).ready(function($){
+            $("select#post_status").append("<option value=\"contracted\"' . $complete . '>Contracted</option>");
+            $(".misc-pub-section label").append("' . $label . '");
+        });
+        </script>
+        ';
+    }
+}
+add_action('admin_footer-post.php', 'append_post_status_list');
+
+// إضافة عمود جديد في جدول المنشورات
+function add_custom_columns($columns) {
+    $columns['post_status'] = __('Status', 'your-text-domain');
+    return $columns;
+}
+add_filter('manage_property_request_posts_columns', 'add_custom_columns');
+
+// عرض محتوى العمود الجديد
+function custom_column_content($column_name, $post_id) {
+    if ($column_name == 'post_status') {
+        $post_status = get_post_status($post_id);
+        if ($post_status == 'contracted') {
+            echo '<span style="background-color: #28a745; color: #fff; padding: 5px 10px; border-radius: 3px;">تم التعاقد</span>';
+        } else {
+            echo ucfirst($post_status);
+        }
+    }
+}
+add_action('manage_property_request_posts_custom_column', 'custom_column_content', 10, 2);
+
+// جعل العمود الجديد قابلاً للفرز
+function custom_column_sortable($columns) {
+    $columns['post_status'] = 'post_status';
+    return $columns;
+}
+add_filter('manage_edit-property_request_sortable_columns', 'custom_column_sortable');
