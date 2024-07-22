@@ -3448,3 +3448,129 @@ function houzez_is_dashboard() {
     }
     return false;
 }
+
+/** -------------------------------------------------------------------------
+ * locations edit select 
+ *-------------------------------------------------------------------------*/
+function houzez_hirarchical_options($taxonomy_name, $taxonomy_terms, $searched_term, $prefix = " " ){
+
+    if (!empty($taxonomy_terms) && taxonomy_exists($taxonomy_name)) {
+        foreach ($taxonomy_terms as $term) {
+
+            // Function to format term name
+            // Get term meta
+            $term_meta = get_option("_houzez_{$taxonomy_name}_{$term->term_id}");
+
+            // Format term name
+            $formatted_term_name = format_term_name($term->name, $term_meta);
+
+            if( $taxonomy_name == 'property_area' ) {
+                $term_meta= get_option( "_houzez_property_area_$term->term_id");
+                $parent_city = sanitize_title($term_meta['parent_city']);
+
+                if ( class_exists( 'sitepress' ) ) {
+                    $default_lang = apply_filters( 'wpml_default_language', NULL );
+                    $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_area', true, $default_lang );
+                    $term_meta= get_option( "_houzez_property_area_$term_id_default");
+                    $parent_city = sanitize_title($term_meta['parent_city']);
+                    $parent_city = get_term_by( 'slug', $parent_city, 'property_city' )->slug;
+                }
+
+                echo '<option data-ref="' . urldecode($term->slug) . '" data-belong="'.urldecode($parent_city).'" value="' . urldecode($term->slug) . '"' . ($searched_term == $term->slug ? ' selected="selected"' : '') . '>' . esc_attr($prefix) . $formatted_term_name . '</option>';
+
+            } elseif( $taxonomy_name == 'property_city' ) {
+                $term_meta= get_option( "_houzez_property_city_$term->term_id");
+                $parent_state = sanitize_title($term_meta['parent_state']);
+
+                if ( class_exists( 'sitepress' ) ) {
+                    $default_lang = apply_filters( 'wpml_default_language', NULL );
+                    $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_city', true, $default_lang );
+                    $term_meta= get_option( "_houzez_property_city_$term_id_default");
+                    $parent_state = sanitize_title($term_meta['parent_state']);
+                    $parent_state = get_term_by( 'slug', $parent_state, 'property_state' )->slug;
+                }
+
+                echo '<option data-ref="' . urldecode($term->slug) . '" data-belong="'.urldecode($parent_state).'" value="' . urldecode($term->slug) . '"' . ($searched_term == $term->slug ? ' selected="selected"' : '') . '>' . esc_attr($prefix) . esc_attr($formatted_term_name) . '</option>';
+
+            } elseif( $taxonomy_name == 'property_state' ) {
+                $term_meta = get_option( "_houzez_property_state_$term->term_id");
+                $parent_country = sanitize_title($term_meta['parent_country']);
+
+                if ( class_exists( 'sitepress' ) ) {
+                    $default_lang = apply_filters( 'wpml_default_language', NULL );
+                    $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_state', true, $default_lang );
+                    $term_meta= get_option( "_houzez_property_state_$term_id_default");
+                    $parent_country = sanitize_title($term_meta['parent_country']);
+                    $parent_country = get_term_by( 'slug', $parent_country, 'property_country' )->slug;
+                }
+
+                echo '<option data-ref="' . urldecode($term->slug) . '" data-belong="'.urldecode($parent_country).'" value="' . urldecode($term->slug) . '"' . ($searched_term == $term->slug ? ' selected="selected"' : '') . '>' . esc_attr($prefix) . esc_attr($formatted_term_name) . '</option>';
+
+            } elseif( $taxonomy_name == 'property_country' ) {
+        
+                echo '<option data-ref="' . urldecode($term->slug) . '" value="' . urldecode($term->slug) . '"' . ($searched_term == $term->slug ? ' selected="selected"' : '') . '>' . esc_attr($prefix) . esc_attr($formatted_term_name) . '</option>';
+
+            } else {
+
+                echo '<option value="' . urldecode($term->slug) . '"' . ($searched_term == $term->slug ? ' selected="selected"' : '') . '>' . esc_attr($prefix) . esc_attr($formatted_term_name) . '</option>';
+            }
+
+            $child_terms = get_terms($taxonomy_name, array(
+                'hide_empty' => false,
+                'parent' => $term->term_id
+            ));
+
+            if (!empty($child_terms)) {
+                houzez_hirarchical_options( $taxonomy_name, $child_terms, $searched_term, "- ".$prefix );
+            }
+        }
+    }
+}
+
+
+function ag_get_term_id_by_name($term_name, $taxonomy) {
+    $term = get_term_by('name', $term_name, $taxonomy);
+    if ($term) {
+        return $term->term_id;
+    } else {
+        return null; // Term not found
+    }
+}
+function lowercase_rawurlencode($str) {
+    return preg_replace_callback(
+        '/%[0-9A-F]{2}/',
+        function ($matches) {
+            return strtolower($matches[0]);
+        },
+        rawurlencode($str)
+    );
+}
+
+// Helper function to format term name
+function format_term_name($name, $term_meta) {
+    // Replace all hyphens with spaces
+    $name = str_replace('-', ' ', $name);
+    
+    // Remove REGION_ID, CITY_ID, DISTRICT_ID if they exist in term meta
+    $region_id = isset($term_meta['REGION_ID']) ? $term_meta['REGION_ID'] : '';
+    $city_id = isset($term_meta['CITY_ID']) ? $term_meta['CITY_ID'] : '';
+    $district_id = isset($term_meta['DISTRICT_ID']) ? $term_meta['DISTRICT_ID'] : '';
+    
+    // Remove these IDs from the name
+    if ($region_id) {
+        $name = str_replace($region_id, '', $name);
+    }
+    if ($city_id) {
+        $name = str_replace($city_id, '', $name);
+    }
+    if ($district_id) {
+        $name = str_replace($district_id, '', $name);
+    }
+
+    // Remove extra spaces
+    $name = preg_replace('/\s+/', ' ', $name);
+    $name = trim($name);
+
+    return $name;
+}
+

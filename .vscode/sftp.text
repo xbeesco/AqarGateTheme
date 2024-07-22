@@ -3,10 +3,10 @@
     "host": "141.147.132.208",
     "protocol": "ftp",
     "port": 21,
-    "username": "yassin_aqargate.com",
+    "username": "dev_aqargate.com",
     "remotePath": "/",
     "uploadOnSave": true,
-    "password": "Alsaudi@76",
+    "password": "@8VeC2ioPI",
     "ignore": [".vscode", ".git", ".DS_Store", ".gitignore"]
 }
 

@@ -6,61 +6,65 @@ class REDFBrokerageAPI {
     private $token;
 
     public function __construct() {
-        $this->appKey   = 'pvi03';
+        $this->appKey   = 'pvi403';
         $this->password = 'ygt002260';
-        $this->baseUrl  = 'https://dlp-uat-fe-gw.redf.gov.sa:801/listingsdata-api';
+        $this->baseUrl  = 'https://dlp-uat-fe-gw.redf.gov.sa:801/applead';
     }
 
-    private function request($method, $endpoint, $body = null, $isAuthRequired = true) {
+    private function request($method, $endpoint, $body , $isAuthRequired = false, $token=null) {
         $url = $this->baseUrl . $endpoint;
-        $headers = ['Content-Type' => 'application/json'];
-
-        if ($isAuthRequired && $this->token) {
-            $headers['Authorization'] = 'Bearer ' . $this->token;
+        $headers = [];
+        $headers[] = 'Content-Type: application/json';
+    
+        if ($isAuthRequired === true && !empty($token)) {
+            $headers[] = 'token: ' . $token;
         }
+    
+        $curl = curl_init();
 
-        $args = [
-            'method' => $method,
-            'headers' => $headers,
-            'sslverify' => false,  // Add this line to bypass SSL verification
-        ];
-
-        if ($body) {
-            $args['body'] = json_encode($body);
-        }
-
-        $response = wp_remote_request($url, $args);
-
-        if (is_wp_error($response)) {
-            throw new Exception($response->get_error_message());
-        }
-
-        $responseBody = wp_remote_retrieve_body($response);
-        $responseCode = wp_remote_retrieve_response_code($response);
-
-        return ['code' => $responseCode, 'response' => json_decode($responseBody, true)];
+        curl_setopt_array($curl, array(
+        CURLOPT_URL => $endpoint,
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_ENCODING => '',
+        CURLOPT_MAXREDIRS => 10,
+        CURLOPT_TIMEOUT => 0,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_HTTP_VERSION => CURL_HTTP_VERSION_1_1,
+        CURLOPT_CUSTOMREQUEST => $method,
+        CURLOPT_POSTFIELDS => $body,
+        CURLOPT_HTTPHEADER => $headers,
+        ));
+      
+      	//var_dump($endpoint);
+      	//var_dump($method);
+      	//var_dump($body);
+      	//var_dump($headers);
+        
+        $response = curl_exec($curl);
+        $responseCode = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+        curl_close($curl);
+        return $response;
     }
+    
 
     public function getToken() {
-        $body = [
-            'AppKey' => $this->appKey,
-            'Password' => $this->password,
-        ];
+        $body = '{
+                    "key":"pvi403",
+                    "password":"ygtO02260"
+                }';
 
-        $result = $this->request('POST', '/api/Brokerage/get-app-token', $body, false);
-        if ($result['code'] == 200 && isset($result['response']['token'])) {
-            $this->token = $result['response']['token'];
-        } else {
-            return $result;
-        }
+        $result = $this->request('POST', 'https://dlp-uat-fe-gw.redf.gov.sa:801/applead/api/Brokerage/get-app-token', $body, false);
+      	
+        return $result;
     }
 
     public function createProperty($propertyData) {
-        return $this->request('POST', '/api/external/properties', $propertyData);
+        $result = $this->request('POST', 'https://dlp-uat-fe-gw.redf.gov.sa:801/listData/api/external/properties', $propertyData, true, $this->getToken());
+        return $result;
     }
 
     public function updateProperty($uid, $propertyData) {
-        return $this->request('PATCH', "/api/external/properties/{$uid}", $propertyData);
+        return $this->request('PATCH', "/api/external/properties/{$uid}", $propertyData, true, $this->getToken());
     }
 
     public function searchProperty($uid) {

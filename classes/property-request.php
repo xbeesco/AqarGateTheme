@@ -110,48 +110,74 @@ class PropertyRequest {
 
         $property_request_name = ($property_request === 'sell') ? 'شراء' : 'للايجار';
         // Construct post title
-        $post_title = 'طلب ' . $prop_type_name . ' / ' . $property_request_name . ' / ' . $state;
+        $post_title = "طلب $prop_type_name / $property_request_name / $state";
 
-        $post_id = wp_insert_post(array(
-            'post_type' => 'property_request',
-            'post_title' => $post_title,
-            'post_status' => 'publish',
-            'post_author' => $user_id,
-        ));
+        if( isset($unserialized_data['action']) && $unserialized_data['action'] === 'edit') {
+            $post_id = $unserialized_data['post_id'] ;
 
-        if ($post_id) {
-            // carbon_set_post_meta($post_id, 'property_request', $property_request);
-            // carbon_set_post_meta($post_id, 'prop_type', $prop_type_name);
-            // carbon_set_post_meta($post_id, 'prop_age', $prop_age);
-            // carbon_set_post_meta($post_id, 'land_area', $land_area);
-            // carbon_set_post_meta($post_id, 'price', $price);
-            // carbon_set_post_meta($post_id, 'payment_method', $payment_method);
-            // carbon_set_post_meta($post_id, 'more_info', $more_info);
-            // carbon_set_post_meta($post_id, 'user_id', $user_id);
-            // carbon_set_post_meta($post_id, 'state', $state);
-            // carbon_set_post_meta($post_id, 'city', $city);
-            // carbon_set_post_meta($post_id, 'area', $neighborhood);
-
-            // Insert into custom table
-            $wpdb->insert($table_name, array(
-                'post_id' => $post_id,
+            $data = [
                 'property_request' => $property_request,
                 'prop_type' => $prop_type_name,
                 'prop_age' => $prop_age,
-                'state' => $state,
-                'city' => $city,
+                'state' => $administrative_area_level_1,
+                'city' => $locality,
                 'area' => $neighborhood,
                 'land_area' => $land_area,
                 'price' => $price,
                 'payment_method' => $payment_method,
                 'more_info' => $more_info,
-                'user_id' => $user_id
-            ));
-            wp_send_json(["sucsses" => true, "html" => ' عزيزنا العميل تم نشر طلبكم . وسيتم استقبال جميع العروض بواسطة طرق الاتصال في حسابكم.', 'redirect' => $user_property_request]);
+                'user_id' => $user_id,
+            ];
+            $where = ['post_id' => $post_id];
+            
+            $wpdb->update($table_name, $data, $where);
+
+            wp_send_json(["sucsses" => true, "html" => ' عزيزنا العميل تم تعديل طلبكم . وسيتم استقبال جميع العروض بواسطة طرق الاتصال في حسابكم.', 'redirect' => $user_property_request]);
             wp_die();
+            
         } else {
-            wp_send_json(["sucsses" => false, "html" =>'حدث خطأ أثناء إرسال الطلب']);
-            wp_die();
+            
+            $post_id = wp_insert_post([
+                'post_type' => 'property_request',
+                'post_title' => $post_title,
+                'post_status' => 'publish',
+                'post_author' => $user_id,
+            ]);
+    
+            if ( $post_id ) {
+                // carbon_set_post_meta($post_id, 'property_request', $property_request);
+                // carbon_set_post_meta($post_id, 'prop_type', $prop_type_name);
+                // carbon_set_post_meta($post_id, 'prop_age', $prop_age);
+                // carbon_set_post_meta($post_id, 'land_area', $land_area);
+                // carbon_set_post_meta($post_id, 'price', $price);
+                // carbon_set_post_meta($post_id, 'payment_method', $payment_method);
+                // carbon_set_post_meta($post_id, 'more_info', $more_info);
+                // carbon_set_post_meta($post_id, 'user_id', $user_id);
+                // carbon_set_post_meta($post_id, 'state', $state);
+                // carbon_set_post_meta($post_id, 'city', $city);
+                // carbon_set_post_meta($post_id, 'area', $neighborhood);
+    
+                // Insert into custom table
+                $wpdb->insert($table_name, array(
+                    'post_id' => $post_id,
+                    'property_request' => $property_request,
+                    'prop_type' => $prop_type_name,
+                    'prop_age' => $prop_age,
+                    'state' => $administrative_area_level_1,
+                    'city' => $locality,
+                    'area' => $neighborhood,
+                    'land_area' => $land_area,
+                    'price' => $price,
+                    'payment_method' => $payment_method,
+                    'more_info' => $more_info,
+                    'user_id' => $user_id
+                ));
+                wp_send_json(["sucsses" => true, "html" => ' عزيزنا العميل تم نشر طلبكم . وسيتم استقبال جميع العروض بواسطة طرق الاتصال في حسابكم.', 'redirect' => $user_property_request]);
+                wp_die();
+            } else {
+                wp_send_json(["sucsses" => false, "html" =>'حدث خطأ أثناء إرسال الطلب']);
+                wp_die();
+            }
         }
     }
 

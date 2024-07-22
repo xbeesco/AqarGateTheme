@@ -462,11 +462,21 @@ if( !function_exists('aqargate_edit_api_property') ) {
             'إيجار' => 'Rent',
             'بيع' => 'Sell',
         ];
-
-        $property_status = get_term_by( 'id', $formDataArray['prop_status'][0], 'property_status' );
+      
+		$current_property_price = $advertisement_response['propertyPrice'];
+        $new_property_price = intval($formDataArray['prop_price']);
+      
+        $property_status = get_term_by('id', $formDataArray['prop_status'][0], 'property_status');
         $property_statusName = $property_status->name;
-        $property_statusName  = isset($advertisementTypeMapping[$property_statusName]) ? $advertisementTypeMapping[$property_statusName] : 'Sell';
- 
+      
+      	// Check if the values have changed
+        if ($property_statusName == $advertisement_response['advertisementType'] && $current_property_price == $new_property_price) {
+            echo json_encode(['success' => true, 'reason' => 'لا حاجة لارسال الاعلان للهيئة العقارية . جاري تحديث الاعلان !']);
+            wp_die();
+        }
+      
+        $property_statusName = $advertisementTypeMapping[$property_statusName] ?? 'Sell';
+
         $user_title             =   get_the_author_meta( 'fave_author_title' , $userID );
         $display_name           =   get_the_author_meta( 'aqar_display_name' , $userID );
         if( empty($display_name) ) {
@@ -615,8 +625,6 @@ if( !function_exists('aqargate_edit_api_property') ) {
             "titleDeedType": "ElectronicDeed",
         }';
 
-        
-
         require_once ( AG_DIR . 'module/class-rega-module.php' );
 
         $RegaMoudle = new RegaMoudle();
@@ -633,7 +641,7 @@ if( !function_exists('aqargate_edit_api_property') ) {
 
         if( isset($response->Body) && $response->Body->result->response === true ){
             update_post_meta($prop_id, 'adverst_can_edit', 0);  
-            update_post_meta( $propID, 'advertisement_response', $advertisement_response );
+            update_post_meta($prop_id, 'advertisement_response', $advertisement_response );
             echo json_encode(['success' => true, 'reason' => 'تم ارسال التعديل بنجاح الي الهيئة العقارية']);
             wp_die();
         } else {
@@ -657,15 +665,18 @@ function custom_columns_manage($columns){
             $advertiserId = get_post_meta($post->ID, 'advertiserId', true);
             $adLicenseNumber = get_post_meta($post->ID, 'adLicenseNumber', true);
             $advertisement_response = get_post_meta($post->ID, 'advertisement_response', true);
-            $ads_REDF = get_post_meta($post->ID, 'ads_REDF', true);
+            $REDF_UID = get_post_meta($post->ID, 'REDF_UID', true);
             $loader = '<span class="btn-loader houzez-loader-js"></span>';
-            $buttonClass = ' button-primary';
+            $buttonClass = $REDF_btnClass = ' button-primary';
             if( !empty($advertisement_response) ) {
                 $buttonClass = ' button-sysnc';
             }
+            if( !empty($REDF_UID) ) {
+                $REDF_btnClass = ' button-sysnc';
+            }
             if( get_post_status($post->ID) === 'publish' && !empty($advertiserId) && !empty($adLicenseNumber)) {
                 echo '<a href="javascript:void(0);" class="sysnc_listing button'.$buttonClass.'" data-id="' .$post->ID. '" style="margin-top: 0.5rem;display:inline-flex;">' . $loader . '<span>REGA SYNC</span></a>';
-                echo '<a href="javascript:void(0);" class="sysnc_listing_redf button'.$buttonClass.'" data-id="' .$post->ID. '" style="margin-top: 0.5rem;display:inline-flex;">' . $loader . '<span>REDF SYNC</span></a>';
+                echo '<a href="javascript:void(0);" class="sysnc_listing_redf button'.$REDF_btnClass.'" data-id="' .$post->ID. '" style="margin-top: 0.5rem;display:inline-flex;">' . $loader . '<span>REDF SYNC</span></a>';
             
             }
             break;
@@ -737,7 +748,6 @@ function sync_advertisement_ajax() {
             if( isset($response->Body->result->advertisement) ) {
                 $data = $response->Body->result->advertisement;
                 $advertisement_response = json_decode(json_encode($data), true);
-                REDF_SYNC($data, $post_id);
                 /**
                  * update response
                  *---------------------------------------------------------------------*/ 
@@ -792,55 +802,96 @@ add_action('admin_enqueue_scripts', 'enqueue_custom_admin_scripts');
 /** -------------------------------------------------------------------------
  * REDF_SYNC  
  *-------------------------------------------------------------------------*/
-function REDF_SYNC($data, $postID) {
-    require_once ( AG_DIR . 'classes/REDFBrokerageAPI.php' );
+function REDF_SYNC() {
+    $postID = $_POST['post_id'] ?? '';
+    require_once AG_DIR . 'classes/REDFBrokerageAPI.php';
     $api = new REDFBrokerageAPI();
 
-    // Get JWT token
-    $api->getToken();
+    $data = get_post_meta($postID, 'advertisement_response', true);
 
+    $brokerPropertyUrl = get_permalink($postID);
+    $price = $data['propertyPrice'] ?? 1;
+    $regionId = $data['location']['regionCode'] ?? 1;
+    $cityId = $data['location']['cityCode'] ?? 1;
+    $longitude = $data['location']['longitude'] ?? 1;
+    $latitude = $data['location']['latitude'] ?? 1;
+
+    $area = get_post_meta($postID, 'fave_property_size', true);
+    $deedNumber = $data['deedNumber'];
+    $propertyFace = $data['propertyFace'];
+    $planNumber = $data['planNumber'];
+    $AdvertiserId = $data['advertiserId'];
+    $numberOfRooms = $data['numberOfRooms'];
     // Property Data
-    $propertyData = [
-        "brokerId" => "1",
-        "brokerPropertyUrl" => "https://sakani.sa/app/mega-project/bdr-lmdyn-at-lmnwr-at-mjtm-lmkymn",
-        "advertiser" => "2",
-        "type" => "4",
-        "price" => 220000,
-        "regionId" => 1,
-        "cityId" => 3,
-        "districtId" => 10100003107,
+    $propertyData = json_encode([
+        "brokerPropertyUrl" => $brokerPropertyUrl,
+        "advertiser" => 3,
+        "type" => "1",
+        "price" => $price,
+        "regionId" => $regionId,
+        "cityId" => $cityId,
         "direction" => "South",
-        "area" => 190,
-        "length" => 10,
-        "width" => 10,
-        "livingRooms" => 2,
-        "bedrooms" => 5,
-        "bathrooms" => 5,
-        "buildYear" => 2010,
-        "parking" => "None",
+        "area" => $area,
+        "parking" => 0,
         "isHidden" => false,
+        "status" => 1,
+        "buildingNumber" => "$planNumber",
+        "condition" => 0,
+        "brokerPropertyId" => "$deedNumber",
+        "AdvertiserId" => "$AdvertiserId",
+        "AuthorizationId" => "$AdvertiserId ",
+        "Bedrooms" => $numberOfRooms,
+        "BuildYear" => "2010",
+        "DeedNumber" => $deedNumber,
+        "Latitude" => $latitude,
+        "Longitude" => $longitude,
+        "Length" => 1,
+        "Width" => 1,
         "media" => [
             [
-                "type" => "Image",
-                "isDefault" => true,
-                "source" => "https://fastly.picsum.photos/id/50/4608/3072.jpg?hmac=E6WgCk6MBOyuRjW4bypT6y-tFXyWQfC_LjIBYPUspxE"
-            ]
-        ],
-        "status" => "Available",
-        "buildingNumber" => "10",
-        "condition" => "Ready",
-        "brokerPropertyId" => "externalID123"
-    ];
-
+                "type" => 0,
+                "isDefault"=> true,
+                "source"=> "https://aqargate.com/staging/wp-content/uploads/2024/05/IMG_1536-1-1170x785.jpg"
+            ],
+    
+        ]
+    ]);
+    
     $REDF_UID = get_post_meta($postID, 'REDF_UID', true);
-    if( !empty( $REDF_UID ) ) {
-        // update a property
-        $response = $api->updateProperty($REDF_UID, $propertyData);
+    if (!empty($REDF_UID)) {
+        // Update a property
+        $response = $api->createProperty($propertyData);
     } else {
         // Create a property
         $response = $api->createProperty($propertyData);
     }
+
+    $ajax_response = ['success' => false, 'message' => ''];
+
+    $response_data = json_decode($response, true);
+    
+    if (json_last_error() === JSON_ERROR_NONE) {
+        if (isset($response_data['errors'])) {
+            // Extract error messages
+            $errors = $response_data['errors'];
+            foreach ($errors as $field => $error) {
+                $ajax_response['message'] .= implode(', ', $error) . ' ';
+            }
+        } elseif( isset($response_data['uid']) && !empty($response_data['uid']) ) {
+            $ajax_response['success'] = true;
+            $ajax_response['message'] = 'Property synced successfully. | UID : ' . $response_data['uid'];
+            update_post_meta( $postID, 'REDF_UID', $response_data['uid']);
+        }
+    } else {
+        $ajax_response['message'] = 'Invalid API response.';
+    }
+
+    echo wp_send_json($ajax_response);
+    wp_die();
 }
+add_action('wp_ajax_REDF_SYNC', 'REDF_SYNC');
+
+
 /** -------------------------------------------------------------------------
  * del_terms 
  *-------------------------------------------------------------------------*/

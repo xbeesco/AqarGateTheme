@@ -70,55 +70,16 @@ $request_types = array(
     </div><!-- dashboard-header-wrap -->
 </header><!-- .header-main-wrap -->
 <style>
- .dashboard-content {
-    padding: 20px;
-}
-
-.dashboard-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-
-.dashboard-table th,
-.dashboard-table td {
-    border: 1px solid #b3cbf5;
-    padding: 8px;
+.table-lined tbody td, .table-lined thead{
     text-align: center;
 }
-
-.dashboard-table th {
-    background-color: #1f3864;
-    font-weight: bold;
-    color: #fff;
-}
-
-.dashboard-table tr:nth-child(even) {
-    background-color: #d3e3ff;
-}
-
-.dashboard-table tr:hover {
-    background-color: #d3e3ff;
-}
-
 .btn-primary{
-    background: #1f3864;
-    border: 4px solid #fff;
-    box-shadow: 0px 0px 7px 3px #0000002b;
-    border-radius: 4px;
-    transition: box-shadow 0.5s linear;
+    background-color: #2196F3;
+    border-color: #03A9F4;
 }
-
-.btn-primary:hover {
-    box-shadow: none;
-    background: #1f3864;
-    border: 4px solid #fff;
-    border-radius: 4px;
-}
-.btn {
-    border: 4px solid #fff;
-    box-shadow: 0px 0px 7px 3px #0000002b;
-    border-radius: 4px;
-    transition: box-shadow 0.5s linear;
+.btn-primary:hover{
+    background-color: #1672ba;
+    border-color: #1672ba;
 }
 .pagination {
     margin-top: 20px;
@@ -151,9 +112,10 @@ $request_types = array(
     border-radius: 4px;
 } */
 </style>
-<div class="dashboard-content container mt-5 pt-5 mb-5 pb-5">
+<section class="dashboard-content-wrap">
+<div class="dashboard-content-inner-wrap mt-5 pt-5 mb-5 pb-5">
     <?php if ( !empty($requests) ) : ?>
-        <table class="dashboard-table">
+        <table class="dashboard-table table-lined table-hover responsive-table">
             <thead>
                 <tr>
                     <th>رقم الطلب</th>
@@ -181,10 +143,18 @@ $request_types = array(
                             <td><a href="<?php echo get_permalink($request->post_id); ?>" class="btn btn-primary">عرض التفاصيل</a></td>
                             <td>
                                 <div class="action-buttons" style="display: flex;flex-direction: row;justify-content: space-evenly;">
-                                    <button class="btn btn-success contract-button d-flex align-items-center" data-id="<?php echo esc_attr($request->post_id); ?>"><span class="btn-loader houzez-loader-js"></span>
-                                        تم التعاقد</button>
-                                    <button class="btn btn-danger delete-button d-flex align-items-center" data-id="<?php echo esc_attr($request->post_id); ?>"><span class="btn-loader houzez-loader-js"></span>
-                                        حذف الطلب</button>
+                                    <a href="<?php echo add_query_arg(['edit'=> 'true'], get_permalink($request->post_id)); ?>" class="d-flex align-items-center" data-id="<?php echo esc_attr($request->post_id); ?>" style="display: flex;flex-direction: column;">
+                                        <img width="20" height="20" src="<?php echo trailingslashit( get_stylesheet_directory_uri() ) .'assets/img/edit.png'; ?>" alt="تم التعاقد" class="contract-img">
+                                        <span>تعديل</span>
+                                    </a>
+                                    <a href="#" class="contract-button d-flex align-items-center" data-id="<?php echo esc_attr($request->post_id); ?>" style="display: flex;flex-direction: column;">
+                                        <img width="20" height="20" src="<?php echo trailingslashit( get_stylesheet_directory_uri() ) .'assets/img/booked.png'; ?>" alt="تم التعاقد" class="contract-img">
+                                        <span>تم التعاقد</span>
+                                    </a>
+                                    <a href="#" class="delete-button d-flex align-items-center" data-id="<?php echo esc_attr($request->post_id); ?>" style="display: flex;flex-direction: column;">
+                                        <img width="20" height="20" src="<?php echo trailingslashit( get_stylesheet_directory_uri() ) .'assets/img/delete.png'; ?>" alt="تم التعاقد" class="contract-img">
+                                        <span>حذف</span>
+                                    </a>
                                 </div>
                             </td>
                         </tr>
@@ -212,6 +182,7 @@ $request_types = array(
         <p>لا توجد طلبات عقارات متاحة.</p>
     <?php endif; ?>
 </div>
+</section>
 <section class="dashboard-side-wrap">
     <?php get_template_part('template-parts/dashboard/side-wrap'); ?>
 </section>
@@ -221,7 +192,7 @@ jQuery(document).ready(function($) {
         var postId = $(this).data('id');
         var currnt = $(this);
         bootbox.confirm({
-            message: "هل أنت متأكد أنك تريد التعاقد على هذا الطلب؟",
+            message: "يرجى التأكيد على أنه تم التعاقد مع أحد الوسطاء العقاريين لكي يتم إغلاق الطلب ",
             buttons: {
                 confirm: {
                     label: 'نعم',
@@ -244,7 +215,7 @@ jQuery(document).ready(function($) {
                         },
                         success: function(response) {
                             if (response.success) {
-                                bootbox.alert("تم التعاقد بنجاح", function() {
+                                bootbox.alert("تم إغلاق الطلب لوجود حالة تعاقد", function() {
                                     location.reload();
                                 });
                             } else {

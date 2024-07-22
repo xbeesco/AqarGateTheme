@@ -406,10 +406,10 @@ function handle_delete_property_request() {
         wp_send_json_error();
     }
 
-    // تحديث حالة المنشور إلى 'draft'
+    // تحديث حالة المنشور إلى 'canceled'
     wp_update_post(array(
         'ID' => $post_id,
-        'post_status' => 'draft'
+        'post_status' => 'canceled'
     ));
 
     wp_send_json_success();

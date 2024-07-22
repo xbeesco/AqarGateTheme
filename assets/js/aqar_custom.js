@@ -316,6 +316,7 @@ jQuery(document).ready(function($){
 			},
 			callback: function (result) {
 				if(result==true) {
+					var processing_text = 'جاري التحويل الي صفحة تعديل الاعلان';
 					fave_processing_modal( processing_text );
 					// User clicked the confirm button
 					var textareaValue = document.getElementById('update-notes').value;

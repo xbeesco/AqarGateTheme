@@ -375,7 +375,8 @@ class PropertyMoudle{
                 'propertyTotalPrice'=> 'اجمالي السعر',
                 'notes' => 'ملاحظات',
                 'locationDescriptionOnMOJDeed' => 'الوصف حسب الصك',
-                'landTotalAnnualRent' => 'الايجار السنوي'
+                'landTotalAnnualRent' => 'الايجار السنوي',
+              	'adLicenseUrl' => 'رابط الاعلان'
 
             ];
             $data = [];
