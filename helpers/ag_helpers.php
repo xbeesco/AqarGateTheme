@@ -35,7 +35,7 @@ function houzez_get_search_taxonomies($taxonomy_name, $searched_data = "", $args
     if($taxonomy_name == 'property_city' || $taxonomy_name == 'property_area' || $taxonomy_name == 'property_country' || $taxonomy_name == 'property_state') {
         $hide_empty = houzez_hide_empty_taxonomies();
     }
-    
+    $hide_empty = true;
     $defaults = array(
         'taxonomy' => $taxonomy_name,
         'orderby'       => 'name',
@@ -80,9 +80,9 @@ function houzez_get_search_taxonomies($taxonomy_name, $searched_data = "", $args
             }
 
       if ( (!empty($searched_data) && is_array( $searched_data ) ) && in_array( $category->slug, $searched_data ) ) {
-                $output.= '<option data-ref="'.esc_attr($category->slug).'" '.$data_attr.' '.$data_subtext.' value="' . esc_attr($category->slug) . '" selected="selected">'. esc_attr($category->name) . '</option>';
+                $output.= '<option data-ref="'.esc_attr($category->slug).'" '.$data_attr.' '.$data_subtext.' value="' . esc_attr($category->slug) . '" selected="selected">'. esc_attr(aqarRemoveNumberFromString($category->name)) . '</option>';
             } else {
-                $output.= '<option data-ref="'.esc_attr($category->slug).'" '.$data_attr.' '.$data_subtext.' value="' . esc_attr($category->slug) . '">' . esc_attr($category->name) . '</option>';
+                $output.= '<option data-ref="'.esc_attr($category->slug).'" '.$data_attr.' '.$data_subtext.' value="' . esc_attr($category->slug) . '">' . esc_attr(aqarRemoveNumberFromString($category->name)) . '</option>';
             }
 
             foreach( $taxonomies as $subcategory ) {
@@ -109,9 +109,9 @@ function houzez_get_search_taxonomies($taxonomy_name, $searched_data = "", $args
                     }
 
        if ( (!empty($searched_data) && is_array( $searched_data ) ) && in_array( $category->slug, $searched_data ) ) {
-                        $output.= '<option data-ref="'.esc_attr($subcategory->slug).'" '.$data_attr_child.' value="' . esc_attr($subcategory->slug) . '" selected="selected"> - '. esc_attr($subcategory->name) . '</option>';
+                        $output.= '<option data-ref="'.esc_attr($subcategory->slug).'" '.$data_attr_child.' value="' . esc_attr($subcategory->slug) . '" selected="selected"> - '. esc_attr(aqarRemoveNumberFromString($subcategory->name)) . '</option>';
                     } else {
-                        $output.= '<option data-ref="'.esc_attr($subcategory->slug).'" '.$data_attr_child.' value="' . esc_attr($subcategory->slug) . '"> - ' . esc_attr($subcategory->name) . '</option>';
+                        $output.= '<option data-ref="'.esc_attr($subcategory->slug).'" '.$data_attr_child.' value="' . esc_attr($subcategory->slug) . '"> - ' . esc_attr(aqarRemoveNumberFromString($subcategory->name)) . '</option>';
                     }
 
                     foreach( $taxonomies as $subsubcategory ) {
@@ -138,9 +138,9 @@ function houzez_get_search_taxonomies($taxonomy_name, $searched_data = "", $args
                             }
 
                             if ( !empty($searched_data) && in_array( $subsubcategory->slug, $searched_data ) ) {
-                                $output.= '<option data-ref="'.esc_attr($subsubcategory->slug).'" '.$data_attr_child.' value="' . esc_attr($subsubcategory->slug) . '" selected="selected"> - '. esc_attr($subsubcategory->name) . '</option>';
+                                $output.= '<option data-ref="'.esc_attr($subsubcategory->slug).'" '.$data_attr_child.' value="' . esc_attr($subsubcategory->slug) . '" selected="selected"> - '. esc_attr(aqarRemoveNumberFromString($subcategory->name)) . '</option>';
                             } else {
-                                $output.= '<option data-ref="'.esc_attr($subsubcategory->slug).'" '.$data_attr_child.' value="' . esc_attr($subsubcategory->slug) . '"> -- ' . esc_attr($subsubcategory->name) . '</option>';
+                                $output.= '<option data-ref="'.esc_attr($subsubcategory->slug).'" '.$data_attr_child.' value="' . esc_attr($subsubcategory->slug) . '"> -- ' . esc_attr(aqarRemoveNumberFromString($subcategory->name)) . '</option>';
                             }
                         }
                     }
@@ -150,6 +150,12 @@ function houzez_get_search_taxonomies($taxonomy_name, $searched_data = "", $args
     }
     echo $output;
 
+}
+
+function aqarRemoveNumberFromString($string) {
+    // Use regex to remove the number at the beginning of the string
+    $result = preg_replace('/-\d+/', '', $string);
+    return $result;
 }
 
 function get_houzez_listing_expire( $postID ) {
@@ -976,6 +982,22 @@ function ag_hirarchical_location_data($taxonomy_name, $taxonomy_terms, $searched
                 'std' => "",
                 'columns' => 6,
 
+            ),
+            array(
+                'id' => "{$houzez_prefix}view_prop_req",
+                'name' => esc_html__( "الاطلاع علي الطلبات", 'houzez' ),
+                'type' => 'checkbox',
+                'desc' => esc_html__('الاطلاع علي الطلبات', 'houzez'),
+                'std' => "",
+                'columns' => 6,
+            ),
+            array(
+                'id' => "{$houzez_prefix}view_prop_req_info",
+                'name' => esc_html__( "التواصل مع العملاء", 'houzez' ),
+                'type' => 'checkbox',
+                'desc' => esc_html__('التواصل مع العملاء', 'houzez'),
+                'std' => "",
+                'columns' => 6,
             ),
             array(
                 'name'         => esc_html__( 'Upload the The Image For Package', 'houzez' ),
@@ -2574,109 +2596,340 @@ add_action('wp_ajax_aq_delete_account_function', 'aq_delete_account_function');
 add_action('wp_ajax_nopriv_aq_delete_account_function', 'aq_delete_account_function' );
 
 //
-
+if ( ! function_exists( 'is_woocommerce_activated' ) ) {
+    function is_woocommerce_activated() {
+        return class_exists( 'woocommerce' );
+    }
+}
 // functions.php or your custom plugin file
 add_action("wp_ajax_handle_contract_submission", "handle_contract_submission");
 add_action("wp_ajax_nopriv_handle_contract_submission", "handle_contract_submission");
 
 function handle_contract_submission() {
-
+    ini_set( 'display_errors', 1 );
     global $current_user;
     $userID = get_current_user_id();
 
-    $username               =   get_the_author_meta( 'user_login' , $userID );
-    $display_name           =   get_the_author_meta( 'aqar_display_name' , $userID );
-
-    if( empty($display_name) ) {
-        $display_name = $current_user->display_name;
-    }
-
+    // Retrieve form data
     $form_data = isset($_POST['form_data']) ? urldecode($_POST['form_data']) : '';
-    // Parse form data into associative array
     mb_parse_str($form_data, $unserialized_data);
 
-    // Translate data and create a simple array
+    // Translate form data
     $translate = [
-        "owner-id"=> "رقم الهوية",
-        "owner-birth"=> "تاريخ الميلاد",
-        "id-type"=> [
+        "owner-id" => "رقم الهوية",
+        "owner-birth" => "تاريخ الميلاد",
+        "id-type" => [
             "national-id" => "هوية وطنية",
             "residence-permit" => "اقامة",
             "commercial-record" => "سجل تجاري",
         ],
-        "owner-mobile"=> "رقم الموبايل",
-        "property-document"=> [
+        "owner-mobile" => "رقم الموبايل",
+        "property-document" => [
             "net-deed" => "صك الكتروني",
             "paper-deed" => "صك ورقي",
             "property-deed" => "صك عقار مع حصر ورثة",
             "inheritance-certificate" => "حجة استحكام",
         ],
-        "document-number"=> "رقم وثيقة الملكية",
-        "property-type"=> "نوع العقار",
-        "property-area"=> "مساحة العقار",
-        "city"=> "المدينة",
-        "neighborhood"=> "الحي",
-        "parcel-number"=> "رقم القطعة",
-        "price"=> "السعر المطلوب"
+        "document-number" => "رقم وثيقة الملكية",
+        "property-type" => "نوع العقار",
+        "property-area" => "مساحة العقار",
+        "city" => "المدينة",
+        "neighborhood" => "الحي",
+        "parcel-number" => "رقم القطعة",
+        "price" => "السعر المطلوب",
+        'buildingNumber' => 'رقم المبنى',
+        "street" => "الشارع",
+        "postalCode" => "الرمز البريدي",
+        "additionalNumber" => "رقم اضافي",
     ];
+
     $translated_data = [];
     foreach ($unserialized_data as $field_name => $field_value) {
-        if( $field_name === 'id-type') {
-            $translated_value = $translate[$field_name][$field_value];
-            $translated_data[] = ["نوع الهوية" => $translated_value ];
-        }elseif( $field_name === 'property-document' ){
-            $translated_value = $translate[$field_name][$field_value];
-            $translated_data[] = ["نوع وثيقة الملكية" => $translated_value ];
-        }else{
-            $translated_value = $translate[$field_name];
-            $translated_data[] = [$translated_value => $field_value ];
+        if (isset($translate[$field_name])) {
+            if (is_array($translate[$field_name])) {
+                // If the translation value is an array, get the specific translation for the field value
+                $translated_value = isset($translate[$field_name][$field_value]) ? $translate[$field_name][$field_value] : $field_value;
+                $translated_data[$field_name] = $translated_value;
+            } else {
+                // If the translation value is a string, use it directly
+                $translated_value = $translate[$field_name];
+                $translated_data[$translated_value] = $field_value;
+            }
+        } else {
+            $translated_data[$field_name] = $field_value;
         }
     }
 
-    $translated_data[] = [
-        "اسم العميل" => $display_name
-    ];
+    $display_name = get_the_author_meta('aqar_display_name', $userID) ?: $current_user->display_name;
+    $translated_data["اسم العميل"] = $display_name;
     
+    // Email content
+    // Email content
     $email_content = "طلب عقد تسويق\n";
-    foreach ($translated_data as $data ) {
-        foreach ($data as $key => $value) {
-            $email_content .= "\n {$key}: " . $value;
-        }
+    foreach ($translated_data as $key => $value) {
+        $email_content .= "\n{$key}: {$value}";
     }
+
     $random_number = str_pad(rand(0, 9999999), 8, '0', STR_PAD_LEFT);
-    $req_borkerage_license_number = $random_number.'-'.$userID;
+    $req_borkerage_license_number = "{$random_number}-{$userID}";
 
+    $email_content .= "\n نشكر لكم ثقتكم في منصة بوابة العقار";
 
-    $email_content .="\n نشكر لكم ثقتكم في منصة بوابة العقار";
+    // Send email
+    // $to = "admin@aqargate.com";
+    $to = "admin@local.com";
+    $subject = "{$req_borkerage_license_number} - طلب عقد تسويق";
+    $message = $email_content;
+    $headers = [];
+    // $send = wp_mail($to, $subject, $message, $headers);
 
-    // $to = "sherif.ali.sa3d@gmail.com"; 
-    $to = "admin@aqargate.com";
-    $subject = " {$req_borkerage_license_number} - طلب عقد تسويق";
-    $message = $email_content; // The content you generated above
+    // Create WooCommerce order
+    if (is_woocommerce_activated()) {
+        $product_id = get_or_create_product();
 
-    $headers = array();
+        if (!$product_id || !wc_get_product($product_id)) {
+            wp_send_json_error(['message' => 'Product not found.']);
+        }
 
-    $send = wp_mail($to, $subject, $message, $headers);
+        WC()->cart->empty_cart();
+        WC()->cart->add_to_cart($product_id);
 
-    if( $send ){
-        $msg = "<h4>عزيزنا :  {$display_name} </h4><br>";
-        $msg .="<p>تم استلام طلبكم رقم  ({$req_borkerage_license_number})  لانشاء عقد تسويق ورخصة الاعلان للعقار الخاص بكم. سيتم تلقيكم رسالة لتأ كيد عقد التسويق 
-        وتوثيق العقد عن طر يق الهيئة العامة للعقار. </p><br>";
-        $msg .= "<p>نشكر لكم ثقتكم في منصة بوابة العقار.</p>";
+        session_start();//place this at the top of all code
+        $_SESSION['brokerage_form_data'] = $unserialized_data;
 
-        add_user_meta( $userID, 'req_borkerage_license_number', $req_borkerage_license_number);
-        // Send a response back to the client
-        wp_send_json_success(
-            [
-                'html' => $msg
-            ]
-        );
-    }else{
-        wp_send_json(["sucsses" => false, "html" => "هناك خطأ ما في ارسال الميل نرجوا اعادة المحاولة"]);
+        // WC()->session->set('brokerage_form_data', $unserialized_data);
+
+        $checkout_url = wc_get_checkout_url();
+
+        wp_send_json_success(['redirect' => $checkout_url]);
+    } else {
+        wp_send_json_error(['message' => 'WooCommerce is not activated.']);
     }
-
+    
 }
 
+function get_or_create_product() {
+    // Check if the product ID is stored in the options table
+    $product_id = get_option('custom_brokerage_product_id');
+    
+    // If product ID exists, return it
+    if ($product_id) {
+        return $product_id;
+    }
+
+    // Otherwise, create a new product
+    $product = new WC_Product_Simple();
+    $product->set_name('رسوم عقد التسويق');
+    $product->set_price(200);
+    $product->set_regular_price(200);
+    $product->set_description('Marketing contract and advertisement license fee');
+    $product->set_sku('brokerage-license-fee'); // Optional: set a unique SKU
+    $product->set_manage_stock(false);
+    $product->save();
+
+    // Save the new product ID in the options table
+    $product_id = $product->get_id();
+    update_option('custom_brokerage_product_id', $product_id);
+
+    return $product_id;
+}
+
+// Add the custom data to the order
+add_action('woocommerce_checkout_update_order_meta', 'add_brokerage_data_to_order');
+
+function add_brokerage_data_to_order($order_id) {
+    $order = wc_get_order($order_id);
+    if ($order) {
+        $custom_brokerage_product_id = get_option('custom_brokerage_product_id');
+
+        // Check if the order contains the specified product
+        $contains_custom_product = false;
+        foreach ($order->get_items() as $item) {
+            if ($item->get_product_id() == $custom_brokerage_product_id) {
+                $contains_custom_product = true;
+                break;
+            }
+        }
+
+        // If the order contains the specified product, proceed with adding session data
+        if ($contains_custom_product) {
+            session_start(); // Ensure the session is started
+            $brokerage_form_data = $_SESSION['brokerage_form_data'] ?? '';
+            if (!empty($brokerage_form_data)) {
+                $order->update_meta_data('_brokerage_form_data', $brokerage_form_data);
+                $order->save();
+                // Clear the session data
+                unset($_SESSION['brokerage_form_data']);
+            }
+        }
+    }
+}
+
+// Customize the thank you page text
+add_filter('woocommerce_thankyou_order_received_text', 'custom_thankyou_text_with_table', 10, 2);
+
+function custom_thankyou_text_with_table($thank_you_text, $order) {
+    $brokerage_form_data = $order->get_meta('_brokerage_form_data');
+    
+    // var_dump( can_view_property_req_info() );
+    if (!empty($brokerage_form_data)) {
+        $thank_you_text = "شكرًا لطلبكم عقد التسويق. يتم الآن إنشاء العقد الخاص بكم وسنقوم بمعالجته قريبًا.";
+
+        // إنشاء الجدول
+        $table_html = '<table class="dashboard-table table-lined table-hover responsive-table">';
+        // $table_html .= '<thead><tr><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">الحقل</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">القيمة</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">الحقل</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">القيمة</th></tr></thead>';
+        $table_html .= '<tbody>';
+
+        $keys = array_keys($brokerage_form_data);
+        for ($i = 0; $i < count($keys); $i += 2) {
+            $key1 = $keys[$i];
+            $key2 = $keys[$i + 1] ?? null;
+
+            $translated_key1 = translate_key($key1);
+            $translated_value1 = translate_value($key1, $brokerage_form_data[$key1]);
+
+            $translated_key2 = $key2 ? translate_key($key2) : '';
+            $translated_value2 = $key2 ? translate_value($key2, $brokerage_form_data[$key2]) : '';
+
+            $table_html .= "<tr>";
+            $table_html .= "<td style='border: 1px solid #ddd; padding: 8px;color: #2271b1;font-weight: bold;'>{$translated_key1}</td>";
+            $table_html .= "<td style='border: 1px solid #ddd; padding: 8px;'>{$translated_value1}</td>";
+            $table_html .= "<td style='border: 1px solid #ddd; padding: 8px;color: #2271b1;font-weight: bold;'>{$translated_key2}</td>";
+            $table_html .= "<td style='border: 1px solid #ddd; padding: 8px;'>{$translated_value2}</td>";
+            $table_html .= "</tr>";
+        }
+
+        $table_html .= '</tbody></table>';
+
+        // إضافة الجدول إلى نص الشكر
+        $thank_you_text .= $table_html;
+    }
+
+    return $thank_you_text;
+}
+
+function can_view_property_req(){
+    $package_id    = get_user_meta( get_current_user_id(), 'package_id', true );
+    if( empty($package_id ) ) {
+        return false;
+    }
+    $view_prop_req = get_post_meta( $package_id, 'fave_view_prop_req', true );
+
+    if( empty($view_prop_req) ) {
+        return false;
+    } else {
+        return true;
+    }
+}
+
+function can_view_property_req_info(){
+    $package_id         = get_user_meta( get_current_user_id(), 'package_id', true );
+    if( empty($package_id ) ) {
+        return false;
+    }
+    $view_prop_req_info = get_post_meta( $package_id, 'fave_view_prop_req_info', true );
+    if( empty($view_prop_req_info) ) {
+        return false;
+    } else {
+        return true;
+    }
+   
+}
+
+add_action('add_meta_boxes', 'add_brokerage_data_meta_box');
+
+function add_brokerage_data_meta_box() {
+    add_meta_box(
+        'brokerage_data_meta_box',    // ID of the meta box
+        'بيانات عقد التسويق',          // Title of the meta box
+        'display_brokerage_data_meta_box',  // Callback function
+        'shop_order',                 // Screen where the meta box will appear
+        'normal',                     // Context (normal, side, advanced)
+        'high'                        // Priority
+    );
+}
+
+function display_brokerage_data_meta_box($post) {
+    $order = wc_get_order($post->ID);
+    $brokerage_form_data = $order->get_meta('_brokerage_form_data');
+
+    if (!empty($brokerage_form_data)) {
+        echo '<div dir="rtl" class="brokerage_form_data">';
+
+        // إنشاء الجدول
+        echo '<table style="width:100%; border-collapse: collapse; margin-top: 20px;">';
+        // echo '<thead><tr><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">الحقل</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">القيمة</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">الحقل</th><th style="border: 1px solid #ddd; padding: 8px; text-align: left;">القيمة</th></tr></thead>';
+        echo '<tbody>';
+
+        $keys = array_keys($brokerage_form_data);
+        for ($i = 0; $i < count($keys); $i += 2) {
+            $key1 = $keys[$i];
+            $key2 = $keys[$i + 1] ?? null;
+
+            $translated_key1 = translate_key($key1);
+            $translated_value1 = translate_value($key1, $brokerage_form_data[$key1]);
+
+            $translated_key2 = $key2 ? translate_key($key2) : '';
+            $translated_value2 = $key2 ? translate_value($key2, $brokerage_form_data[$key2]) : '';
+
+            echo "<tr>";
+            echo "<td style='border: 1px solid #ddd; padding: 8px;color: #2271b1;font-weight: bold;'>{$translated_key1}</td>";
+            echo "<td style='border: 1px solid #ddd; padding: 8px;'>{$translated_value1}</td>";
+            echo "<td style='border: 1px solid #ddd; padding: 8px;color: #2271b1;font-weight: bold;'>{$translated_key2}</td>";
+            echo "<td style='border: 1px solid #ddd; padding: 8px;'>{$translated_value2}</td>";
+            echo "</tr>";
+        }
+
+        echo '</tbody></table></div>';
+    }
+}
+
+function translate_key($key) {
+    $translate = [
+        "owner-id" => "رقم الهوية",
+        "owner-birth" => "تاريخ الميلاد",
+        "id-type" => "نوع الهوية",
+        "owner-mobile" => "رقم الموبايل",
+        "property-document" => "وثيقة الملكية",
+        "document-number" => "رقم الوثيقة",
+        "property-type" => "نوع العقار",
+        "property-area" => "مساحة العقار",
+        "city" => "المدينة",
+        "neighborhood" => "الحي",
+        "parcel-number" => "رقم القطعة",
+        "price" => "السعر",
+        "street" => "الشارع",
+        "postalCode" => "الرمز البريدي",
+        "buildingNumber" => "رقم المبنى",
+        "additionalNumber" => "رقم إضافي"
+    ];
+
+    return isset($translate[$key]) ? $translate[$key] : $key;
+}
+
+function translate_value($key, $value) {
+    $translate = [
+        "id-type" => [
+            "national-id" => "هوية وطنية",
+            "residence-permit" => "إقامة",
+            "commercial-record" => "سجل تجاري"
+        ],
+        "property-document" => [
+            "net-deed" => "صك إلكتروني",
+            "paper-deed" => "صك ورقي",
+            "property-deed" => "صك عقار مع حصر ورثة",
+            "inheritance-certificate" => "حجة استحكام"
+        ]
+    ];
+
+    return isset($translate[$key][$value]) ? $translate[$key][$value] : $value;
+}
+
+
+
+	
+        
+            
 
 function aq_black_list($id){
     if( get_option( '_can_login' ) === 'yes' ) {

@@ -27,21 +27,22 @@ $meta_query[] = array(
     'compare' => '=',
 );
 
-if( $user_role === 'houzez_seller' ) {
+// if( $user_role === 'houzez_seller' ) {
 
-    $meta_query[] = array(
-        'key' => 'fave_package_price',
-        'value' => '500',
-        'compare' => '=',
-    );
+//     $meta_query[] = array(
+//         'key' => 'fave_package_price',
+//         'value' => '500',
+//         'compare' => '=',
+//     );
     
-} else {
-    $meta_query[] = array(
-        'key' => 'fave_package_price',
-        'value' => '500',
-        'compare' => '!=',
-    );
-}
+// } else {
+//     $meta_query[] = array(
+//         'key' => 'fave_package_price',
+//         'value' => '500',
+//         'compare' => '!=',
+//     );
+// }
+
 $meta_count = count($meta_query);
 if( $meta_count > 1 ) {
     $meta_query['relation'] = 'AND';
@@ -79,6 +80,17 @@ while( $fave_qry->have_posts() ): $fave_qry->the_post(); $i++;
     $pack_package_tax        = get_post_meta( get_the_ID(), 'fave_package_tax', true );
     $fave_package_popular    = get_post_meta( get_the_ID(), 'fave_package_popular', true );
     $package_custom_link     = get_post_meta( get_the_ID(), 'fave_package_custom_link', true );
+    // custom meta
+    $view_prop_req           = get_post_meta( get_the_ID(), 'fave_view_prop_req', true );
+    $view_prop_req_info      = get_post_meta( get_the_ID(), 'fave_view_prop_req_info', true );
+    $view_prop_req_text = $view_prop_req_info_text = 'لا';
+    if( $view_prop_req ){
+        $view_prop_req_text = 'نعم';
+    }
+    if( $view_prop_req_info ) {
+        $view_prop_req_info_text = 'نعم';
+    }
+    
 
     if( $pack_billing_frquency > 1 ) {
         $pack_billing_period .='s';
@@ -135,6 +147,16 @@ while( $fave_qry->have_posts() ): $fave_qry->the_post(); $i++;
                         <?php } else { ?>
                             <strong><?php echo esc_attr( $pack_listings ); ?></strong>
                         <?php } ?>
+                    </li>
+                    <li>
+                        <i class="houzez-icon icon-check-circle-1 primary-text mr-1"></i> 
+                        <?php echo 'التواصل مع العملاء'; ?>: 
+                        <strong><?php echo esc_attr( $view_prop_req_info_text ); ?></strong>
+                    </li>
+                    <li>
+                        <i class="houzez-icon icon-check-circle-1 primary-text mr-1"></i> 
+                        <?php echo 'الإطلاع على الطلبات'; ?>: 
+                        <strong><?php echo esc_attr( $view_prop_req_text ); ?></strong>
                     </li>
                     <li>
                         <i class="houzez-icon icon-check-circle-1 primary-text mr-1"></i> 

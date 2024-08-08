@@ -5,10 +5,10 @@
 global $post, $page_bg;
 $sticky_sidebar = houzez_option('sticky_sidebar');
 $sidebar_meta = houzez_get_sidebar_meta($post->ID);
-$page_bg = 'page-content-wrap';
-$userID = get_current_user_id();
-$id_number  =  get_the_author_meta( 'aqar_author_id_number' , $userID );
-$user_role = houzez_user_role_by_user_id( $userID );
+$page_bg      = 'page-content-wrap';
+$userID       = get_current_user_id();
+$id_number    = get_the_author_meta( 'aqar_author_id_number' , $userID );
+$user_role    = houzez_user_role_by_user_id( $userID );
 ?>
 <?php get_header(); ?>
 <section class="page-wrap">
@@ -16,7 +16,7 @@ $user_role = houzez_user_role_by_user_id( $userID );
         <div class="page-title-wrap">
             <?php get_template_part('template-parts/page/breadcrumb');  ?>
             <div class="d-flex align-items-center">
-                <?php get_template_part('template-parts/page/page-title');  ?>
+                <?php //get_template_part('template-parts/page/page-title');  ?>
             </div><!-- d-flex -->
         </div><!-- page-title-wrap -->
         <div class="row">
@@ -64,9 +64,11 @@ $user_role = houzez_user_role_by_user_id( $userID );
                         margin: 1rem 0;
                     }
                     </style>
+                    <?php if( is_user_logged_in() ) { ?>
                     <div class="brokerage-header text-center">
                         <h3>لإنشاء عقد تسويق وإصدار رخصة الاعلان يرجى إدخال البيانات التالية</h3>
                     </div>
+                    <?php } ?>
                     <?php if( $user_role == "houzez_owner" || $user_role == "administrator" ) { ?>
                     <form id="contract-form">
                         <!-- بيانات المالك -->
@@ -210,6 +212,47 @@ $user_role = houzez_user_role_by_user_id( $userID );
                                 </div>
                             </div>
                         </div>
+                        <h3>العنوان الوطني للعقار</h3>
+                        <div class="form-row mb-5">
+                            <div class="form-group col-md-6">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">الشارع</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="street" name="street"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div class="form-group col-md-6">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">الرمز البريدي</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="postalCode" name="postalCode"
+                                        required>
+                                </div>
+                            </div>
+                            <div class="form-group col-md-6">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">رقم المبني</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="buildingNumber" name="buildingNumber"
+                                        required>
+                                </div>
+                            </div>
+
+                            <div class="form-group col-md-6">
+                                <div class="input-group">
+                                    <div class="input-group-prepend">
+                                        <span class="input-group-text">الرمز الاضافي</span>
+                                    </div>
+                                    <input type="text" class="form-control" id="additionalNumber" name="additionalNumber"
+                                        required>
+                                </div>
+                            </div>
+                        </div>
                         <h4>ملاحظة : رسوم عقد التسويق ورخصة الاعلان 200 ريال سعودي</h4>
                         <!-- ملاحظة وزر الإرسال -->
                         <div class="form-group">
@@ -232,6 +275,7 @@ $user_role = houzez_user_role_by_user_id( $userID );
                         $("#submit-button").click(function() {
                             var formData = $("#contract-form").serialize();
                             var currnt = $(this);
+
                             // Check if all required fields are filled
                             if (validateForm()) {
                                 $.ajax({
@@ -242,65 +286,101 @@ $user_role = houzez_user_role_by_user_id( $userID );
                                         form_data: formData,
                                     },
                                     beforeSend: function() {
-                                        currnt.find('.houzez-loader-js').addClass(
-                                        'loader-show');
+                                        currnt.find('.houzez-loader-js').addClass('loader-show');
                                     },
                                     complete: function() {
-                                        currnt.find('.houzez-loader-js').removeClass(
-                                            'loader-show');
+                                        currnt.find('.houzez-loader-js').removeClass('loader-show');
                                     },
                                     success: function(response) {
+                                        currnt.find('.houzez-loader-js').removeClass('loader-show');
 
-                                    currnt.find('.houzez-loader-js').removeClass('loader-show');
-
-                                    console.log(response.data.data);
-                                    if( response.success  ) {
-                                        // If the email is sent successfully, show a popup window
-                                        // Fade out the form with a duration of 500 milliseconds
-                                        $("#contract-form").fadeOut(500, function () {
-                                            // Callback function after the fade out is complete
-                                            // This is where you can perform additional actions if needed
-                                            // Show the success content with a fade in effect
-                                            $("#success-content").html(response.data.html);
-                                            $("#success-content").fadeIn(500);
-                                        });
-                                    } else {
-                                        $("#contract-form").fadeOut(500, function () {
-                                            // Callback function after the fade out is complete
-                                            // This is where you can perform additional actions if needed
-                                            // Show the success content with a fade in effect
-                                            $("#success-content").html(response.data.html);
-                                            $("#success-content").fadeIn(500);
-                                        });
-                                    }  
-
+                                        if(response.success) {
+                                            // Redirect to the checkout page
+                                            window.location.href = response.data.redirect;
+                                        } else {
+                                            console.error("Error:", response.data.message);
+                                            alert("There was an error: " + response.data.message);
+                                        }
                                     },
                                     error: function(error) {
                                         console.error("Error submitting form:", error);
-                                        // Handle error if needed
+                                        alert("There was an error submitting the form. Please try again.");
                                     }
                                 });
                             }
                         });
 
+                        
+
                         function validateForm() {
                             var isValid = true;
+                            // Remove existing error messages
+                            $("#contract-form .error-message").remove();
+
                             // Check each required field
-                            $("#contract-form [required]").each(function () {
-                                if (!$(this).val()) {
-                                    isValid = false;
-                                    alert("يرجى ملء جميع الحقول المطلوبة.");
-                                    return false; // Break out of the loop if any required field is empty
+                            $("#contract-form [required]").each(function() {
+                                if ($(this).attr('type') === 'checkbox') {
+                                    if (!$(this).is(':checked')) {
+                                        isValid = false;
+                                        var errorMessage = getErrorMessage($(this).attr('id'));
+                                        $(this).parent().parent().append('<div class="error-message w-100" style="color: red;font-size: 12px;background: #ff020214;padding: 0px 15px;border-radius: 4px;margin-top: 5px;">' + errorMessage + '</div>');
+                                    }
+                                } else {
+                                    if (!$(this).val()) {
+                                        isValid = false;
+                                        var errorMessage = getErrorMessage($(this).attr('id'));
+                                        $(this).after('<div class="error-message w-100" style="color: red;font-size: 12px;background: #ff020214;padding: 0px 15px;border-radius: 4px;margin-top: 5px;">' + errorMessage + '</div>');
+                                    }
                                 }
                             });
-
                             return isValid;
                         }
+
+                        function getErrorMessage(fieldId) {
+                            var messages = {
+                                "owner-id": "يرجى إدخال رقم هوية المالك",
+                                "owner-birth": "يرجى إدخال تاريخ الميلاد",
+                                "id-type": "يرجى اختيار نوع الهوية",
+                                "owner-mobile": "يرجى إدخال رقم الجوال",
+                                "property-document": "يرجى اختيار نوع وثيقة الملكية",
+                                "document-number": "يرجى إدخال رقم وثيقة الملكية",
+                                "property-type": "يرجى إدخال نوع العقار",
+                                "property-area": "يرجى إدخال مساحة العقار",
+                                "city": "يرجى إدخال المدينة",
+                                "neighborhood": "يرجى إدخال الحي",
+                                "parcel-number": "يرجى إدخال رقم القطعة",
+                                "price": "يرجى إدخال السعر المطلوب",
+                                "street": "يرجى إدخال الشارع",
+                                "postalCode": "يرجى إدخال الرمز البريدي",
+                                "buildingNumber": "يرجى إدخال رقم المبنى",
+                                "additionalNumber": "يرجى إدخال الرقم الإضافي",
+                                "approval-checkbox": "يرجى الموافقة على الشروط والأحكام"
+                            };
+                            return messages[fieldId] || "هذا الحقل مطلوب";
+                        }
+                        
                     });
+
                     </script>
                     <?php } else {  ?>
                         <div class="brokerage-header text-center">
-                            <p>سجل دخول ليتم ارسال الطلب</p>
+                            <div class="dashboard-content-block-wrap">
+                                <div class="submit-login-required" style="padding-bottom: 9rem;">
+                                    <?php echo ' لإنشاء عقد تسویق یرجى تسجیل الدخول'; ?>
+                                        
+                                        <?php if( houzez_option('header_login') != 0 ) { ?>
+                                        <span class="login-link"><a href="#" data-toggle="modal" data-target="#login-register-form"><?php esc_html_e('Login', 'houzez'); ?></a></span> 
+                                        <?php } ?>
+
+                                        <?php if( houzez_option('header_register') != 0 ) { ?>
+                                        - 
+                                        <span class="register-link"><a href="#" data-toggle="modal" data-target="#login-register-form"><?php esc_html_e('Register', 'houzez'); ?></a></span> 
+                                        <?php } ?>
+                                        
+                                        
+                                </div>
+
+                            </div>
                         </div>
                     <?php } ?>
                 </div>

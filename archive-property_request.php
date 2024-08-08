@@ -84,7 +84,7 @@ $requests_per_page = 20;
 $paged = (get_query_var('paged')) ? get_query_var('paged') : 1;
 $offset = ($paged - 1) * $requests_per_page;
 
-if ($has_subscription && is_user_logged_in()) {
+if ( $has_subscription && is_user_logged_in() && can_view_property_req() ) {
     $post_statuses = ['publish', 'contracted', 'canceled'];
     $postStatus = implode(',', $post_statuses);
     // استرداد منشورات property_request التي حالتها "منشور"
@@ -119,7 +119,7 @@ if ($has_subscription && is_user_logged_in()) {
     
     
     ?>
-    <div class="dashboard-content container mt-5 pt-5 mb-5 pb-5">
+    <div class="dashboard-content container mt-5 pt-5 mb-5 pb-5 text-center">
         <h1 class="mb-5">الطلبات العقارية</h1>
         <?php if ( !empty($requests) ) : ?>
             <table class="dashboard-table table-lined table-hover responsive-table">
@@ -184,14 +184,24 @@ if ($has_subscription && is_user_logged_in()) {
 
     <?php
 } else if( ! is_user_logged_in() ) {
-    echo '<div class="dashboard-content container text-center mt-5 pt-5 mb-5 pb-5">';
+    echo '<div class="dashboard-content container text-center mt-5 pt-5 mb-5 pb-5" style="height: 50vh">';
         get_template_part('template-parts/dashboard/submit/partials/login-required-property');
     echo '</div>';
 } else if ( ! $has_subscription ) {
     ?>
-    <div class="dashboard-content container text-center mt-5 pt-5 mb-5 pb-5">
+    <div class="dashboard-content container text-center mt-5 pt-5 mb-5 pb-5" style="height: 50vh">
         <div style="border: 1px solid #1f3864;padding-top: 20px;background-color: #e5fde1;margin-bottom: 20px;border-radius: 10px;">
             <p>عزيزنا العميل للاطلاع على الطلبات العقارية يجب أن تكون مشتركًا في إحدى باقات العضوية.</p>
+        </div>
+        <p>للاشتراك في إحدى الباقات، يرجى الضغط على الزر التالي</p>
+        <a href="<?php echo $select_packages_link; ?>" class="btn btn-primary">باقات العضوية</a>
+    </div>
+    <?php
+} else if( $has_subscription && is_user_logged_in() && !can_view_property_req() ) {
+    ?>
+    <div class="dashboard-content container text-center mt-5 pt-5 mb-5 pb-5" style="height: 50vh">
+        <div style="border: 1px solid #1f3864;padding-top: 20px;background-color: #e5fde1;margin-bottom: 20px;border-radius: 10px;">
+            <p>عزيزنا العميل للاطلاع على الطلبات العقارية يجب أن  تحدث الباقة لتشمل الاطلاع علي الطلبات العقارية.</p>
         </div>
         <p>للاشتراك في إحدى الباقات، يرجى الضغط على الزر التالي</p>
         <a href="<?php echo $select_packages_link; ?>" class="btn btn-primary">باقات العضوية</a>

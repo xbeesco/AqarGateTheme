@@ -31,7 +31,16 @@ if( ! function_exists('aqar_enqueue_scripts') ){
 
 function aqar_enqueue_custom_scripts() {
     wp_enqueue_script('aqar-script', trailingslashit( get_stylesheet_directory_uri() ) . 'assets/js/admin-script.js', array('jquery'), rand(), true);
-    wp_localize_script('aqar-script', 'ajax_params', array('ajax_url' => admin_url('admin-ajax.php')));
+    wp_localize_script(
+        'aqar-script',
+         'ajax_params',
+          array(
+            'ajax_url' => admin_url('admin-ajax.php'),
+            'are_you_sure_text' => esc_html__('Are you sure you want to do this?', 'houzez'),
+            'processing_text' => esc_html__('Processing, Please wait...', 'houzez'),
+            'houzez_rtl' => is_rtl() ? 'yes' : 'no',
+          )
+        );
 }
 add_action('admin_enqueue_scripts', 'aqar_enqueue_custom_scripts');
 
@@ -81,6 +90,10 @@ update_option( 'houzez_activation', 'activated' );
 update_option( 'houzez_purchase_code', '123456789');
 // set_transient( 'houzez_verification_success', true, 5 );
 
+/* -------------------------------------------------------------------------- */
+/*                            Elementor                                       */
+/* -------------------------------------------------------------------------- */
+require_once AG_DIR . 'module/elementor/widgets/elementor.php';
 
 /* -------------------------------------------------------------------------- */
 /*                             AQARGATE LOCATIONS                             */

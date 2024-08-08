@@ -289,8 +289,8 @@ jQuery(document).ready(function($){
         removeAdditionalDetails();
 
 
-		var processing_text = houzezProperty.processing_text;
-		var are_you_sure_text = houzezProperty.are_you_sure_text;
+		// var processing_text = houzezProperty.processing_text;
+		var are_you_sure_text = ajax_aqar.are_you_sure_text;
 		/*--------------------------------------------------------------------------
          *  update property
          * -------------------------------------------------------------------------*/
@@ -540,5 +540,106 @@ jQuery(document).ready(function($){
             jQuery('body').append(process_modal);
             jQuery('#fave_modal').modal();
         };
+
+		/** -------------------------------------------------------------------------
+		 * Summary of  
+		 *-------------------------------------------------------------------------*/
+		var aqarProductsTabs = function() {
+			var alreadyProcessed = false;
+		
+			$('.houzez-products-tabs-js').each(function() {
+				var $this = $(this);
+				var $html_container = $this.find('.houzez-tab-content');
+				var $products_cache = [];
+		        
+				function loadTabContent($tab) {
+					var settings = $tab.data('json');
+					var data_index = $tab.index();
+					var city_id = $('#aqarCityFilter').val(); // Get the selected city term ID
+		            var ajaxurl = ajax_aqar.ajaxurl;
+					var houzez_rtl = ajax_aqar.houzez_rtl;
+					if( houzez_rtl == 'yes' ) {
+						houzez_rtl = true;
+					} else {
+						houzez_rtl = false;
+					}
+					// if (alreadyProcessed || $tab.find('a').hasClass('active')) {
+					// 	return;
+					// }
+		
+					alreadyProcessed = true;
+		
+					// Add the selected city ID to the settings
+					settings['property_city'] = [city_id];
+
+					console.log(settings);
+		
+					// if ($products_cache[data_index]) {
+					// 	setTimeout(function() {
+					// 		$html_container.html($products_cache[data_index].html);
+					// 		alreadyProcessed = false;
+					// 	}, 300);
+					// 	return;
+					// }
+		
+					$.ajax({
+						url: ajaxurl,
+						data: {
+							action: 'houzez_get_properties_tab_content',
+							settings: settings
+						},
+						dataType: 'json',
+						method: 'POST',
+						beforeSend: function() {
+							$html_container.empty().append(''
+								+ '<div id="houzez-map-loading">'
+								+ '<div class="mapPlaceholder">'
+								+ '<div class="loader-ripple spinner">'
+								+ '<div class="bounce1"></div>'
+								+ '<div class="bounce2"></div>'
+								+ '<div class="bounce3"></div>'
+								+ '</div>'
+								+ '</div>'
+								+ '</div>'
+							);
+						},
+						success: function(data) {
+							$products_cache[data_index] = data;
+							$html_container.html(data.html);
+		
+							houzez_init_add_favorite(ajaxurl, userID);
+							houzez_init_remove_favorite(ajaxurl, userID);
+							houzez_listing_lightbox(ajaxurl, ajax_aqar.processing_text, houzez_rtl, userID);
+							houzez_grid_image_gallery();
+							houzez_grid_call_to_action();
+							// compare_for_ajax();
+							$('[data-toggle="tooltip"]').tooltip();
+						},
+						error: function(xhr, status, error) {
+							var err = eval("(" + xhr.responseText + ")");
+							console.log(err.Message);
+						},
+						complete: function() {
+							alreadyProcessed = false;
+						}
+					});
+				}
+		
+				// Handle tab click
+				$this.find('ul.property-nav-tabs li').on('click', function(e) {
+					e.preventDefault();
+					$('#aqarCityFilter').val(''); // Clear the selected city
+            		$('.selectpicker').selectpicker('refresh'); // Refresh the selectpicker to update the UI
+				});
+		
+				// Handle city select change
+				$(document).on('change', "#aqarCityFilter", function() {
+					var $active_tab = $this.find('ul.property-nav-tabs li a.active').parent();
+					loadTabContent($active_tab);
+				});
+			});
+		};
+		aqarProductsTabs();
+		
 
 });

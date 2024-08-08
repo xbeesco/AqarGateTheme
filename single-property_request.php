@@ -536,6 +536,7 @@ form {
             </tr>
         </tbody>
     </table>
+    <?php if( can_view_property_req_info() ) { ?>
     <h2 class="section-head">بيانات طالب العقار</h2>
     <table class="details-table text-center">
         <thead>
@@ -558,18 +559,37 @@ form {
             </tr>
         </tbody>
     </table>
+    <?php } ?>
 </div>
 <?php } ?>
 <?php
             else :
-                echo '<p>عذرًا، هذا الطلب غير متاح.</p>';
+                echo '<div class="brokerage-header text-center h-100">
+    <div class="dashboard-content container text-center mt-5 pt-5 mb-5 pb-5">
+        <div class="dashboard-content-block-wrap">
+            <div class="submit-login-required" style="padding-bottom: 12rem;"><h4>عزیزنا العمیل .. بیانات ھذا الطلب غیر متاحة حیث تم التعاقد وإنھاء الطلب. </h4></div>
+        </div><!-- dashboard-content-block-wrap -->
+    </div>
+</div>';
             endif;
         else :
-            echo '<p>عذرًا، هذا الطلب غير متاح.</p>';
+            echo '<div class="brokerage-header text-center h-100">
+    <div class="dashboard-content container text-center mt-5 pt-5 mb-5 pb-5">
+        <div class="dashboard-content-block-wrap">
+            <div class="submit-login-required" style="padding-bottom: 12rem;"><h4>عزیزنا العمیل .. بیانات ھذا الطلب غیر متاحة حیث تم التعاقد وإنھاء الطلب. </h4></div>
+        </div><!-- dashboard-content-block-wrap -->
+    </div>
+</div>';
         endif;
     endwhile;
 else :
-    echo '<p>لا يوجد محتوى لعرضه</p>';
+    echo '<div class="brokerage-header text-center h-100">
+    <div class="dashboard-content container text-center mt-5 pt-5 mb-5 pb-5">
+        <div class="dashboard-content-block-wrap">
+            <div class="submit-login-required" style="padding-bottom: 12rem;"><h4>عزیزنا العمیل .. بیانات ھذا الطلب غیر متاحة حیث تم التعاقد وإنھاء الطلب. </h4></div>
+        </div><!-- dashboard-content-block-wrap -->
+    </div>
+</div>';
 endif;
 
 get_footer();
