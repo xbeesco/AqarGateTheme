@@ -32,172 +32,98 @@ $southLimitLengthChar = $borders['southLimitLengthChar'] ?? '';
 
 ?>
 <div class="detail-wrap">
-	<ul class="<?php echo houzez_option('prop_details_cols', 'list-2-cols'); ?> list-unstyled">
-		<?php
+  <style>td {padding: 5px 10px;}</style>
+	<table style="width: 100%; border-collapse: collapse; border: 1px solid #ddd;">
+    <tbody>
+        <?php
         if( !empty( $prop_id ) && $hide_fields['prop_id'] != 1 ) {
-            echo '<li>
-	                <strong>'.houzez_option('spl_prop_id', 'Property ID').':</strong> 
-	                <span>'.houzez_propperty_id_prefix($prop_id).'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.houzez_option('spl_prop_id', 'Property ID').':</strong></td><td style="border: 1px solid #ddd;"><span>'.houzez_propperty_id_prefix($prop_id).'</span></td></tr>';
         }
         if( !empty( $advertiserId )  ) {
-            echo '<li>
-	                <strong> رقم رخصة الاعلان :  </strong> 
-	                <span>'.$advertiserId .'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong> رقم رخصة الاعلان :  </strong></td><td style="border: 1px solid #ddd;"><span>'.$advertiserId.'</span></td></tr>';
         }
         if( $prop_price != "" && $hide_fields['sale_rent_price'] != 1 ) {
-            echo '<li>
-	                <strong>'.houzez_option('spl_price', 'Price'). ':</strong> 
-	                <span>'.houzez_listing_price().'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.houzez_option('spl_price', 'Price'). ':</strong></td><td style="border: 1px solid #ddd;"><span>'.houzez_listing_price().'</span></td></tr>';
         }
-
         if( !empty( $prop_size ) && $hide_fields['area_size'] != 1 ) {
-            echo '<li>
-	                <strong>'.houzez_option('spl_prop_size', 'Property Size'). ':</strong> 
-	                <span>'.houzez_property_size( 'after' ).'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.houzez_option('spl_prop_size', 'Property Size'). ':</strong></td><td style="border: 1px solid #ddd;"><span>'.houzez_property_size( 'after' ).'</span></td></tr>';
         }
-
         if( !empty( $land_area ) && $hide_fields['land_area'] != 1 ) {
-            echo '<li>
-	                <strong>'.houzez_option('spl_land', 'Land Area'). ':</strong> 
-	                <span>'.houzez_property_land_area( 'after' ).'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.houzez_option('spl_land', 'Land Area'). ':</strong></td><td style="border: 1px solid #ddd;"><span>'.houzez_property_land_area( 'after' ).'</span></td></tr>';
         }
         if( $bedrooms != "" && $hide_fields['bedrooms'] != 1 ) {
             $bedrooms_label = ($bedrooms > 1 ) ? houzez_option('spl_bedrooms', 'Bedrooms') : houzez_option('spl_bedroom', 'Bedroom');
-
-            echo '<li>
-	                <strong>'.esc_attr($bedrooms_label).':</strong> 
-	                <span>'.esc_attr( $bedrooms ).'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.esc_attr($bedrooms_label).':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $bedrooms ).'</span></td></tr>';
         }
         if( $rooms != "" && ( isset($hide_fields['rooms']) && $hide_fields['rooms'] != 1 ) ) {
             $rooms_label = ($rooms > 1 ) ? houzez_option('spl_rooms', 'Rooms') : houzez_option('spl_room', 'Room');
-
-            echo '<li>
-                    <strong>'.esc_attr($rooms_label).':</strong> 
-                    <span>'.esc_attr( $rooms ).'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.esc_attr($rooms_label).':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $rooms ).'</span></td></tr>';
         }
         if( $bathrooms != "" && $hide_fields['bathrooms'] != 1 ) {
-
             $bath_label = ($bathrooms > 1 ) ? houzez_option('spl_bathrooms', 'Bathrooms') : houzez_option('spl_bathroom', 'Bathroom');
-            echo '<li>
-	                <strong>'.esc_attr($bath_label).':</strong> 
-	                <span>'.esc_attr( $bathrooms ).'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.esc_attr($bath_label).':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $bathrooms ).'</span></td></tr>';
         }
         if( $garage != "" && $hide_fields['garages'] != 1 ) {
-
             $garage_label = ($garage > 1 ) ? houzez_option('spl_garages', 'Garages') : houzez_option('spl_garage', 'Garage');
-            echo '<li>
-	                <strong>'.esc_attr($garage_label).':</strong> 
-	                <span>'.esc_attr( $garage ).'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.esc_attr($garage_label).':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $garage ).'</span></td></tr>';
         }
         if( !empty( $garage_size ) && $hide_fields['garages'] != 1 ) {
-            echo '<li>
-	                <strong>'.houzez_option('spl_garage_size', 'Garage Size').':</strong> 
-	                <span>'.esc_attr( $garage_size ).'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.houzez_option('spl_garage_size', 'Garage Size').':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $garage_size ).'</span></td></tr>';
         }
         if( !empty( $year_built ) && $hide_fields['year_built'] != 1 ) {
-            echo '<li>
-	                <strong>'.houzez_option('spl_year_built', 'Year Built').':</strong> 
-	                <span>'.esc_attr( $year_built ).'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.houzez_option('spl_year_built', 'Year Built').':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $year_built ).'</span></td></tr>';
         }
         if( !empty( $property_type ) && ($hide_fields['prop_type']) != 1 ) {
-            echo '<li class="prop_type">
-	                <strong>'.houzez_option('spl_prop_type', 'Property Type').':</strong> 
-	                <span>'.esc_attr( $property_type ).'</span>
-                </li>';
+            echo '<tr class="prop_type" style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.houzez_option('spl_prop_type', 'Property Type').':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $property_type ).'</span></td></tr>';
         }
         if( !empty( $property_status ) && ($hide_fields['prop_status']) != 1 ) {
-            echo '<li class="prop_status">
-	                <strong>'.houzez_option('spl_prop_status', 'Property Status').':</strong> 
-	                <span>'.esc_attr( $property_status ).'</span>
-                </li>';
+            echo '<tr class="prop_status" style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.houzez_option('spl_prop_status', 'Property Status').':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $property_status ).'</span></td></tr>';
         }
-
         //Custom Fields
         if(class_exists('Houzez_Fields_Builder')) {
-        $fields_array = Houzez_Fields_Builder::get_form_fields(); 
-
+            $fields_array = Houzez_Fields_Builder::get_form_fields(); 
             if(!empty($fields_array)) {
                 foreach ( $fields_array as $value ) {
-
                     $field_type = $value->type;
                     $meta_type = true;
-
                     if( $field_type == 'checkbox_list' || $field_type == 'multiselect' ) {
                         $meta_type = false;
                     }
-
                     $data_value = get_post_meta( get_the_ID(), 'fave_'.$value->field_id, $meta_type );
-                    $field_title = $value->label;
-                    $field_id = houzez_clean_20($value->field_id);
-                    
-                    $field_title = houzez_wpml_translate_single_string($field_title);
-
+                    $field_title = houzez_wpml_translate_single_string($value->label);
                     if( $meta_type == true ) {
                         $data_value = houzez_wpml_translate_single_string($data_value);
                     } else {
                         $data_value = houzez_array_to_comma($data_value);
                     }
-
                     if( $field_type == "url" ) {
-
-                        if(!empty($data_value) && $hide_fields[$field_id] != 1) {
-                            echo '<li class="'.esc_attr($field_id).'"><strong>'.esc_attr($field_title).':</strong> <span><a href="'.esc_url($data_value).'" target="_blank">'.esc_attr( $data_value ).'</a></span></li>';
-                        } 
-
+                        if(!empty($data_value) && $hide_fields[houzez_clean_20($value->field_id)] != 1) {
+                            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.esc_attr($field_title).':</strong></td><td style="border: 1px solid #ddd;"><span><a href="'.esc_url($data_value).'" target="_blank">'.esc_attr( $data_value ).'</a></span></td></tr>';
+                        }
                     } else {
-                        if(!empty($data_value) && $hide_fields[$field_id] != 1) {
-                            echo '<li class="'.esc_attr($field_id).'"><strong>'.esc_attr($field_title).':</strong> <span>'.esc_attr( $data_value ).'</span></li>';
+                        if(!empty($data_value) && $hide_fields[houzez_clean_20($value->field_id)] != 1) {
+                            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.esc_attr($field_title).':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $data_value ).'</span></td></tr>';
                         }    
                     }
-                    
                 }
             }
         }
         if( !empty( $creationDate )  ) {
-            echo '<li>
-	                <strong> تاريخ إنشاء ترخيص الاعلان :  </strong> 
-	                <span>'.$creationDate .'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong> تاريخ إنشاء ترخيص الاعلان :  </strong></td><td style="border: 1px solid #ddd;"><span>'.$creationDate.'</span></td></tr>';
         }
         if( !empty( $endDate )  ) {
-            echo '<li>
-	                <strong> تاريخ انتهاء ترخيص الاعلان :   </strong> 
-	                <span>'.$endDate .'</span>
-                </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong> تاريخ انتهاء ترخيص الاعلان :   </strong></td><td style="border: 1px solid #ddd;"><span>'.$endDate.'</span></td></tr>';
         }
-
         if( !empty( $borders )  ) {
-            echo '<li>
-	                <strong>  الحد الشمالي :  </strong> 
-	                <span>'.$northLimitName . ' / ' . $northLimitDescription . ' / ' . $northLimitLengthChar .'</span>
-                </li>';
-            echo '<li>
-                <strong>  الحد الشرقي :  </strong> 
-                <span>'.$eastLimitName . ' / ' . $eastLimitDescription . ' / ' . $eastLimitLengthChar .'</span>
-            </li>';
-            echo '<li>
-                <strong>  الحد الغربي :  </strong> 
-                <span>'.$westLimitName . ' / ' . $westLimitDescription . ' / ' . $westLimitLengthChar .'</span>
-            </li>';
-            echo '<li>
-                <strong>  الحد الجنوبي :  </strong> 
-                <span>'.$southLimitName . ' / ' . $southLimitDescription . ' / ' . $southLimitLengthChar .'</span>
-            </li>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>  الحد الشمالي :  </strong></td><td style="border: 1px solid #ddd;"><span>'.$northLimitName . ' / ' . $northLimitDescription . ' / ' . $northLimitLengthChar.'</span></td></tr>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>  الحد الشرقي :  </strong></td><td style="border: 1px solid #ddd;"><span>'.$eastLimitName . ' / ' . $eastLimitDescription . ' / ' . $eastLimitLengthChar.'</span></td></tr>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>  الحد الغربي :  </strong></td><td style="border: 1px solid #ddd;"><span>'.$westLimitName . ' / ' . $westLimitDescription . ' / ' . $westLimitLengthChar.'</span></td></tr>';
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>  الحد الجنوبي :  </strong></td><td style="border: 1px solid #ddd;"><span>'.$southLimitName . ' / ' . $southLimitDescription . ' / ' . $southLimitLengthChar.'</span></td></tr>';
         }
         ?>
-        
-	</ul>
+    </tbody>
+</table>
+
 </div>
 
 <?php if( !empty( $additional_features[0]['fave_additional_feature_title'] ) && $hide_fields['additional_details'] != 1 ) { ?>

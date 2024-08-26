@@ -270,7 +270,7 @@ if ( !function_exists( 'aqar_cancel_property' ) ) {
                 "streetName": "'.$street.'"
             },
             "operationReason": "'.$operationReason.'",
-            "operationType": "UpdateAd",
+            "operationType": "CancelAd",
             "platformId": "'.get_option( '_platformid' ).'",
             "platformOwnerId": "'.get_option( '_platformownerid' ).'",
             "price": '.intval(get_post_meta( $propID, 'fave_property_price', true)).',
@@ -420,28 +420,28 @@ if( !function_exists('aqargate_edit_api_property') ) {
         $advertiserName  = $advertisement_response['advertiserName'];
         // Remove any non-numeric characters from the phone number
         $phoneNumber                        = preg_replace('/\D/', '', $advertisement_response['phoneNumber']);
-        $brokerageAndMarketingLicenseNumber = $advertisement_response['brokerageAndMarketingLicenseNumber'];
-        $isConstrained                      = $advertisement_response['isConstrained'];
-        $isPawned                           = $advertisement_response['isPawned'];
-        $isHalted                           = $advertisement_response['isHalted'];
-        $isTestment                         = $advertisement_response['isTestment'];
-        $rerConstraints                     = $advertisement_response['rerConstraints'];
-        $streetWidth                        = $advertisement_response['streetWidth'];
-        $propertyArea                       = $advertisement_response['propertyArea'];
-        $propertyPrice                      = $advertisement_response['propertyPrice'];
-        $landTotalPrice                     = $advertisement_response['landTotalPrice'];
-        $landTotalAnnualRent                = $advertisement_response['landTotalAnnualRent'];
-        $propertyType                       = $advertisement_response['propertyType'];
-        $propertyAge                        = $advertisement_response['propertyAge'];
-        $advertisementType                  = $advertisement_response['advertisementType'];
-        $creationDate                       = $advertisement_response['creationDate'];
-        $endDate                            = $advertisement_response['endDate'];
-        $adLicenseUrl                       = $advertisement_response['adLicenseUrl'];
-        $adSource                           = $advertisement_response['adSource'];
-        $titleDeedTypeName                  = $advertisement_response['titleDeedTypeName'];
-        $locationDescriptionOnMOJDeed       = $advertisement_response['locationDescriptionOnMOJDeed'];
-        $notes                              = $advertisement_response['notes'];
-        $channels                           = $advertisement_response['channels'];
+        $brokerageAndMarketingLicenseNumber = $advertisement_response['brokerageAndMarketingLicenseNumber'] ?? '';
+        $isConstrained                      = $advertisement_response['isConstrained'] ?? '';
+        $isPawned                           = $advertisement_response['isPawned'] ?? '';
+        $isHalted                           = $advertisement_response['isHalted'] ?? '';
+        $isTestment                         = $advertisement_response['isTestment'] ?? '';
+        $rerConstraints                     = $advertisement_response['rerConstraints'] ?? '';
+        $streetWidth                        = $advertisement_response['streetWidth'] ?? '';
+        $propertyArea                       = $advertisement_response['propertyArea'] ?? '';
+        $propertyPrice                      = $advertisement_response['propertyPrice'] ?? '';
+        $landTotalPrice                     = $advertisement_response['landTotalPrice'] ?? '';
+        $landTotalAnnualRent                = $advertisement_response['landTotalAnnualRent'] ?? '';
+        $propertyType                       = $advertisement_response['propertyType'] ?? '';
+        $propertyAge                        = $advertisement_response['propertyAge'] ?? '';
+        $advertisementType                  = $advertisement_response['advertisementType'] ?? '';
+        $creationDate                       = $advertisement_response['creationDate'] ?? '';
+        $endDate                            = $advertisement_response['endDate'] ?? '';
+        $adLicenseUrl                       = $advertisement_response['adLicenseUrl'] ?? '';
+        $adSource                           = $advertisement_response['adSource'] ?? '';
+        $titleDeedTypeName                  = $advertisement_response['titleDeedTypeName'] ?? '';
+        $locationDescriptionOnMOJDeed       = $advertisement_response['locationDescriptionOnMOJDeed'] ?? '';
+        $notes                              = $advertisement_response['notes'] ?? '';
+        $channels                           = $advertisement_response['channels'] ?? '';
         
         $guaranteesAndTheirDuration = $advertisement_response['guaranteesAndTheirDuration'];
         // جلب القيم من المصفوفة المضمنة (borders)
@@ -467,13 +467,13 @@ if( !function_exists('aqargate_edit_api_property') ) {
         $new_property_price = intval($formDataArray['prop_price']);
       
         $property_status = get_term_by('id', $formDataArray['prop_status'][0], 'property_status');
-        $property_statusName = $property_status->name;
+        $property_statusName = $property_status->name ?? null;
       
       	// Check if the values have changed
-        if ($property_statusName == $advertisement_response['advertisementType'] && $current_property_price == $new_property_price) {
-            echo json_encode(['success' => true, 'reason' => 'لا حاجة لارسال الاعلان للهيئة العقارية . جاري تحديث الاعلان !']);
-            wp_die();
-        }
+        // if ($property_statusName == $advertisement_response['advertisementType'] && $current_property_price == $new_property_price) {
+        //     echo json_encode(['success' => true, 'reason' => 'لا حاجة لارسال الاعلان للهيئة العقارية . جاري تحديث الاعلان !']);
+        //     wp_die();
+        // }
       
         $property_statusName = $advertisementTypeMapping[$property_statusName] ?? 'Sell';
 
@@ -520,7 +520,7 @@ if( !function_exists('aqargate_edit_api_property') ) {
         $operationReason  = !empty(get_post_meta( $prop_id, 'adverst_update_reason', true ))  ? get_post_meta( $prop_id, 'adverst_update_reason', true ) :  "Other";
 
         $property_type = get_term_by( 'id', $formDataArray['prop_type'][0], 'property_type' );
-        $property_typeName = $property_type->name;
+        $property_typeName = $property_type->name ?? null;
         
         $mappingPropertyTypes = [
             'أرض' => 'Land',
@@ -579,7 +579,7 @@ if( !function_exists('aqargate_edit_api_property') ) {
         ];
 
         $property_status     = get_term_by( 'id', $formDataArray['prop_status'][0], 'property_status' );
-        $property_statusName = $property_status->name;
+        $property_statusName = $property_status->name ?? null;
         $property_statusName = isset($advertisementTypeMapping[$property_statusName]) ? $advertisementTypeMapping[$property_statusName] : 'Sell';
         
 
@@ -726,12 +726,13 @@ function sync_advertisement_ajax() {
         $advertiserId = get_post_meta($post_id, 'advertiserId', true);
         $adLicenseNumber = get_post_meta($post_id, 'adLicenseNumber', true);
         
-        require_once(AG_DIR . 'module/class-rega-module.php');
+        require_once AG_DIR . 'module/class-rega-module.php';
         $RegaMoudle = new RegaMoudle();
         $response = $RegaMoudle->sysnc_AdvertisementValidator($adLicenseNumber, $advertiserId);
+        //var_export($response);
         $response = json_decode($response);
         if( $response->Header->Status->Code != 200  ) {  
-            $msg = 'هنالك مشكلة في الاتصال مع هيئة العقار' . '<br>';
+            $msg = "هنالك مشكلة في الاتصال مع هيئة العقار<br>";
             if( isset($response->Body->error->message) ) {
                 $msg .= $response->Body->error->message . '<br>';
             } 
@@ -760,7 +761,9 @@ function sync_advertisement_ajax() {
                 echo wp_send_json( $ajax_response );
                 wp_die();
             } else if ($response->Body->result->isValid === false ) {
-                $ajax_response = array( 'success' => false , 'message' => $response->Body->result->message );
+                wp_update_post(['ID' => $post_id, 'post_status' => 'expired']);
+                houzez_listing_expire_meta($post_id);
+                $ajax_response = array( 'success' => true , 'message' => $response->Body->result->message );
                 echo wp_send_json( $ajax_response );
                 wp_die();
             } else{

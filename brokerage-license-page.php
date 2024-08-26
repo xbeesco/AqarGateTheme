@@ -40,7 +40,7 @@ $user_role    = houzez_user_role_by_user_id( $userID );
                     }
 
                     .input-group-text {
-                        width: 120px !important;
+                        width: 140px !important;
                         text-align: right;
                         justify-content: start;
                         background: #ededed;
@@ -64,12 +64,12 @@ $user_role    = houzez_user_role_by_user_id( $userID );
                         margin: 1rem 0;
                     }
                     </style>
-                    <?php if( is_user_logged_in() ) { ?>
+                    <?php if( is_user_logged_in() && $user_role == "houzez_owner" || $user_role == "administrator" ) { ?>
                     <div class="brokerage-header text-center">
                         <h3>لإنشاء عقد تسويق وإصدار رخصة الاعلان يرجى إدخال البيانات التالية</h3>
                     </div>
                     <?php } ?>
-                    <?php if( $user_role == "houzez_owner" || $user_role == "administrator" ) { ?>
+                    <?php if( $user_role == "houzez_owner" || $user_role == "administrator" || intval($userID) === 1401 ) { ?>
                     <form id="contract-form">
                         <!-- بيانات المالك -->
                         <h3>بيانات المالك</h3>
@@ -365,19 +365,23 @@ $user_role    = houzez_user_role_by_user_id( $userID );
                     <?php } else {  ?>
                         <div class="brokerage-header text-center">
                             <div class="dashboard-content-block-wrap">
-                                <div class="submit-login-required" style="padding-bottom: 9rem;">
+                                <div class="submit-login-required" style="padding-bottom: 9rem; padding-top: 12rem;">
+                                <?php if( ! is_user_logged_in() ) { ?>
                                     <?php echo ' لإنشاء عقد تسویق یرجى تسجیل الدخول'; ?>
-                                        
-                                        <?php if( houzez_option('header_login') != 0 ) { ?>
-                                        <span class="login-link"><a href="#" data-toggle="modal" data-target="#login-register-form"><?php esc_html_e('Login', 'houzez'); ?></a></span> 
-                                        <?php } ?>
+                                    <?php if( houzez_option('header_login') != 0 ) { ?>
+                                    <span class="login-link"><a href="#" data-toggle="modal" data-target="#login-register-form"><?php esc_html_e('Login', 'houzez'); ?></a></span> 
+                                    <?php } ?>
 
-                                        <?php if( houzez_option('header_register') != 0 ) { ?>
-                                        - 
-                                        <span class="register-link"><a href="#" data-toggle="modal" data-target="#login-register-form"><?php esc_html_e('Register', 'houzez'); ?></a></span> 
-                                        <?php } ?>
+                                    <?php if( houzez_option('header_register') != 0 ) { ?>
+                                    - 
+                                    <span class="register-link"><a href="#" data-toggle="modal" data-target="#login-register-form"><?php esc_html_e('Register', 'houzez'); ?></a></span> 
+                                    <?php } ?>
                                         
-                                        
+                                <?php } else {  ?>  
+                                    <div style="border: 1px solid #1f3864;padding-top: 20px;background-color: #e5fde1;margin-bottom: 20px;border-radius: 10px;">
+                                        <p>إنشاء عقد التسويق متاح حاليا للملاك فقط .</p>
+                                    </div>
+                                <?php }  ?>     
                                 </div>
 
                             </div>

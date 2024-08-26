@@ -158,10 +158,10 @@ function aqarRemoveNumberFromString($string) {
     return $result;
 }
 
-function get_houzez_listing_expire( $postID ) {
+function get_houzez_listing_expire( $post_id ) {
     global $post;
     if(empty($post->ID)){
-        $postID = $postID;
+        $postID = $post_id;
     }else{
         $postID = $post->ID;
     }
@@ -1639,105 +1639,6 @@ function property_overview_details($options = 'crb_overview_fields', $prop_id = 
 
 }
 
-/**
- * ag_free_membership_package
- *
- * @param  mixed $userID
- * @param  mixed $package_id
- * @return void
- */
-// function ag_free_membership_package( $userID, $package_id ) {
-
-//     $total_price = get_post_meta($package_id, 'fave_package_price', true);
-//     $currency = esc_html(houzez_option('currency_symbol'));
-//     $where_currency = esc_html(houzez_option('currency_position'));
-//     $wire_payment_instruction = houzez_option('direct_payment_instruction');
-//     $is_featured = 0;
-//     $is_upgrade = 0;
-//     $paypal_tax_id = '';
-//     $paymentMethod = '';
-//     $time = time();
-//     $date = date('Y-m-d H:i:s', $time);
-
-//     if ($total_price != 0) {
-//         if ($where_currency == 'before') {
-//             $total_price = $currency . ' ' . $total_price;
-//         } else {
-//             $total_price = $total_price . ' ' . $currency;
-//         }
-//     }
-
-//     // insert invoice
-//     $invoiceID = houzez_generate_invoice('package', 'one_time', $package_id, $date, $userID, $is_featured, $is_upgrade, $paypal_tax_id, $paymentMethod, 1);
-
-//     // houzez_save_user_packages_record($userID, $package_id);
-//     houzez_update_membership_package($userID, $package_id);
-//     update_post_meta( $invoiceID, 'invoice_payment_status', 1 );
-//     update_user_meta( $userID, 'user_had_free_package', 'yes' );
-
-//     $args = array(
-//         'payzaty_url' => false,
-//         'order_id'    => $invoiceID,
-//     );
-    
-//     return $args;
-
-// }
-
-// function houzez_update_membership_package( $user_id, $package_id ) {
-
-//     // Get selected package listings
-//     $pack_listings            =   get_post_meta( $package_id, 'fave_package_listings', true );
-//     $pack_featured_listings   =   get_post_meta( $package_id, 'fave_package_featured_listings', true );
-//     $pack_unlimited_listings  =   get_post_meta( $package_id, 'fave_unlimited_listings', true );
-
-//     $user_current_posted_listings           =   houzez_get_user_num_posted_listings ( $user_id ); // get user current number of posted listings ( no expired )
-//     $user_current_posted_featured_listings  =   houzez_get_user_num_posted_featured_listings( $user_id ); // get user number of posted featured listings ( no expired )
-
-    
-
-//     if( houzez_check_user_existing_package_status( $user_id, $package_id ) ) {
-//         $new_pack_listings           =  $pack_listings - $user_current_posted_listings;
-//         $new_pack_featured_listings  =  $pack_featured_listings -  $user_current_posted_featured_listings;
-//     } else {
-//         $new_pack_listings           =  $pack_listings;
-//         $new_pack_featured_listings  =  $pack_featured_listings;
-//     }
-
-//     if( $new_pack_listings < 0 ) {
-//         $new_pack_listings = 0;
-//     }
-
-//     if( $new_pack_featured_listings < 0 ||  empty($new_pack_featured_listings)) {
-//         $new_pack_featured_listings = 0;
-//     }
-
-//     if ( $pack_unlimited_listings == 1 ) {
-//         $new_pack_listings = -1 ;
-//     }
-
-
-    
-
-//     update_user_meta( $user_id, 'package_listings', $new_pack_listings);
-//     update_user_meta( $user_id, 'package_featured_listings', $new_pack_featured_listings);
-
-//     // Use for user who submit property without having account and membership
-//     $user_submit_has_no_membership = get_the_author_meta( 'user_submit_has_no_membership', $user_id );
-//     if( !empty( $user_submit_has_no_membership ) ) {
-//         houzez_update_package_listings( $user_id );
-//         houzez_update_property_from_draft( $user_submit_has_no_membership ); // change property status from draft to pending or publish
-//         delete_user_meta( $user_id, 'user_submit_has_no_membership' );
-//     }
-
-
-//     $time = time();
-//     $date = date('Y-m-d H:i:s',$time);
-//     update_user_meta( $user_id, 'package_activation', $date );
-//     update_user_meta( $user_id, 'package_id', $package_id );
-//     update_user_meta( $user_id, 'houzez_membership_id', $package_id);
-
-// }
 
 function houzez_required_field( $field ) {
     $required_fields = houzez_option('required_fields');
@@ -2145,22 +2046,19 @@ function aqar_get_custom_add_listing_field($key)
     }
 }
 /* -------------------------------------------------------------------------- */
-/*                                    debug                                   */
+/*                            Debug Helpers                                   */
 /* -------------------------------------------------------------------------- */
-/****************************************** Debug Helpers ******************************************/
+
 if( ! function_exists('get_line_info') ){
 	function get_line_info(){
-		$excuting_line = debug_backtrace()[1]['line'];
+		$excuting_line   = debug_backtrace()[1]['line'];
+		$excuting_file   = debug_backtrace()[1]['file'];
+		$excuting_file   = explode("\\" ,$excuting_file);
+		$count           = count( $excuting_file);
+		$excuting_folder = @$excuting_file[( $count-2)];
+		$excuting_file   = $excuting_file[( $count-1)];
+		$excuting_file   = explode('.',$excuting_file)[0];
 
-		$excuting_file = debug_backtrace()[1]['file'];
-		$excuting_file = explode("\\" ,$excuting_file);
-		
-		$count = count( $excuting_file);
-
-
-		$excuting_folder 	= @$excuting_file[( $count-2)];		
-		$excuting_file		= $excuting_file[( $count-1)];
-		$excuting_file		= explode('.',$excuting_file)[0];
 		return "$excuting_folder/$excuting_file@$excuting_line";
 	}
 }
@@ -2209,7 +2107,7 @@ if( ! function_exists('csv_to_array') ){
      * csv_to_array
      *
      * @param  mixed $file
-     * @return void
+     * @return void|array
      */
     function csv_to_array($file) {
 
@@ -2219,7 +2117,7 @@ if( ! function_exists('csv_to_array') ){
         
         $headers = fgetcsv($handle, 10000, ',');
         $headers = preg_replace('/ ^[\pZ\p{Cc}\x{feff}]+|[\pZ\p{Cc}\x{feff}]+$/ux', '', $headers);
-        $_data = array();
+        $_data = [];
         
         while ($row = fgetcsv($handle, 10000, ',')) {
             $row = preg_replace('/ ^[\pZ\p{Cc}\x{feff}]+|[\pZ\p{Cc}\x{feff}]+$/ux', '', $row);
@@ -2268,11 +2166,9 @@ function edit_prop_input()
    ?>
     
     <input type="hidden" name="prop_type[]" id="prop_type" value="<?php echo $property_type[0]; ?>">
-    <!-- <input type="hidden" name="prop_status[]" value="<?php echo $property_status[0]; ?>"> -->
+    <input type="hidden" name="prop_status[]" value="<?php echo $property_status[0]; ?>">
     <input type="hidden" name="prop_labels[]" value="<?php echo ( isset($property_label[0]) ? $property_label[0] : '' ); ?>">
- 
     <input type="hidden" name="postal_code" value="<?php echo $postal_code; ?>">
-
     <input type="hidden" name="prop_size" value="<?php echo $prop_size; ?>">
     <input type="hidden" name="d8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1" value="<?php echo $meta_1; ?>">
     <input type="hidden" name="d8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9" value="<?php echo $meta_2; ?>">
@@ -2609,6 +2505,23 @@ function handle_contract_submission() {
     ini_set( 'display_errors', 1 );
     global $current_user;
     $userID = get_current_user_id();
+    $first_name             =   get_the_author_meta( 'first_name' , $userID );
+    $last_name              =   get_the_author_meta( 'last_name' , $userID );
+    $user_email             =   get_the_author_meta( 'user_email' , $userID );
+    $user_mobile            =   get_the_author_meta( 'fave_author_mobile' , $userID );
+
+    $address = array(
+        'first_name' => $first_name ,
+        'last_name'  => $last_name,
+        'email'      => $user_email ,
+        'phone'      => $user_mobile,
+        'address_1'  => 'address_1',
+        'address_2'  => '',
+        'city'       => '',
+        'state'      => '',
+        'postcode'   => '11461',
+        'country'    => 'SA'
+    );
 
     // Retrieve form data
     $form_data = isset($_POST['form_data']) ? urldecode($_POST['form_data']) : '';
@@ -2676,12 +2589,12 @@ function handle_contract_submission() {
     $email_content .= "\n نشكر لكم ثقتكم في منصة بوابة العقار";
 
     // Send email
-    // $to = "admin@aqargate.com";
-    $to = "admin@local.com";
+    $admin_email  =  get_bloginfo('admin_email');
+    $to = $admin_email;
     $subject = "{$req_borkerage_license_number} - طلب عقد تسويق";
     $message = $email_content;
     $headers = [];
-    // $send = wp_mail($to, $subject, $message, $headers);
+    $send = wp_mail($to, $subject, $message, $headers);
 
     // Create WooCommerce order
     if (is_woocommerce_activated()) {
@@ -2694,12 +2607,25 @@ function handle_contract_submission() {
         WC()->cart->empty_cart();
         WC()->cart->add_to_cart($product_id);
 
-        session_start();//place this at the top of all code
-        $_SESSION['brokerage_form_data'] = $unserialized_data;
+        // session_start();//place this at the top of all code
+        // $_SESSION['brokerage_form_data'] = $unserialized_data;
 
         // WC()->session->set('brokerage_form_data', $unserialized_data);
 
-        $checkout_url = wc_get_checkout_url();
+        $args = [
+            'created_via' => 'checkout', // default values are "admin", "checkout", "store-api"
+            'customer_id' => $userID,
+        ];
+        // Create order and assign to user
+        $order = wc_create_order($args);
+        $order->add_product(wc_get_product($product_id), 1);
+        $order->set_address( $address, 'billing' );
+        $order->calculate_totals();
+        $order->update_meta_data('_brokerage_form_data', $unserialized_data);
+        $order->save();
+    
+        // Get payment link
+        $checkout_url = $order->get_checkout_payment_url();
 
         wp_send_json_success(['redirect' => $checkout_url]);
     } else {
@@ -2735,7 +2661,7 @@ function get_or_create_product() {
 }
 
 // Add the custom data to the order
-add_action('woocommerce_checkout_update_order_meta', 'add_brokerage_data_to_order');
+//add_action('woocommerce_checkout_update_order_meta', 'add_brokerage_data_to_order');
 
 function add_brokerage_data_to_order($order_id) {
     $order = wc_get_order($order_id);
@@ -3072,7 +2998,7 @@ function houzez_submit_listing($new_property) {
         }
 
         if( ! houzez_user_has_membership($userID) && $enable_paid_submission == 'membership' ) {
-            $new_property['post_status'] = 'draft';
+            $new_property['post_status'] = 'publish';
 
         }
 
@@ -3692,7 +3618,8 @@ function houzez_is_dashboard() {
         'template/user_dashboard_gdpr.php',
         'template/user_dashboard_submit.php',
         'template/user_dashboard_messages.php',
-        'template/user_property_request.php'
+        'template/user_property_request.php',
+        'property-request-page.php'
         
     ) );
 
@@ -3827,3 +3754,11 @@ function format_term_name($name, $term_meta) {
     return $name;
 }
 
+
+function custom_redirect_from_my_account() {
+    if (is_account_page() ) {
+        wp_redirect(home_url()); // Replace with the URL you want to redirect to.
+        exit;
+    }
+}
+add_action('template_redirect', 'custom_redirect_from_my_account');

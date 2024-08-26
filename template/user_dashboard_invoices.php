@@ -36,7 +36,7 @@ if ( is_front_page()  ) {
     <div class="dashboard-content-inner-wrap">
         <div class="dashboard-content-block-wrap">
         <?php echo aqar_is_verify_msg($current_user->ID); ?>  
-            <?php if( aqar_is_verify($current_user->ID) ) { ?> 
+            <?php if( !aqar_is_verify($current_user->ID) ) { ?> 
             <?php 
             if( isset( $_GET['invoice_id']) && !empty($_GET['invoice_id']) ) {
                 get_template_part('template-parts/dashboard/invoice/detail');

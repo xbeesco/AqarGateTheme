@@ -168,6 +168,7 @@ if (houzez_edit_property()) {
 		<h4><?php echo houzez_option('cls_map', 'Map'); ?></h4>
 		<div class="row">
 			<div class="col-md-12 col-sm-12 submit-property-map-area">
+				<h5 class="mt-3 mb-t text-center text-danger">نامل مطابقة الموقع أدناه مع الموقع المذكور في وصف عنوان العقار المكتوب</h5>
 				<div class="form-group dashboard-map-field">
 					<label><?php echo houzez_option('cl_drag_drop_text', 'Drag and drop the pin on map to find exact location'); ?></label>
 

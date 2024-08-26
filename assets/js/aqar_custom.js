@@ -237,69 +237,21 @@ jQuery(document).ready(function($){
 		$(elements_link).attr('href', add_listing);
 	}
 
-	/* ------------------------------------------------------------------------ */
-        /*  Property additional Features
-         /* ------------------------------------------------------------------------ */
-		 $( "#rer-borders" ).sortable({
-            revert: 100,
-            placeholder: "detail-placeholder",
-            handle: ".sort-additional-row",
-            cursor: "move"
-        });
+		
+		
 
-        $( '.add-additional-row' ).click(function( e ){
-            e.preventDefault();
+		var processing_text = (typeof houzezProperty !== 'undefined' && typeof houzezProperty.processing_text !== 'undefined') ? houzezProperty.processing_text : "جارى المعالجة .. انتظر من فضلك...";
 
-            var numVal = $(this).data("increment") + 1;
-            $(this).data('increment', numVal);
-            $(this).attr({
-                "data-increment" : numVal
-            });
-
-            var newAdditionalDetail = '<tr>'+
-                '<td class="table-q-width">'+
-                '<input class="form-control" type="text" name="rerBorders['+numVal+'][direction]" id="direction_'+numVal+'" value="">'+
-                '</td>'+
-                '<td class="table-q-width">'+
-                '<input class="form-control" type="text" name="rerBorders['+numVal+'][type]" id="type_'+numVal+'" value="">'+
-                '</td>'+
-				'<td class="table-q-width">'+
-                '<input class="form-control" type="text" name="rerBorders['+numVal+'][length]" id="length_'+numVal+'" value="">'+
-                '</td>'+
-                '<td class="">'+
-                '<a class="sort-additional-row btn btn-light-grey-outlined"><i class="houzez-icon icon-navigation-menu"></i></a>'+
-                '</td>'+
-                '<td>'+
-                '<button data-remove="'+numVal+'" class="remove-additional-row btn btn-light-grey-outlined"><i class="houzez-icon icon-close"></i></button>'+
-                '</td>'+
-                '</tr>';
-
-            $( '#rer-borders').append( newAdditionalDetail );
-            removeAdditionalDetails();
-        });
-
-        var removeAdditionalDetails = function (){
-
-            $( '.remove-additional-row').click(function( event ){
-                event.preventDefault();
-                var $this = $( this );
-                $this.closest( 'tr' ).remove();
-            });
-        }
-        removeAdditionalDetails();
-
-
-		// var processing_text = houzezProperty.processing_text;
 		var are_you_sure_text = ajax_aqar.are_you_sure_text;
 		/*--------------------------------------------------------------------------
          *  update property
          * -------------------------------------------------------------------------*/
         $( 'a.update-property' ).on( 'click', function (){
             
-			var $this = $( this );
-			var propID = $this.data('id');
+			var $this     = $( this );
+			var propID    = $this.data('id');
 			var propNonce = $this.data('nonce');
-			var editLink = $this.data('edit');
+			var editLink  = $this.data('edit');
 
 			bootbox.confirm({
 			title: "سبب التعديل ?",
@@ -474,7 +426,7 @@ jQuery(document).ready(function($){
 			var propID   = $this.data('property');
 			var form     = $("#submit_property_form");
 			var editLink = $this.data('edit');
-
+			var are_you_sure_text = 'هل تريد ارسال التعديلات الي الهيئة العامة للعقار !';
 			bootbox.confirm({
 				message: "<p><strong>"+are_you_sure_text+"</strong></p>",
 				buttons: {
@@ -641,5 +593,46 @@ jQuery(document).ready(function($){
 		};
 		aqarProductsTabs();
 		
+	/* ------------------------------------------------------------------------ */
+    /* WooCommerce Pay Package
+    /* ------------------------------------------------------------------------ */
+    $('.aqargate-woocommerce-package').on('click', function(e) {
+        e.preventDefault();
 
+        if( parseInt( userID, 10 ) === 0 || userID == undefined) {
+            
+            jQuery('#login-register-form').modal('show');
+            jQuery('.login-form-tab').addClass('active show');
+            jQuery('.modal-toggle-1.nav-link').addClass('active');
+
+        } else {
+			let packid  = $(this).data('packid');
+			let ajaxurl = ajax_aqar.ajaxurl;
+            fave_processing_modal( processing_text );
+
+            $.ajax({
+                type: 'POST',
+                url: ajaxurl,
+                data: {
+                    'action': 'aqar_woo_pay_package',
+                    'package_id': packid
+                },
+                success: function(response) { 
+                    if ( response.success != false ) {
+						console.log(response.data.checkout_url);
+						if( response.data.checkout_url ) {
+							window.location.href= response.data.checkout_url;
+						}
+                    } else {
+                        jQuery('#fave_modal').modal('hide');
+                    }
+                },
+                error: function(errorThrown) {
+
+                }
+            }); // $.ajax
+
+        } // login
+
+    });
 });

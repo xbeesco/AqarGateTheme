@@ -7,5 +7,5 @@
     if (houzez_edit_property()) {
         houzez_field_meta('property_price');
     }
-    ?>" placeholder="<?php echo houzez_option('cl_sale_price_plac', 'Enter the price'); ?>" type="text">
+    ?>" placeholder="<?php echo houzez_option('cl_sale_price_plac', 'Enter the price'); ?>" type="text" readonly>
 </div>

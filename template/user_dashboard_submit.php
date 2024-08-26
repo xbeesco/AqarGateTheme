@@ -462,8 +462,7 @@ if( is_user_logged_in() ) { ?>
             </div><!-- d-flex -->
         </div><!-- dashboard-header-wrap -->
     </header><!-- .header-main-wrap -->
-    <section class="dashboard-content-wrap <?php echo esc_attr($dash_main_class); ?>"> 
-        <?php if( aqar_is_verify( $userID ) ) { ?>     
+    <section class="dashboard-content-wrap <?php echo esc_attr($dash_main_class); ?>">     
         <?php 
         if(houzez_edit_property()) { ?>
             <div class="d-flex">
@@ -499,7 +498,6 @@ if( is_user_logged_in() ) { ?>
         if(houzez_edit_property()) { ?>
             </div><!-- order-1 -->
         </div><!-- d-flex -->
-        <?php } ?>
         <?php } ?>
         
     </section><!-- dashboard-content-wrap -->

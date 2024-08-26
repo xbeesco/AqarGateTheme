@@ -370,6 +370,470 @@ function removeLeadingZero($string) {
     return $string;
 }
 
+add_action('wp_ajax_sync_properties', 'handle_sync_properties');
+
+function handle_sync_properties() {
+    $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+    $batch_size = 10;
+
+    $properties = get_posts(array(
+        'post_type'      => 'property',
+        'posts_per_page' => $batch_size,
+        'offset'         => $offset,
+        'meta_key'       => 'advertisement_response',
+        'meta_compare'   => 'EXISTS',
+        'post_status'    => 'publish'
+    ));
+
+    $total_properties = count($properties);
+
+    $processed = 0;
+    $log = [];
+
+    foreach ($properties as $property) {
+        $prop_id = $property->ID;
+        $property_name = get_the_title($prop_id);
+
+        // Prepare the form data for each property
+        $formDataArray = [
+            'prop_price' => get_post_meta($prop_id, 'fave_property_price', true),
+            // Add more fields as necessary
+        ];
+
+        // Serialize the form data
+        $serializedData = http_build_query($formDataArray);
+
+        // Mimic the $_POST array
+        $_POST['propID'] = $prop_id;
+        $_POST['formData'] = $serializedData;
+
+        // Call the function
+        $output = PlatformCompliance_property('UpdateAd');
+
+        // Decode the response
+        $response = json_decode($output, true);
+
+        $log[] = [
+            'ID' => $prop_id,
+            'Property' => wp_trim_words($property_name, 10, '...'),
+            'Status' => $response['success'] ? 'Success' : 'Failed',
+            'Message' => $response['reason']
+        ];
+        $processed++;
+    }
+
+    $remaining_properties = wp_count_posts('property')->publish - ($offset + $batch_size);
+    $progress = round((($offset + $batch_size) / wp_count_posts('property')->publish) * 100);
+
+    echo json_encode(array(
+        'progress' => $progress,
+        'message' => $remaining_properties > 0 ? 'Synchronizing...' : 'All properties have been synchronized successfully!',
+        'log' => $log,
+        'next_offset' => $remaining_properties > 0 ? $offset + $batch_size : null
+    ));
+    wp_die();
+}
+
+add_action('wp_ajax_sync_expire_properties', 'handle_sync_expire_properties');
+
+function handle_sync_expire_properties() {
+    $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
+    $batch_size = 10;
+
+    // Get the count of expired properties with the specified meta key
+    $query = new WP_Query([
+        'post_type' => 'property',
+        'posts_per_page' => -1, // Retrieve all matching posts
+        'meta_key' => 'advertisement_response',
+        'meta_compare' => 'EXISTS',
+        'post_status' => 'expired',
+        'fields' => 'ids' // Only get the IDs to save memory
+    ]);
+
+    $total_properties = $query->found_posts; // Total number of matching properties
+
+    $properties = get_posts([
+        'post_type' => 'property',
+        'posts_per_page' => $batch_size,
+        'offset' => $offset,
+        'meta_key' => 'advertisement_response',
+        'meta_compare' => 'EXISTS',
+        'post_status' => 'expired',
+    ]);
+
+    $log = [];
+
+    foreach ($properties as $property) {
+        $prop_id = $property->ID;
+        $property_name = get_the_title($prop_id);
+
+        // Prepare the form data for each property
+        $formDataArray = [
+            'prop_price' => get_post_meta($prop_id, 'fave_property_price', true),
+            // Add more fields as necessary
+        ];
+
+        // Serialize the form data
+        $serializedData = http_build_query($formDataArray);
+
+        // Mimic the $_POST array
+        $_POST['propID'] = $prop_id;
+        $_POST['formData'] = $serializedData;
+
+        // Call the function
+        $output = PlatformCompliance_property('CancelAd');
+
+        // Decode the response
+        $response = json_decode($output, true);
+
+        $log[] = [
+            'ID' => $prop_id,
+            'Property' => wp_trim_words($property_name, 10, '...'),
+            'Status' => $response['success'] ? 'Success' : 'Failed',
+            'Message' => $response['reason']
+        ];
+    }
+
+    $remaining_properties = $total_properties - ($offset + $batch_size);
+    $progress = round((($offset + $batch_size) / $total_properties) * 100);
+
+    echo json_encode(array(
+        'progress' => $progress,
+        'message' => $remaining_properties > 0 ? 'Synchronizing...' : 'All expired properties have been synchronized successfully!',
+        'log' => $log,
+        'next_offset' => $remaining_properties > 0 ? $offset + $batch_size : null
+    ));
+    wp_die();
+}
+
+/*-----------------------------------------------------------------------------------*/
+// Add custom post status Hold
+/*-----------------------------------------------------------------------------------*/
+if ( ! function_exists('aqar_custom_post_status_canceld') ) {
+    function aqar_custom_post_status_canceld() {
+
+        $args = array(
+            'label'                     => _x( 'Canceld', 'Status General Name', 'houzez' ),
+            'label_count'               => _n_noop( 'Canceld (%s)',  'Canceld (%s)', 'houzez' ),
+            'public'                    => true,
+            'show_in_admin_all_list'    => true,
+            'show_in_admin_status_list' => true,
+            'exclude_from_search'       => false,
+        );
+        register_post_status( 'canceld', $args );
+
+    }
+    add_action( 'init', 'aqar_custom_post_status_canceld', 1 );
+}
+function handle_property_status_change($new_status, $old_status, $post) {
+    // Ensure the post type is 'property' and status changes from 'publish' to 'expired'
+    if ($post->post_type == 'property' && $old_status == 'publish' && $new_status == 'expired') {
+        // Your code to handle the status change
+        // For example, you might want to trigger the `handle_sync_expire_properties` function
+
+        // Example: Call the function to handle this specific property
+        $output = PlatformCompliance_property('CancelAd', $post->ID);
+        // Decode the response
+        $response = json_decode($output, true);
+
+        if ( isset($response['success']) && $response['success'] === true ) {
+            wp_update_post(['ID' => $post->ID, 'post_status' => 'canceld']);
+        }
+        
+        // Or log the status change
+        error_log("Property ID {$post->ID} changed from {$old_status} to {$new_status}");
+    }
+}
+add_action('transition_post_status', 'handle_property_status_change', 10, 3);
+
+
+function PlatformCompliance_property($operationType = 'UpdateAd', $prop_id = '')
+{
+ 
+        global $current_user;
+        if( empty($prop_id ) ) {
+            $prop_id = intval($_POST['propID']);
+        }
+        $serializedData = $_POST['formData']; // 'formData' is the key name sent from AJAX
+        // Process the serialized form data
+        parse_str($serializedData, $formDataArray);
+        $userID       = get_current_user_id();
+ 
+        $AdLinkInPlatform = get_the_permalink($prop_id); 
+
+        $advertisement_response = get_post_meta($prop_id, 'advertisement_response', true);
+
+        if( empty($advertisement_response) ){
+            $msg =  json_encode(['success' => false, 'reason' => 'لم يتم التعديل من خلال الربط التقني المحدث'] );
+            return $msg;
+        }
+
+        // جلب القيم من المصفوفة
+        $advertiserId    = $advertisement_response['advertiserId'];
+        $adLicenseNumber = $advertisement_response['adLicenseNumber'];
+        $deedNumber      = $advertisement_response['deedNumber'];
+        $advertiserName  = $advertisement_response['advertiserName'];
+        // Remove any non-numeric characters from the phone number
+        $phoneNumber                        = preg_replace('/\D/', '', $advertisement_response['phoneNumber']);
+        $brokerageAndMarketingLicenseNumber = $advertisement_response['brokerageAndMarketingLicenseNumber'] ?? '';
+        $isConstrained                      = $advertisement_response['isConstrained'] ?? '';
+        $isPawned                           = $advertisement_response['isPawned'] ?? '';
+        $isHalted                           = $advertisement_response['isHalted'] ?? '';
+        $isTestment                         = $advertisement_response['isTestment'] ?? '';
+        $rerConstraints                     = $advertisement_response['rerConstraints'] ?? '';
+        $streetWidth                        = $advertisement_response['streetWidth'] ?? '';
+        $propertyArea                       = $advertisement_response['propertyArea'] ?? '';
+        $propertyPrice                      = $advertisement_response['propertyPrice'] ?? '';
+        $landTotalPrice                     = $advertisement_response['landTotalPrice'] ?? '';
+        $landTotalAnnualRent                = $advertisement_response['landTotalAnnualRent'] ?? '';
+        $propertyType                       = $advertisement_response['propertyType'] ?? '';
+        $propertyAge                        = $advertisement_response['propertyAge'] ?? '';
+        $advertisementType                  = $advertisement_response['advertisementType'] ?? '';
+        $creationDate                       = $advertisement_response['creationDate'] ?? '';
+        $endDate                            = $advertisement_response['endDate'] ?? '';
+        $adLicenseUrl                       = $advertisement_response['adLicenseUrl'] ?? '';
+        $adSource                           = $advertisement_response['adSource'] ?? '';
+        $titleDeedTypeName                  = $advertisement_response['titleDeedTypeName'] ?? '';
+        $locationDescriptionOnMOJDeed       = $advertisement_response['locationDescriptionOnMOJDeed'] ?? '';
+        $notes                              = $advertisement_response['notes'] ?? '';
+        $channels                           = $advertisement_response['channels'] ?? '';
+        
+        $guaranteesAndTheirDuration = $advertisement_response['guaranteesAndTheirDuration'];
+        // جلب القيم من المصفوفة المضمنة (borders)
+        $borders = $advertisement_response['borders'];
+
+        // Mapping between Arabic property utility names and their codes
+        $propertyUtilitiesMapping = array(
+            'كهرباء' => 'Electricity',
+            'مياه' => 'Waters',
+            'صرف صحي' => 'Sanitation',
+            'لايوجد خدمات' => 'NoServices',
+            'هاتف' => 'FixedPhone',
+            'الياف ضوئية' => 'FibreOptics',
+            'تصريف الفيضانات' => 'FloodDrainage'
+        );
+
+        $advertisementTypeMapping = [
+            'إيجار' => 'Rent',
+            'بيع' => 'Sell',
+        ];
+      
+		$current_property_price = $advertisement_response['propertyPrice'];
+        $new_property_price = intval($formDataArray['prop_price']);
+      
+        $property_status = get_term_by('id', $formDataArray['prop_status'][0], 'property_status');
+        $property_statusName = $property_status->name ?? null;
+      
+      	// Check if the values have changed
+        if ($property_statusName == $advertisement_response['advertisementType'] && $current_property_price == $new_property_price) {
+            $msg =  json_encode(['success' => true, 'reason' => 'لا حاجة لارسال الاعلان للهيئة العقارية . جاري تحديث الاعلان !']);
+            return $msg;
+        }
+      
+        $property_statusName = $advertisementTypeMapping[$property_statusName] ?? 'Sell';
+
+        $user_title             =   get_the_author_meta( 'fave_author_title' , $userID );
+        $display_name           =   get_the_author_meta( 'aqar_display_name' , $userID );
+        if( empty($display_name) ) {
+            $display_name = $current_user->display_name;
+        }
+        if( empty($user_title) ){
+            $user_title = $display_name;
+        }
+        $advertiserMobile = get_the_author_meta( 'fave_author_mobile' , $userID );
+        $pattern = '/^\+\s*966/';
+        // Remove +966 if it exists at the start
+        $cleanedPhoneNumber = preg_replace($pattern, '', $advertiserMobile);
+
+        // Add leading zero if it doesn't already start with one
+        if (substr($cleanedPhoneNumber, 0, 1) !== '0') {
+            $cleanedPhoneNumber = '0' . $cleanedPhoneNumber;
+        }
+        // prr($advertisement_response);
+        $adLinkInPlatform = esc_url(get_the_permalink($prop_id));
+
+        if( !empty($isConstrained) || !empty($isPawned) || !empty($isHalted) || !empty($isTestment) || !empty($rerConstraints) ) {
+            $constraints = "True";
+        }else {
+            $constraints = "False";
+
+        }
+
+        // جلب القيم من المصفوفة المضمنة (location)
+        $region           = $advertisement_response['location']['region'] ?? 'null';
+        $regionCode       = $advertisement_response['location']['regionCode'] ?? 'null';
+        $city             = $advertisement_response['location']['city'] ?? 'null';
+        $cityCode         = $advertisement_response['location']['cityCode'] ?? 'null';
+        $district         = $advertisement_response['location']['district'] ?? 'null';
+        $districtCode     = $advertisement_response['location']['districtCode'] ?? 'null';
+        $street           = $advertisement_response['location']['street'] ?? 'null';
+        $postalCode       = $advertisement_response['location']['postalCode'] ?? 'null';
+        $buildingNumber   = $advertisement_response['location']['buildingNumber'] ?? 'null';
+        $additionalNumber = $advertisement_response['location']['additionalNumber'] ?? 'null';
+        $longitude        = $advertisement_response['location']['longitude'] ?? 'null';
+        $latitude         = $advertisement_response['location']['latitude'] ?? 'null';
+        $operationReason  = !empty(get_post_meta( $prop_id, 'adverst_update_reason', true ))  ? get_post_meta( $prop_id, 'adverst_update_reason', true ) :  "Other";
+
+        $property_type = get_term_by( 'id', $formDataArray['prop_type'][0], 'property_type' );
+        $property_typeName = $property_type->name ?? null;
+        
+        $mappingPropertyTypes = [
+            'أرض' => 'Land',
+            'ارض' => 'Land',
+            'دور' => 'Floor',
+            'شقة' => 'Apartment',
+            'فيلا' => 'Villa',
+            'شقَّة صغيرة (استوديو)' => 'Studio',
+            'غرفة' => 'Room',
+            'استراحة' => 'RestHouse',
+            'مجمع' => 'Compound',
+            'برج' => 'Tower',
+            'معرض' => 'Exhibition',
+            'مكتب' => 'Office',
+            'مستودع' => 'Warehouses',
+            'كشك' => 'Booth',
+            'سينما' => 'Cinema',
+            'فندق' => 'Hotel',
+            'مواقف سيارات' => 'CarParking',
+            'ورشة' => 'RepairShop',
+            'صراف' => 'Teller',
+            'مصنع' => 'Factory',
+            'مدرسة' => 'School',
+            'مستشفى، مركز صحي' => 'HospitalOrHealthCenter',
+            'محطة كهرباء' => 'ElectricityStation',
+            'برج اتصالات' => 'TelecomTower',
+            'محطة' => 'Station',
+            'مزرعة' => 'Farm',
+            'عمارة' => 'Building'
+        ];
+
+
+        $property_typeName = isset($mappingPropertyTypes[$property_typeName]) ? $mappingPropertyTypes[$property_typeName] : 'Land';
+
+        $mappedUtilities = array();
+        foreach ($advertisement_response['propertyUtilities'] as $utility) {
+            if (isset($propertyUtilitiesMapping[$utility])) {
+                $mappedUtilities[] = $propertyUtilitiesMapping[$utility];
+            } else {
+                // If the Arabic utility name doesn't exist in the mapping
+                $mappedUtilities[] = 'NoServices';
+            }
+        }
+
+        // Function to add double quotes around each item
+        $quotedUtilities = array_map(function($item) {
+            return '"' . $item . '"';
+        }, $mappedUtilities);
+
+        // Implode the array to create a string
+        $implodedUtilities = implode(', ', $quotedUtilities);
+
+        $advertisementTypeMapping = [
+            'إيجار' => 'Rent',
+            'بيع' => 'Sell',
+        ];
+
+        $property_status     = get_term_by( 'id', $formDataArray['prop_status'][0], 'property_status' );
+        $property_statusName = $property_status->name ?? null;
+        $property_statusName = isset($advertisementTypeMapping[$property_statusName]) ? $advertisementTypeMapping[$property_statusName] : 'Sell';
+        
+
+        $advertisement_request = '{
+            "adLicenseNumber": "'.$adLicenseNumber.'",
+            "adLinkInPlatform": "'.$adLinkInPlatform.'",
+            "adSource": "REGA",
+            "adType": "'.$property_statusName.'",
+            "advertiserId": "'.$advertiserId.'",
+            "advertiserMobile": "'.$cleanedPhoneNumber.'",
+            "advertiserName": "'.$user_title.'",
+            "brokerageAndMarketingLicenseNumber": "'.$brokerageAndMarketingLicenseNumber.'",
+            "channels": [
+                "LicensedPlatform"
+            ],
+            "constraints": "'.$constraints.'",
+            "creationDate": "'.$creationDate.'",
+            "endDate": "'.$endDate.'",
+            "nationalAddress": {
+                "additionalNo": '.$additionalNumber.',
+                "adMapLatitude": '.$latitude.',
+                "adMapLongitude": '.$longitude.',
+                "buildingNo": '.$buildingNumber.',
+                "city": "'.$city.'",
+                "district": "'.$district.'",
+                "postalCode": '. $postalCode .',
+                "region": "'.$region.'",
+                "streetName": "'.$street.'"
+            },
+            "operationReason": "'.$operationReason.'",
+            "operationType": "'.$operationType.'",
+            "platformId": "'.get_option( '_platformid' ).'",
+            "platformOwnerId": "'.get_option( '_platformownerid' ).'",
+            "price": '.intval($formDataArray['prop_price']).',
+            "propertyArea": '.$propertyArea.',
+            "propertyType": "'.$property_typeName.'",
+            "propertyUsage": [
+                "Commercial"
+            ],
+            "propertyUtilities": ['. $implodedUtilities .'],
+            "qrCode": "",
+            "titleDeedNumber": "'.$deedNumber.'",
+            "titleDeedType": "ElectronicDeed",
+        }';
+
+        require_once AG_DIR . 'module/class-rega-module.php';
+
+        $RegaMoudle = new RegaMoudle();
+
+        $response = $RegaMoudle->PlatformCompliance($advertisement_request);
+        $response = json_decode( $response );
+        //prr($response);wp_die();
+        // echo json_encode( $advertisement_request, JSON_PRETTY_PRINT);
+
+        // if( !aqar_can_edit($prop_id) ){
+        //     echo json_encode(['success' => false, 'reason' => 'التعديل من خلال صفحة كل العقارات الخاصة بكم'] );
+        //     wp_die();
+        // }
+
+        if( isset($response->Body) && $response->Body->result->response === true ){
+            update_post_meta($prop_id, 'adverst_can_edit', 0);  
+            update_post_meta($prop_id, 'advertisement_response', $advertisement_response );
+            $msg =  json_encode(['success' => true, 'reason' => 'تم ارسال التعديل بنجاح الي الهيئة العقارية']);
+            return $msg;
+        } else {
+            if( isset($response->httpCode)  ) {
+                $msg =  json_encode(['success' => false, 'reason' => $response->httpMessage . ' ' . $response->moreInformation] );
+                return $msg; 
+            }elseif( isset($response->Body->result->message) ){    
+                // prr($response);
+                $msg =  json_encode(['success' => false, 'reason' => $response->Body->result->message] );
+                return $msg; 
+            }
+        }
+    }
+
+function AQAR_sync_advertisement($post_id) {
+
+    if( !empty($post_id) ) {
+
+        $advertiserId = get_post_meta($post_id, 'advertiserId', true);
+        $adLicenseNumber = get_post_meta($post_id, 'adLicenseNumber', true);
+        
+        require_once(AG_DIR . 'module/class-rega-module.php');
+        $RegaMoudle = new RegaMoudle();
+        $response = $RegaMoudle->sysnc_AdvertisementValidator($adLicenseNumber, $advertiserId);
+        $response = json_decode($response);
+        
+        if( isset($response->Body->result->advertisement) ) {
+            $data = $response->Body->result->advertisement;
+            $advertisement_response = json_decode(json_encode($data), true);
+            /**
+             * update response
+             *---------------------------------------------------------------------*/ 
+            update_post_meta( $post_id, 'advertisement_response', $advertisement_response );
+        }   
+    }  
+}
+
 function handle_contract_property_request() {
     if (!isset($_POST['post_id']) || !is_user_logged_in()) {
         wp_send_json_error();

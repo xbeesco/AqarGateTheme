@@ -12,17 +12,21 @@ $user_role = houzez_user_role_by_user_id( $userID );
 $select_packages_link = houzez_get_template_link('template/template-packages.php'); 
 ?>
 <?php get_header(); ?>
-<section class="page-wrap">
-    <div class="container">
-        <div class="page-title-wrap">
-            <?php get_template_part('template-parts/page/breadcrumb');  ?>
-            <div class="d-flex align-items-center">
-                <?php get_template_part('template-parts/page/page-title');  ?>
-            </div><!-- d-flex -->
-        </div><!-- page-title-wrap -->
-        <div class="row">
-            <div class="col-lg-10 col-md-12 m-auto">
-                <div class="article-wrap">
+<header class="header-main-wrap dashboard-header-main-wrap">
+    <div class="dashboard-header-wrap">
+        <div class="d-flex align-items-center">
+            <div class="dashboard-header-left flex-grow-1">
+                <h1><?php the_title(); ?></h1>         
+            </div><!-- dashboard-header-left -->
+
+            <div class="dashboard-header-right">
+                
+            </div><!-- dashboard-header-right -->
+        </div><!-- d-flex -->
+    </div><!-- dashboard-header-wrap -->
+</header><!-- .header-main-wrap -->
+<section class="dashboard-content-wrap">
+    <div class="dashboard-content-inner-wrap mt-5 pt-5 mb-5 pb-5">
                     <style>
                     /* Maintain the same border style */
                     form {
@@ -415,12 +419,13 @@ $select_packages_link = houzez_get_template_link('template/template-packages.php
                         }
                     });
                     </script>
+                    
                     <?php } else {  ?>
                         <?php get_template_part('template-parts/dashboard/submit/partials/login-required-property'); ?>
                     <?php } ?>
-                </div>
-            </div><!-- bt-content-wrap -->
-        </div><!-- row -->
     </div><!-- container -->
 </section><!-- listing-wrap -->
+<section class="dashboard-side-wrap">
+    <?php get_template_part('template-parts/dashboard/side-wrap'); ?>
+</section>
 <?php get_footer(); ?>

@@ -4,7 +4,8 @@ wp_get_current_user();
 $userID  = $current_user->ID;
 check_ajax_referer( 'aqargate_profile_ajax_nonce', 'aqargate-security-profile' );
 
-$agent_id =  $firstname =  $lastname =  $title =  $about =  $userphone =  $usermobile =  $whatsapp =  $userskype =  $facebook =  $twitter =  $linkedin =  $instagram =  $pinterest =  $youtube =  $vimeo =  $googleplus =  $profile_pic =  $profile_pic_id =  $website =  $useremail =  $license =  $tax_number =  $fax_number =  $userlangs =  $user_address =  $user_company =  $service_areas =  $specialties =  $tiktok =  $telegram = '';
+$user_company = $userlangs = $latitude = $longitude = $tax_number = $user_location = $license = $user_address = $fax_number = $firstname = $lastname = $title = $about = $userphone = $usermobile = $userskype = $facebook = $tiktok = $telegram = $twitter = $linkedin = $instagram = $pinterest = $profile_pic = $profile_pic_id = $website = $useremail = $service_areas = $specialties = $whatsapp = $line_id = $zillow = $realtor_com = '';
+
 
 
 $user_roles = array ( 'houzez_agency', 'houzez_agent', 'houzez_buyer', 'houzez_seller', 'houzez_owner', 'houzez_manager' );
@@ -124,9 +125,10 @@ if( !empty( $_POST['useremail'] ) ) {
         $user_as_agent = houzez_option('user_as_agent');
 
         if (in_array('houzez_agent', (array)$current_user->roles)) {
-            houzez_update_user_agent ( $agent_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $fax_number, $userlangs, $user_address, $user_company, $service_areas, $specialties, $tiktok, $telegram );
+            houzez_update_user_agent ( $agent_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $fax_number, $userlangs, $user_address, $user_company, $service_areas, $specialties, $tiktok, $telegram, $line_id, $zillow, $realtor_com );
+
         } elseif(in_array('houzez_agency', (array)$current_user->roles)) {
-            houzez_update_user_agency ( $agency_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $user_address, $user_location, $latitude, $longitude, $fax_number, $userlangs, $tiktok, $telegram );
+            houzez_update_user_agency ( $agency_id, $firstname, $lastname, $title, $about, $userphone, $usermobile, $whatsapp, $userskype, $facebook, $twitter, $linkedin, $instagram, $pinterest, $youtube, $vimeo, $googleplus, $profile_pic, $profile_pic_id, $website, $useremail, $license, $tax_number, $user_address, $user_location, $latitude, $longitude, $fax_number, $userlangs, $tiktok, $telegram, $line_id, $service_areas, $specialties, $zillow, $realtor_com );
         }
 
     }

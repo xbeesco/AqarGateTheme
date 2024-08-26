@@ -1,9 +1,9 @@
 <?php 
-$disabled = '';
+$disabled = 'disabled="true"';
 $readonly = '';
 
 if( aqar_can_edit() ) {
-    $disabled = '';
+    $disabled = 'disabled="true"';
     $readonly = '';
 }
 

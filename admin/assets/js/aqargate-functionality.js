@@ -146,7 +146,112 @@ jQuery(document).ready(function($) {
         });
     });
 
+    $('#sync-properties-button').on('click', function() {
+        $('#sync-properties-progress').show();
+        $('#sync-properties-status').html('');
+        $('#sync-properties-log').html('');
+        $('#sync-properties-button').prop('disabled', true);
+    
+        function syncBatch(offset) {
+            $.ajax({
+                url: aqargateSyncLocations.ajaxurl,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'sync_properties',
+                    nonce: aqargateSyncLocations.nonce,
+                    offset: offset
+                },
+                success: function(response) {
+                    if (response && response.progress !== undefined) {
+                        $('#sync-properties-progress-bar').css('width', response.progress + '%').attr('aria-valuenow', response.progress);
+                        $('#sync-properties-status').html(response.message);
+                        $('#sync-properties-log').append(buildSyncTable(response.log));
+    
+                        if (response.next_offset !== null) {
+                            syncBatch(response.next_offset);  // Recursive call to process the next batch
+                        } else {
+                            $('#sync-properties-button').prop('disabled', false);
+                        }
+                    } else {
+                        $('#sync-properties-status').html('An error occurred during the synchronization process.');
+                        $('#sync-properties-button').prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    $('#sync-properties-status').html('An error occurred during the synchronization process.');
+                    $('#sync-properties-button').prop('disabled', false);
+                }
+            });
+        }
+    
+        syncBatch(0);  // Start with the first batch
+    });
+
+    $('#sync-expired-properties-button').on('click', function() {
+        $('#sync-properties-progress').show();
+        $('#sync-properties-status').html('');
+        $('#sync-properties-log').html('');
+        $('#sync-expired-properties-button').prop('disabled', true);
+    
+        function syncBatch(offset) {
+            $.ajax({
+                url: aqargateSyncLocations.ajaxurl,
+                type: 'POST',
+                dataType: 'json',
+                data: {
+                    action: 'sync_expire_properties',
+                    nonce: aqargateSyncLocations.nonce,
+                    offset: offset
+                },
+                success: function(response) {
+                    if (response && response.progress !== undefined) {
+                        $('#sync-properties-progress-bar').css('width', response.progress + '%').attr('aria-valuenow', response.progress);
+                        $('#sync-properties-status').html(response.message);
+                        $('#sync-properties-log').append(buildSyncTable(response.log));
+    
+                        if (response.next_offset !== null) {
+                            syncBatch(response.next_offset);  // Recursive call to process the next batch
+                        } else {
+                            $('#sync-expired-properties-button').prop('disabled', false);
+                        }
+                    } else {
+                        $('#sync-properties-status').html('An error occurred during the synchronization process.');
+                        $('#sync-expired-properties-button').prop('disabled', false);
+                    }
+                },
+                error: function() {
+                    $('#sync-properties-status').html('An error occurred during the synchronization process.');
+                    $('#sync-expired-properties-button').prop('disabled', false);
+                }
+            });
+        }
+    
+        syncBatch(0);  // Start with the first batch
+    });
+    
+
+    function buildSyncTable(logEntries) {
+        console.log(logEntries);
+        var table = '<table class="table table-striped table-bordered">';
+        table += '<thead><tr><th>ID</th><th>Property</th><th>Status</th><th>Message</th></tr></thead>';
+        table += '<tbody>';
+
+        logEntries.forEach(function(entry) {
+            table += '<tr>';
+            table += '<td>' + entry.ID + '</td>';
+            table += '<td>' + entry.Property + '</td>';
+            table += '<td>' + entry.Status + '</td>';
+            table += '<td>' + entry.Message + '</td>';
+            table += '</tr>';
+        });
+
+        table += '</tbody></table>';
+        return table;
+    }
+
     function buildTable(logEntries) {
+        console.log(logEntries);
         var table = '<table class="table table-striped table-bordered">';
         table += '<thead><tr><th>ID</th><th>Property</th><th>State</th><th>City</th><th>Area</th></tr></thead>';
         table += '<tbody>';
@@ -206,4 +311,6 @@ jQuery(document).ready(function($) {
             }
         });
     });
+
+    
 });

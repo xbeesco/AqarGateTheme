@@ -40,6 +40,7 @@ if( !empty( $id_for_permalink ) ) {
         <div class="dashboard-content-block-wrap">
             <?php  
             $is_verify = aqar_is_verify_user();
+            $is_verify = true;
              if( ! $is_verify && ! current_user_can( 'manage_options' ) && ! houzez_is_agency() ) {
                 include_once ( AG_DIR . 'module/profile-nafath.php' );
             ?>

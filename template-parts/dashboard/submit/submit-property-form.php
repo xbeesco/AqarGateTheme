@@ -35,9 +35,9 @@ $allowed_html = array(
 );
 
 if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
-
+    
     if ( $enable_paid_submission == 'membership' && $remaining_listings != -1 && $remaining_listings < 1 && is_user_logged_in() ) {
-
+        
         echo '<div class="dashboard-content-block-wrap">
                 <div class="dashboard-content-block">';
         if (!houzez_user_has_membership($userID)) {
@@ -52,8 +52,9 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
 
     } else { ?>
          <?php 
-             $is_verify = get_user_meta( $userID, 'aqar_is_verify_user', true );
-            if( get_option( '_aq_show_api' ) == 'yes' &&  aqar_is_verify($userID) ) {
+            $is_verify = get_user_meta( $userID, 'aqar_is_verify_user', true );
+             
+            if( get_option( '_aq_show_api' ) == 'yes'  ) {
                 /* --------- get property data from api ----- */
                     // echo '<div class="dashboard-content-block-wrap"><div class="dashboard-content-block">';
                     // echo '<div id="success-messages" class="validate-success alert alert-success"
@@ -62,7 +63,7 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
                     //     <a class="btn btn-info" href="' . $select_packages_link . '">' . esc_html__('Upgrade Package', 'houzez') . '</a>
                     //     </div>';
                     // echo '</div></div>';
-                    if( $is_verify && ! aq_is_black_list() ) {
+                    if( aqar_is_verify($userID) && ! aq_is_black_list() ) {
                         do_action( 'aqar_isvalid', $userID );
                     } else {
                         aqar_is_verify_msg($userID); 

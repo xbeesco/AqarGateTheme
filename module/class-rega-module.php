@@ -329,64 +329,104 @@ class RegaMoudle{
                }
             },
             "Body":{
-               "result":{
-                  "isValid":true,
-                  "advertisement":{
-                     "advertiserId":"1034758700",
-                     "adLicenseNumber":"8200000082",
-                     "deedNumber":311010000240,
-                     "advertiserName":"شريف علي سعد",
-                     "phoneNumber":"05123456789",
-                     "brokerageAndMarketingLicenseNumber":"1100000139",
-                     "isConstrained":false,
-                     "isPawned":false,
-                     "streetWidth":0,
-                     "propertyArea":3000,
-                     "propertyPrice":300,
-                     "numberOfRooms":0,
-                     "propertyType":"ارض",
-                     "propertyAge":"جديد",
-                     "advertisementType":"إيجار",
-                     "location":{
-                        "region":"منطقة الحدود الشماليه",
-                        "regionCode":"9",
-                        "city":"اعيوج لينه",
-                        "cityCode":"901030",
-                        "district":"اعيوج لينه",
-                        "districtCode":"901030",
-                        "street":"dd",
-                        "postalCode":"56456",
-                        "buildingNumber":"5645",
-                        "additionalNumber":"5555",
-                        "longitude":"24",
-                        "latitude":"24"
-                     },
-                     "propertyFace":null,
-                     "planNumber":null,
-                     "obligationsOnTheProperty":null,
-                     "guaranteesAndTheirDuration":null,
-                     "theBordersAndLengthsOfTheProperty":null,
-                     "complianceWithTheSaudiBuildingCode":null,
-                     "channels": [                       
-                            "منصة مرخصة",
-                            "لوحة اعلانية"  
-                    ],
-                    "propertyUsages": [                  
-                            "سكني"                   
-                    ],
-                    "propertyUtilities": [                     
-                            "مياه"                    
-                    ],
-                     "creationDate":"31/06/2023",
-                     "endDate":"15/07/2023",
-                     "qrCodeUrl":"https://test-brokerage.housingapps.sa/public/IndividualBroker/ElanDetails/08db0361-4dc7-414a-8a75-6b1b9e971160"
-                  }
-               },
-               "targetUrl":null,
-               "success":true,
-               "error":null,
-               "unAuthorizedRequest":false,
-               "__abp":true
+               "result": {
+    "isValid": true,
+    "advertisement": {
+      "advertiserId": "7011349102",
+      "adLicenseNumber": "7200000895",
+      "deedNumber": "1234567898888",
+      "advertiserName": "شركة مأوى الحلول للخدمات العقارية شركة شخص واحد",
+      "phoneNumber": "+966554881599",
+      "brokerageAndMarketingLicenseNumber": "1200000333",
+      "isConstrained": false,
+      "isPawned": false,
+      "isHalted": false,
+      "isTestment": false,
+      "rerConstraints": null,
+      "streetWidth": 15224,
+      "propertyArea": 5464,
+      "propertyPrice": 120,
+      "landTotalPrice": null,
+      "landTotalAnnualRent": 655680,
+      "numberOfRooms": null,
+      "propertyType": "ارض",
+      "propertyAge": null,
+      "advertisementType": "إيجار",
+      "location": {
+        "region": "منطقة الجوف",
+        "regionCode": "13",
+        "city": "العيساويه",
+        "cityCode": "12548",
+        "district": "الربوة",
+        "districtCode": "106",
+        "street": "مكة",
+        "postalCode": "99999",
+        "buildingNumber": "1111",
+        "additionalNumber": "1111",
+        "longitude": "46.6415725",
+        "latitude": "24.8181109"
+      },
+      "propertyFace": "شمالية شرقية",
+      "planNumber": "12345",
+      "landNumber": "123",
+      "obligationsOnTheProperty": "452543857",
+      "guaranteesAndTheirDuration": "",
+      "complianceWithTheSaudiBuildingCode": null,
+      "channels": [
+        "لوحة اعالنية"
+      ],
+      "propertyUsages": [
+        "سكني"
+      ],
+      "propertyUtilities": [
+        "اليوجد خدمات"
+      ],
+      "creationDate": "08/01/2024",
+      "endDate": "01/01/2025",
+      "adLicenseURL": "https://localhost:44311//public/OfficesBroker/ElanDetails/08dc1012-2d47-4e83-8c46-8099d0771a0f",
+      "adSource": "الهيئة العامة للعقار",
+      "titleDeedTypeName": "صك السجل العقاري",
+      "locationDescriptionOnMOJDeed": null,
+      "notes": null,
+      "borders": {
+        "northLimitName": null,
+        "northLimitDescription": null,
+        "northLimitLengthChar": null,
+        "eastLimitName": null,
+        "eastLimitDescription": null,
+        "eastLimitLengthChar": null,
+        "westLimitName": null,
+        "westLimitDescription": null,
+        "westLimitLengthChar": null,
+        "southLimitName": null,
+        "southLimitDescription": null,
+        "southLimitLengthChar": null
+      },
+      "rerBorders": [
+        {
+          "direction": "رقم /8461 1",
+          "type": "قطعة",
+          "length": "ثالثون متر"
+        },
+        {
+          "direction": "القطعه رقم 8460",
+          "type": "جزء من",
+          "length": "سبعة عشر متر و خمسون سنتمتر"
+        },
+        {
+          "direction": "عرض 20 متر",
+          "type": "شارع",
+          "length": "سبعة عشر متر و خمسون سنتمتر"
+        },
+        {
+          "direction": "رقم 8463",
+          "type": "قطعة",
+          "length": "ثالثون متر"
+        }
+      ]
+    },
+    "message": null
+  }
             }
          }
         ';

@@ -185,7 +185,7 @@ while( $fave_qry->have_posts() ): $fave_qry->the_post(); $i++;
             </div><!-- price-table-description -->
             <div class="price-table-button">
                 <?php if( houzez_is_woocommerce() && $pack_price > 0) { ?>
-                    <a class="houzez-woocommerce-package btn btn-primary" data-packid="<?php echo get_the_ID(); ?>" href="#">
+                    <a class="aqargate-woocommerce-package btn btn-primary" data-packid="<?php echo get_the_ID(); ?>" href="#">
                         <i class="houzez-icon icon-check-circle-1 mr-1"></i> <?php echo $houzez_local['get_started']; ?>
                     </a>
                 <?php } else { ?>
