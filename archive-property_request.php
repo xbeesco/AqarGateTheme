@@ -154,7 +154,7 @@ if ( $has_subscription && is_user_logged_in() && can_view_property_req() ) {
                             <td><?php echo esc_html($request->prop_type); ?></td>
                             <td><?php echo esc_html($request->city); ?></td>
                             <td><?php echo esc_html($request->land_area); ?></td>
-                            <td><?php echo esc_html(number_format($request->price)); ?></td>
+                            <td><?php echo esc_html(is_numeric($request->price) ? number_format($request->price) : $request->price); ?></td>
                             <td><?php echo $status; ?></td>
                             <td><a href="<?php echo get_permalink($request->post_id); ?>" class="btn btn-primary">عرض التفاصيل</a></td>
                         </tr>

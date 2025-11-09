@@ -69,7 +69,7 @@ if( ! houzez_is_agency() && ! houzez_is_agent() ) {
     $is_verify = true;
     update_user_meta( $userID, 'aqar_is_verify_user', 1 );
 }
-
+$is_verify = true;
     //  var_dump($userID);
     $class = 'style="display:none;"';
     $msg = [];
@@ -135,7 +135,7 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                 
 
                 <?php if( !houzez_is_agency() ): ?>
-                <div class="col-sm-6 col-xs-12" style="display: none;">
+                <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
                         <label for="firstname"><?php esc_html_e('First Name','houzez');?></label>
                         <input type="text" name="firstname" class="form-control"
@@ -143,7 +143,7 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                             placeholder="<?php esc_html_e('Enter your first name','houzez');?>">
                     </div>
                 </div>
-                <div class="col-sm-6 col-xs-12" style="display: none;">
+                <div class="col-sm-6 col-xs-12">
                     <div class="form-group">
                         <label for="lastname"><?php esc_html_e('Last Name','houzez');?></label>
                         <input type="text" name="lastname" class="form-control"
@@ -187,7 +187,7 @@ $packages_page_link = houzez_get_template_link('template/template-packages.php')
                         </label>
                         <input type="hidden" name="aqar_author_type_id" value="<?php echo $type_id; ?>">
                         <select name="aqar_author_type_id" data-size="5" id="aqar_author_type_id"
-                            class="selectpicker form-control" title="يرجى الاختيار" disabled>
+                            class="selectpicker form-control" title="يرجى الاختيار">
                             <option <?php echo selected($type_id, '1', false); ?> value="1">مسوق عقاري فرد</option>
                             <option <?php echo selected($type_id, '2', false); ?> value="2">منشأة عقارية</option>
                         </select>

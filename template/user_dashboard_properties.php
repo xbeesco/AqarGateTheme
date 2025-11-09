@@ -13,10 +13,10 @@ if ( !is_user_logged_in() || !houzez_check_role() ) {
 global $houzez_local, $prop_featured, $current_user, $post;
 
 wp_get_current_user();
-$userID         = $current_user->ID;
-$user_login     = $current_user->user_login;
-$paid_submission_type = esc_html ( houzez_option('enable_paid_submission','') );
-$packages_page_link = houzez_get_template_link('template/template-packages.php');
+$userID                = $current_user->ID;
+$user_login            = $current_user->user_login;
+$paid_submission_type  = esc_html ( houzez_option('enable_paid_submission','') );
+$packages_page_link    = houzez_get_template_link('template/template-packages.php');
 $dashboard_add_listing = houzez_get_template_link_2('template/user_dashboard_submit.php');
 
 get_header();
@@ -27,8 +27,8 @@ if( isset( $_GET['prop_status'] ) && $_GET['prop_status'] == 'approved' ) {
 } elseif( isset( $_GET['prop_status'] ) && $_GET['prop_status'] == 'pending' ) {
     $qry_status = 'pending';
 
-} elseif( isset( $_GET['prop_status'] ) && $_GET['prop_status'] == 'expired' ) {
-    $qry_status = 'expired';
+// } elseif( isset( $_GET['prop_status'] ) && $_GET['prop_status'] == 'expired' ) {
+//     $qry_status = 'expired';
 } elseif( isset( $_GET['prop_status'] ) && $_GET['prop_status'] == 'disapproved' ) {
     $qry_status = 'disapproved';
 } elseif( isset( $_GET['prop_status'] ) && $_GET['prop_status'] == 'draft' ) {
@@ -36,7 +36,7 @@ if( isset( $_GET['prop_status'] ) && $_GET['prop_status'] == 'approved' ) {
 } elseif( isset( $_GET['prop_status'] ) && $_GET['prop_status'] == 'on_hold' ) {
     $qry_status = 'on_hold';
 } else {
-    $qry_status = 'any';
+    $qry_status = 'publish, on_hold';
 }
 $sortby = '';
 if( isset( $_GET['sortby'] ) ) {
@@ -54,11 +54,11 @@ if ( get_query_var( 'paged' ) ) {
 $agents_array = array();
 
 $args = array(
-    'post_type'        =>  'property',
-    'author'           =>  $userID,
-    'paged'             => $paged,
-    'posts_per_page'    => $no_of_prop,
-    'post_status'      =>  array( $qry_status ),
+    'post_type'        => 'property',
+    'author'           => $userID,
+    'paged'            => $paged,
+    'posts_per_page'   => $no_of_prop,
+    'post_status'      => array( 'publish', 'on_hold', 'pending', 'draft' ),
     'suppress_filters' => false
 );
 

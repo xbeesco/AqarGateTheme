@@ -1,8 +1,9 @@
 <?php
 $userID       = get_current_user_id();
 $dash_profile_link = houzez_get_template_link_2('template/user_dashboard_profile.php');
+$dash_props_link = houzez_get_template_link_2('template/user_dashboard_properties.php');
 
-$agency_agent_add = add_query_arg( 'agent', 'add_new', $dash_profile_link );
+$agency_agent_add = add_query_arg( 'agents', 'add_new', $dash_profile_link );
 
 $wp_user_query = new WP_User_Query( array(
     array( 'role' => 'houzez_agent' ),
@@ -55,9 +56,14 @@ $agents = $wp_user_query->get_results();
                         $agent_info = get_userdata($agent->ID);
                         $agency_agent_edit = add_query_arg(
                             array(
-                                'agent' => 'add_new',
-                                'id' => $agent->ID,
+                                'edit_user' => $agent->ID,
                             ),$dash_profile_link
+                        );
+
+                        $view_listings = add_query_arg(
+                            array(
+                                'user' => $agent->ID,
+                            ),$dash_props_link
                         );
 
                         $first_name = $agent_info->first_name;
@@ -107,6 +113,8 @@ $agents = $wp_user_query->get_results();
                                         <a class="dropdown-item" href="<?php echo esc_url($agent_permalink); ?>"><?php echo esc_html__('View', 'houzez');?></a>
                                         <a class="dropdown-item" href="<?php echo esc_url($agency_agent_edit); ?>"><?php echo esc_html__('Edit', 'houzez');?></a>
                                         <a data-agentid="<?php echo intval($agent->ID); ?>" class="houzez_delete_agency_agent dropdown-item" href="#"><?php echo esc_html__('Delete', 'houzez');?></a>
+
+                                        <a href="<?php echo esc_url($view_listings); ?>" class="dropdown-item" href="#"><?php echo esc_html__('View Listings', 'houzez');?></a>
                                     </div>
                                 </div>
                             </td>

@@ -55,7 +55,7 @@ if( is_page_template( 'template/user_dashboard_profile.php' ) ) {
 }
 
 $agency_agents = add_query_arg( 'agents', 'list', $dash_profile_link );
-$agency_agent_add = add_query_arg( 'agent', 'add_new', $dash_profile_link );
+$agency_agent_add = add_query_arg( 'agents', 'add_new', $dash_profile_link );
 
 $all = add_query_arg( 'prop_status', 'all', $dashboard_listings );
 $approved = add_query_arg( 'prop_status', 'approved', $dashboard_listings );
@@ -91,7 +91,7 @@ if( isset( $_GET['agents'] ) && $_GET['agents'] == 'list' ) {
     $ac_agents = 'class=active';
     $parent_agents = "side-menu-parent-selected";
     $ac_profile = '';
-} elseif( isset( $_GET['agent'] ) && $_GET['agent'] == 'add_new' ) {
+} elseif( isset( $_GET['agents'] ) && $_GET['agents'] == 'add_new' ) {
     $ac_agents = 'class=active';
     $ac_agent_new = 'class=active';
     $ac_profile = '';

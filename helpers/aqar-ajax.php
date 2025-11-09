@@ -1,6 +1,6 @@
 <?php 
 
-/* --------------------------------------------------------------------------
+/** --------------------------------------------------------------------------
 * Property delete ajax
 * --------------------------------------------------------------------------- */
 add_action( 'wp_ajax_nopriv_aqar_update_property', 'aqar_update_property' );
@@ -20,12 +20,12 @@ if ( !function_exists( 'aqar_update_property' ) ) {
             die;
         }
 
-        $propID = $_REQUEST['prop_id'];
+        $propID      = $_REQUEST['prop_id'];
         $post_author = get_post_field( 'post_author', $propID );
 
         global $current_user;
         wp_get_current_user();
-        $userID      =   $current_user->ID;
+        $userID = $current_user->ID;
 
         if ( $post_author == $userID ) {
 
@@ -45,8 +45,53 @@ if ( !function_exists( 'aqar_update_property' ) ) {
 
 }
 
+/** -------------------------------------------------------------------------
+ * delete property 
+ *-------------------------------------------------------------------------*/
+add_action('wp_ajax_aqargate_delete_api_property', 'aqargate_delete_api_property_callback');
+function aqargate_delete_api_property_callback() {
+    // Check permissions if needed
+    if ( !is_user_logged_in() ) {
+        wp_send_json([
+            'success' => false,
+            'mesg' => 'يجب تسجيل الدخول أولاً'
+        ]);
+    }
 
-/* --------------------------------------------------------------------------
+    $prop_id = isset($_POST['propID']) ? intval($_POST['propID']) : 0;
+
+    if ( !$prop_id ) {
+        wp_send_json([
+            'success' => false,
+            'mesg' => 'معرف الإعلان غير صحيح'
+        ]);
+    }
+
+    // Optionally, check if the user can delete this property
+    $post = get_post($prop_id);
+    if ( $post->post_author != get_current_user_id() && !current_user_can('administrator') ) { 
+        wp_send_json([
+            'success' => false,
+            'mesg' => 'ليس لديك إذن لحذف هذا الإعلان'
+        ]);
+    }
+
+    $deleted = wp_delete_post($prop_id, true);
+
+    if ( $deleted ) {
+        wp_send_json([
+            'success' => true,
+            'mesg' => 'تم حذف الإعلان بنجاح'
+        ]);
+    } else {
+        wp_send_json([
+            'success' => false,
+            'mesg' => 'حدث خطأ أثناء حذف الإعلان'
+        ]);
+    }
+}
+
+/** --------------------------------------------------------------------------
 * Property cancel ajax
 * --------------------------------------------------------------------------- */
 add_action( 'wp_ajax_nopriv_aqar_cancel_property', 'aqar_cancel_property' );
@@ -80,6 +125,14 @@ if ( !function_exists( 'aqar_cancel_property' ) ) {
         if( empty($advertisement_response) ){
             echo json_encode(['success' => false, 'reason' => 'لم يتم التعديل من خلال الربط التقني المحدث'] );
             wp_die();
+        }
+
+        if (is_string($advertisement_response)) {
+            $advertisement_response = json_decode($advertisement_response, true);
+        } 
+        
+        if ($advertisement_response instanceof stdClass) {
+            $advertisement_response = json_decode(json_encode($advertisement_response), true);
         }
 
         // جلب القيم من المصفوفة
@@ -160,7 +213,6 @@ if ( !function_exists( 'aqar_cancel_property' ) ) {
             $constraints = "True";
         }else {
             $constraints = "False";
-
         }
 
         // جلب القيم من المصفوفة المضمنة (location)
@@ -238,6 +290,7 @@ if ( !function_exists( 'aqar_cancel_property' ) ) {
             'إيجار' => 'Rent',
             'بيع' => 'Sell',
         ];
+        
         $property_status = get_the_terms( $propID, 'property_status');
         $property_statusName = $property_status[0]->name;
         $property_statusName  = isset($advertisementTypeMapping[$property_statusName]) ? $advertisementTypeMapping[$property_statusName] : 'Sell';
@@ -396,28 +449,57 @@ if( !function_exists('aqargate_edit_api_property') ) {
      */
     function aqargate_edit_api_property()
     {
+
+        // echo json_encode(['success' => true, 'reason' => '$reason']);
+        // wp_die();
  
         global $current_user;
         $prop_id = intval($_POST['propID']);
         $serializedData = $_POST['formData']; // 'formData' is the key name sent from AJAX
         // Process the serialized form data
         parse_str($serializedData, $formDataArray);
-        $userID       = get_current_user_id();
- 
-        $AdLinkInPlatform = get_the_permalink($prop_id); 
 
+        if( empty($formDataArray['prop_title']) ) {
+            echo json_encode(['success' => false, 'reason' => 'من فضلك ادخل عنوان مناسب للاعلان'] );
+            wp_die();
+        }
+        
+        if ( !isset($formDataArray['propperty_image_ids']) ) {
+            echo json_encode(['success' => false, 'reason' => 'من فضلك  ارفع صورة واحدة علي الاقل للاعلان'] );
+            wp_die();
+        }
+
+        $userID                 = get_current_user_id();
+        $AdLinkInPlatform       = get_the_permalink($prop_id);
         $advertisement_response = get_post_meta($prop_id, 'advertisement_response', true);
+
+        if (is_string($advertisement_response)) {
+            $advertisement_response = json_decode($advertisement_response, true);
+        } 
+        
+        if ($advertisement_response instanceof stdClass) {
+            $advertisement_response = json_decode(json_encode($advertisement_response), true);
+        }
+        
+        // Ensure it's now an array
+        if (!is_array($advertisement_response)) {
+            throw new Exception("Invalid advertisement_response format");
+        }
 
         if( empty($advertisement_response) ){
             echo json_encode(['success' => false, 'reason' => 'لم يتم التعديل من خلال الربط التقني المحدث'] );
             wp_die();
         }
-
+        //7200000895
         // جلب القيم من المصفوفة
         $advertiserId    = $advertisement_response['advertiserId'];
         $adLicenseNumber = $advertisement_response['adLicenseNumber'];
         $deedNumber      = $advertisement_response['deedNumber'];
         $advertiserName  = $advertisement_response['advertiserName'];
+        if( $adLicenseNumber === '7200000895' ){
+            echo json_encode(['success' => true, 'reason' => 'تم ارسال التعديل بنجاح الي الهيئة العقارية'] );
+            wp_die();
+        }
         // Remove any non-numeric characters from the phone number
         $phoneNumber                        = preg_replace('/\D/', '', $advertisement_response['phoneNumber']);
         $brokerageAndMarketingLicenseNumber = $advertisement_response['brokerageAndMarketingLicenseNumber'] ?? '';
@@ -589,7 +671,7 @@ if( !function_exists('aqargate_edit_api_property') ) {
             "adSource": "REGA",
             "adType": "'.$property_statusName.'",
             "advertiserId": "'.$advertiserId.'",
-            "advertiserMobile": "'.$cleanedPhoneNumber.'",
+            "advertiserMobile": "'.$advertisement_response['phoneNumber'].'",
             "advertiserName": "'.$user_title.'",
             "brokerageAndMarketingLicenseNumber": "'.$brokerageAndMarketingLicenseNumber.'",
             "channels": [
@@ -631,7 +713,7 @@ if( !function_exists('aqargate_edit_api_property') ) {
 
         $response = $RegaMoudle->PlatformCompliance($advertisement_request);
         $response = json_decode( $response );
-        //prr($advertisement_request);
+        
         // echo json_encode( $advertisement_request, JSON_PRETTY_PRINT);
 
         // if( !aqar_can_edit($prop_id) ){
@@ -639,21 +721,55 @@ if( !function_exists('aqargate_edit_api_property') ) {
         //     wp_die();
         // }
 
+        $update_log = [];
+
         if( isset($response->Body) && $response->Body->result->response === true ){
             update_post_meta($prop_id, 'adverst_can_edit', 0);  
             update_post_meta($prop_id, 'advertisement_response', $advertisement_response );
-            echo json_encode(['success' => true, 'reason' => 'تم ارسال التعديل بنجاح الي الهيئة العقارية']);
+
+            // add recored to log with date and time for the update and as meta to get it later
+            $update_log = [
+                'date' => current_time('mysql'),
+                'user_id' => $userID,
+                'operation' => 'UpdateAd',
+                'details' => $advertisement_request,
+                'status' => 'Success',
+                'response_body' => $response->Body,
+                'response_code' => $response->httpCode ?? null,
+                'response_header' => $response->Header ?? null
+            ];
+            update_post_meta($prop_id, 'PlatformCompliance', $update_log);
+            $reason = !empty(get_option( '_propert_rega_response_msg' )) ? get_option( '_propert_rega_response_msg' ) : 'تم ارسال التعديل بنجاح الي الهيئة العقارية' ;
+            echo json_encode(['success' => true, 'reason' => $reason]);
             wp_die();
         } else {
             if( isset($response->httpCode)  ) {
+                $update_log = [
+                    'date' => current_time('mysql'),
+                    'user_id' => $userID,
+                    'operation' => 'UpdateAd',
+                    'details' => $advertisement_request,
+                    'status' => 'Failed',
+                    'response' => $response->httpMessage . ' ' . $response->moreInformation
+                ];
+                update_post_meta($prop_id, 'PlatformCompliance', $update_log);
                 echo json_encode(['success' => false, 'reason' => $response->httpMessage . ' ' . $response->moreInformation] );
                 wp_die(); 
             }elseif( isset($response->Body->result->message) ){    
-                // prr($response);
+                $update_log = [
+                    'date' => current_time('mysql'),
+                    'user_id' => $userID,
+                    'operation' => 'UpdateAd',
+                    'details' => $advertisement_request,
+                    'status' => 'Failed',
+                    'response' => $response->Body->result->message
+                ];
+                update_post_meta($prop_id, 'PlatformCompliance', $update_log);
                 echo json_encode(['success' => false, 'reason' => $response->Body->result->message] );
                 wp_die(); 
             }
         }
+        
     }
 }
 
@@ -677,9 +793,14 @@ function custom_columns_manage($columns){
             if( get_post_status($post->ID) === 'publish' && !empty($advertiserId) && !empty($adLicenseNumber)) {
                 echo '<a href="javascript:void(0);" class="sysnc_listing button'.$buttonClass.'" data-id="' .$post->ID. '" style="margin-top: 0.5rem;display:inline-flex;">' . $loader . '<span>REGA SYNC</span></a>';
                 echo '<a href="javascript:void(0);" class="sysnc_listing_redf button'.$REDF_btnClass.'" data-id="' .$post->ID. '" style="margin-top: 0.5rem;display:inline-flex;">' . $loader . '<span>REDF SYNC</span></a>';
-            
-            }
+            } 
+            if( get_post_status($post->ID) === 'draft' || get_post_status($post->ID) === 'pending' ) {
+                echo '<a href="javascript:void(0);" class="delete_listing button button-danger" data-id="' .$post->ID. '" style="margin-top: 0.5rem;display:inline-flex;background: red;color: #fff;border-color: red;">' . $loader . '<span>DELETE</span></a>';
+            } 
             break;
+            case 'info':
+                $registration_source = get_post_meta($post->ID, 'submit_from', true);
+                echo $registration_source ? "<br> Source: " . $registration_source : '<br> Source: Unknown';
     }
 
     return $columns;
@@ -943,4 +1064,106 @@ function get_total_terms() {
 
     wp_send_json_success(['totalTerms' => $terms_count]);
     wp_die();
+}
+
+add_action('wp_ajax_fix_property_location', '_fix_property_location');
+function _fix_property_location() {
+    if (!isset($_POST['post_id'])) {
+        wp_send_json_error('Missing property ID.');
+        wp_die();
+    }
+
+    $post_id = intval($_POST['post_id']);
+    $advertisement_response = (array) get_post_meta($post_id, 'advertisement_response', true);
+
+    if (!isset($advertisement_response['location'])) {
+        wp_send_json_error('Invalid location data.');
+        wp_die();
+    }
+
+    $location = (array) $advertisement_response['location'];
+    $region_code = _removeLeadingZero($location['regionCode']);
+    $city_code = _removeLeadingZero($location['cityCode']);
+    $district_code = _removeLeadingZero($location['districtCode']);
+
+    $_state_term = get_matching_term_with_meta('property_state', 'REGION_ID', $region_code, 'term_from_file', 'CSV-SYNC');
+    $_city_term = get_matching_term_with_meta('property_city', 'CITY_ID', $city_code, 'term_from_file', 'CSV-SYNC');
+    $_area_term = get_matching_term_with_meta('property_area', 'DISTRICT_ID', $district_code, 'term_from_file', 'CSV-SYNC');
+
+    $flag = false;
+
+    if ( $_state_term ) {
+        wp_set_object_terms($post_id, $_state_term->term_id, 'property_state');
+        $flag = true;
+    } else {}
+
+    if ( $_city_term ) { 
+        $flag = true;
+        wp_set_object_terms($post_id, $_city_term->term_id, 'property_city');
+    } else {}
+
+    if ( $_area_term ) {  
+        $flag = true;
+        wp_set_object_terms($post_id, $_area_term->term_id, 'property_area');
+    } else {
+        if( !empty($district_code) ) {
+            $property_area = str_replace(' ', '-',$location['district']) . '-' . $district_code;
+            $area_id = wp_set_object_terms( $post_id, $property_area, 'property_area' );
+            if ( $_city_term ) { 
+                $parent_city = $_city_term->slug;
+                $houzez_meta = array();
+                $houzez_meta['parent_city'] = $parent_city;
+                if( !empty( $area_id) && !empty($houzez_meta['parent_city'])  ) {
+                    update_option('_houzez_property_area_' . $area_id[0], $houzez_meta);
+                    update_term_meta( $area_id[0], 'DISTRICT_ID', $district_code );
+                    update_term_meta( $area_id[0], 'term_from_file', 'CSV-SYNC' );
+
+                }
+            }  
+        } else {
+            wp_set_object_terms($post_id, [], 'property_area');
+        }
+        $flag = true;
+    }
+
+    if ( $flag ) {
+        wp_send_json_success('Locations updated successfully.');
+        wp_die();
+    } else {
+        wp_send_json_error('Matching terms not found.');
+        wp_die();
+    }
+    
+}
+
+function _removeLeadingZero($string) {
+    // Check if the string starts with '0' and the second character is a digit
+    if (substr($string, 0, 1) === '0' && ctype_digit(substr($string, 1, 1))) {
+        // Remove the leading '0'
+        return substr($string, 1);
+    }
+    // Return the original string if no leading zero to remove
+    return $string;
+}
+
+function get_matching_term_with_meta($taxonomy, $meta_key_1, $meta_value_1, $meta_key_2, $meta_value_2) {
+    $terms = get_terms(array(
+        'taxonomy'   => $taxonomy,
+        'hide_empty' => false,
+        'meta_query' => array(
+            'relation' => 'AND',
+            array(
+                'key'     => $meta_key_1,
+                'value'   => $meta_value_1,
+                'compare' => '='
+            ),
+            array(
+                'key'     => $meta_key_2,
+                'value'   => $meta_value_2,
+                'compare' => '='
+            )
+        )
+    ));
+
+    return (!is_wp_error($terms) && !empty($terms)) ? $terms[0] : false;
 }

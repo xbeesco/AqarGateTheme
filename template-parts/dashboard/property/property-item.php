@@ -130,7 +130,10 @@ if( $property_status != 'expired' && $property_status != 'disapproved' ) {
                 <?php } ?>
 
 				<a href="" class="cancel-property dropdown-item" data-id="<?php echo intval($post->ID); ?>" data-nonce="<?php echo wp_create_nonce('delete_my_property_nonce') ?>">الغاء الاعلان</a>
-
+				
+                <?php if( $property_status === 'draft' ||  $property_status === 'pending' ) { ?>
+                <a class="deleteing-property dropdown-item" data-property="<?php echo $post->ID; ?>" href="#"><?php esc_html_e('Delete', 'houzez'); ?></a>
+                <?php } ?>
 				<!-- <a class="clone-property dropdown-item" data-property="<?php echo $post->ID; ?>" href="#"><?php esc_html_e('Duplicate', 'houzez'); ?></a> -->
 
 				<?php 

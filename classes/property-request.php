@@ -22,7 +22,7 @@ class PropertyRequest {
                 'public'        => true,
                 'has_archive'   => true,
                 'rewrite'       => array('slug' => 'property-request'),
-                'supports'      => array('title', 'editor'),
+                'supports'      => array('title', 'editor', 'author'),
                 'menu_position' => 5,
                 'show_in_rest'  => true,
             )
@@ -81,7 +81,7 @@ class PropertyRequest {
 
         $form_data = isset($_POST['form_data']) ? urldecode($_POST['form_data']) : '';
         mb_parse_str($form_data, $unserialized_data);
-
+        // print_r($unserialized_data);
         $property_request = sanitize_text_field($unserialized_data['property-request']);
         $prop_type_id = intval($unserialized_data['prop_type']);
         $prop_age = sanitize_text_field($unserialized_data['prop_age']);
@@ -117,16 +117,17 @@ class PropertyRequest {
 
             $data = [
                 'property_request' => $property_request,
-                'prop_type' => $prop_type_name,
-                'prop_age' => $prop_age,
-                'state' => $administrative_area_level_1,
-                'city' => $locality,
-                'area' => $neighborhood,
-                'land_area' => $land_area,
-                'price' => $price,
-                'payment_method' => $payment_method,
-                'more_info' => $more_info,
-                'user_id' => $user_id,
+                'prop_type'        => $prop_type_name,
+                'prop_age'         => $prop_age,
+                'country'          => $country,
+                'state'            => $administrative_area_level_1,
+                'city'             => $locality,
+                'area'             => $neighborhood,
+                'land_area'        => $land_area,
+                'price'            => $price,
+                'payment_method'   => $payment_method,
+                'more_info'        => $more_info,
+                'user_id'          => $user_id,
             ];
             $where = ['post_id' => $post_id];
             
@@ -159,18 +160,18 @@ class PropertyRequest {
     
                 // Insert into custom table
                 $wpdb->insert($table_name, array(
-                    'post_id' => $post_id,
                     'property_request' => $property_request,
-                    'prop_type' => $prop_type_name,
-                    'prop_age' => $prop_age,
-                    'state' => $administrative_area_level_1,
-                    'city' => $locality,
-                    'area' => $neighborhood,
-                    'land_area' => $land_area,
-                    'price' => $price,
-                    'payment_method' => $payment_method,
-                    'more_info' => $more_info,
-                    'user_id' => $user_id
+                    'prop_type'        => $prop_type_name,
+                    'prop_age'         => $prop_age,
+                    'country'          => $country,
+                    'state'            => $administrative_area_level_1,
+                    'city'             => $locality,
+                    'area'             => $neighborhood,
+                    'land_area'        => $land_area,
+                    'price'            => $price,
+                    'payment_method'   => $payment_method,
+                    'more_info'        => $more_info,
+                    'user_id'          => $user_id,
                 ));
                 wp_send_json(["sucsses" => true, "html" => ' عزيزنا العميل تم نشر طلبكم . وسيتم استقبال جميع العروض بواسطة طرق الاتصال في حسابكم.', 'redirect' => $user_property_request]);
                 wp_die();
@@ -194,6 +195,7 @@ class PropertyRequest {
                 property_request varchar(255) NOT NULL,
                 prop_type varchar(255) NOT NULL,
                 prop_age varchar(255) NOT NULL,
+                country varchar(255) NOT NULL,
                 state varchar(255) NOT NULL,
                 city varchar(255) NOT NULL,
                 area varchar(255) NOT NULL,
@@ -208,7 +210,14 @@ class PropertyRequest {
             require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
             dbDelta($sql);
         }
+    
+        // Check if the 'country' column exists, and add it if it doesn't
+        $column = $wpdb->get_results("SHOW COLUMNS FROM `$table_name` LIKE 'country'");
+        if (empty($column)) {
+            $wpdb->query("ALTER TABLE $table_name ADD country varchar(255) NOT NULL");
+        }
     }
+    
 }
 
 new PropertyRequest();

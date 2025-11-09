@@ -139,7 +139,7 @@ $request_types = array(
                             <td><?php echo esc_html($request->prop_type); ?></td>
                             <td><?php echo esc_html($request->city); ?></td>
                             <td><?php echo esc_html($request->land_area); ?></td>
-                            <td><?php echo esc_html(number_format($request->price)); ?></td>
+                            <td><?php echo esc_html($request->price); ?></td>
                             <td><a href="<?php echo get_permalink($request->post_id); ?>" class="btn btn-primary">عرض التفاصيل</a></td>
                             <td>
                                 <div class="action-buttons" style="display: flex;flex-direction: row;justify-content: space-evenly;">

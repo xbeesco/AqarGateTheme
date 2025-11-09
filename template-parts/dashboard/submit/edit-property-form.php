@@ -143,9 +143,9 @@ if( is_page_template( 'template/user_dashboard_submit.php' ) ) {
                         break;
 
                     case 'agent_info':
-                        if(houzez_show_agent_box()) {
+                        //if(houzez_show_agent_box()) {
                             get_template_part('template-parts/dashboard/submit/contact-information');
-                        }
+                        //}
                         break;
 
                     case 'private_note':

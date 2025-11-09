@@ -134,6 +134,9 @@ if( !empty( $_POST['useremail'] ) ) {
     }
 }
 
+// register
+update_user_meta( $user_id, 'register_from', 'Web' );
+
 // include_once ( AG_DIR.'classes/class-rega.php' );
 // $valid_status = REGA::is_valid_ad( $prop_id='', $userID );
 // wp_update_user( array ('ID' => $userID, 'display_name' => $_POST['display_name'] ) );

@@ -357,7 +357,7 @@ function nafathApi() {
     aq_black_list($id);
 
     if( ! is_user_logged_in() && ! $test ){       
-        $nath_id = get_users('meta_value=' . $id );
+        $nath_id = get_users(['meta_value' => $id]);
         $message = 'رقم الهوية مسجل مسبقا في الموقع , يمكنك تسجيل الدخول';
         if( is_array( $nath_id ) && count( $nath_id ) > 0 ) {
             wp_send_json( array('success' => false, 'message' => $message ) );
@@ -365,13 +365,33 @@ function nafathApi() {
         }
     }
 
-    /* ---------------------------------- Test ---------------------------------- */
-        // $trans = 'c6c5085d-13e7-4408-ad11-2afa44fe2e49';
-        // $rand  = '44';
-        // aq_send_nafath_dummy_response($transId, $id);
-        // wp_send_json( array('success' => true, 'number' => $rand, 'transId' => $trans ) );
-        // wp_die();
-   /* ------------------------------------ . ----------------------------------- */ 
+    /* --------------------- false this line for live site -------------------- */
+    $test = false; 
+    $COMPLETED = ['1000000000', '1000000446'];
+    if( in_array( $id, $COMPLETED ) ) {
+        $test = true;
+    } else {
+        wp_send_json( array('success' => false, 'error'=> 'رقم الهوية الصحيح (1000000446)') );
+        wp_die();
+    }
+/* ------------------------------------ . ----------------------------------- */
+
+/**----------------Test--------------------- */
+if( $test ) {
+    aq_send_nafath_dummy_response('0c4349fc-07a5-4679-9468-d5790762eb4f', $id);
+    
+    $trans = '0c4349fc-07a5-4679-9468-d5790762eb4f';
+    $rand  = '44';
+    wp_send_json( array(
+        'success' => true, 
+        'data'    => [
+            'number' => $rand,
+            'transId' => $trans
+            ],
+        ) );
+    wp_die();
+}
+/**----------------------------------------- */ 
 
     require_once ( AG_DIR . 'module/class-nafath-api.php' );
 
@@ -412,7 +432,7 @@ function aq_send_nafath_dummy_response($transId, $id)
     }
     $curl = curl_init();
     curl_setopt_array($curl, array(
-    CURLOPT_URL => 'https://aqargate.com/nafazcallback',
+    CURLOPT_URL => 'https://staging.aqargate.com/nafazcallback',
     CURLOPT_RETURNTRANSFER => true,
     CURLOPT_ENCODING => '',
     CURLOPT_MAXREDIRS => 10,
@@ -841,7 +861,9 @@ function ag_houzez_register() {
                 }
             }
             houzez_wp_new_user_notification( $user_id, $user_password, $phone_number );
-
+            // register
+            update_user_meta( $user_id, 'register_from', 'Web' );
+            update_user_meta( $user_id, 'aqar_is_verify_user', 1 );
             do_action('houzez_after_register', $user_id);
         }
         wp_die();

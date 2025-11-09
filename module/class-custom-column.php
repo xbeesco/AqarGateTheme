@@ -11,6 +11,8 @@ class Aqar_tax_column {
         foreach ($taxonomies as $taxonomy) {
             add_filter( 'manage_' . $taxonomy . '_custom_column', [$this, 'taxonomy_rows'],15, 3 );
             add_filter( 'manage_edit-' . $taxonomy . '_columns',  [$this, 'taxonomy_columns'] );
+            add_filter('manage_edit-' . $taxonomy . '_sortable_columns', [$this, 'sortable_columns']); // Step 1
+            add_action('pre_get_terms', [$this, 'sort_by_status']); // Step 2
         }
     }
 
@@ -20,7 +22,7 @@ class Aqar_tax_column {
         $new_columns['termstatus'] = esc_html__( 'STATUS', 'aqar' );
         $new_columns['termid'] = esc_html__( 'LKID', 'aqar' );
         return array_merge( $new_columns, $original_columns );
-        }
+    }
         
     public function taxonomy_rows( $row, $column_name, $term_id ) {
         $meta       = get_term_meta( $term_id, 'term_from_file', true ) ?? 'API-SYNC';
@@ -50,5 +52,23 @@ class Aqar_tax_column {
             }
         }
     }
+
+    public function sortable_columns($sortable_columns) {
+        $sortable_columns['termstatus'] = 'status';
+        return $sortable_columns;
+    }
+
+    public function sort_by_status($query) {
+        if (is_admin() && isset($_GET['orderby']) && $_GET['orderby'] === 'termstatus') {
+            wp_die(1);
+            $query->query_vars['meta_key'] = 'term_from_file';
+            $query->query_vars['orderby'] = [
+                'meta_value' => 'ASC',
+                'name' => 'ASC', // Fallback to term name if meta is the same.
+            ];
+        }
+    }
+    
+    
 }
 new Aqar_tax_column();

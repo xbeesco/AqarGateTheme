@@ -522,7 +522,7 @@ form {
                 <th>المساحة</th>
                 <td><?php echo esc_html($request->land_area); ?></td>
                 <th>السعر</th>
-                <td><?php echo esc_html(number_format($request->price)); ?></td>
+                <td><?php echo esc_html(is_numeric($request->price) ? number_format($request->price) : $request->price); ?></td>
                 <th>عمر العقار</th>
                 <td><?php echo esc_html($property_ages[$request->prop_age]); ?></td>
             </tr>
@@ -549,13 +549,14 @@ form {
         </thead>
         <tbody>
             <?php
-            $user_info = get_userdata($request->user_id);
+            $user_id = get_post_field('post_author', get_the_ID());
+            $user_info = get_userdata(get_post_field('post_author', get_the_ID()));
             ?>
             <tr>
                 <td><?php echo esc_html($user_info->display_name); ?></td>
                 <td><?php echo esc_html($user_info->user_email); ?></td>               
-                <td dir="ltr"><?php echo esc_html(get_user_meta($request->user_id, 'fave_author_mobile', true)); ?></td>                
-                <td><?php echo esc_html(get_user_meta($request->user_id, 'fave_author_whatsapp', true)); ?></td>
+                <td dir="ltr"><?php echo esc_html(get_user_meta($user_id, 'fave_author_mobile', true)); ?></td>                
+                <td><?php echo esc_html(get_user_meta($user_id, 'fave_author_whatsapp', true)); ?></td>
             </tr>
         </tbody>
     </table>

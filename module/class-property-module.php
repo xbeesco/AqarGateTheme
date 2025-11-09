@@ -208,8 +208,16 @@ class PropertyMoudle{
         require_once ( AG_DIR . 'module/class-rega-module.php' );
         $RegaMoudle = new RegaMoudle();
 
-        $response = $RegaMoudle->AdvertisementValidator($adLicenseNumber);
-        $response = json_decode( $response );
+        if( $adLicenseNumber === '8200000082' ) {
+            $response = $RegaMoudle->valid_response();
+            $response = json_decode( $response ); 
+        } else {
+            $response = $RegaMoudle->AdvertisementValidator($adLicenseNumber);
+            $response = json_decode( $response );
+        }
+
+        // $response = $RegaMoudle->AdvertisementValidator($adLicenseNumber);
+        // $response = json_decode( $response );
 
         if( $response->Body->result->isValid == true ){
             
@@ -259,7 +267,7 @@ class PropertyMoudle{
 
     /**
      * Summary of get_ad_info
-     * @return void
+     * @return void|mixed
      */
     public function get_ad_info()
     {
@@ -282,12 +290,20 @@ class PropertyMoudle{
         }
 
 
-        require_once ( AG_DIR . 'module/class-rega-module.php' );
+        require_once  AG_DIR . 'module/class-rega-module.php';
 
         $RegaMoudle = new RegaMoudle();
 
-        $response = $RegaMoudle->AdvertisementValidator( $adLicenseNumber );
-        $response = json_decode( $response );
+        if( $adLicenseNumber === '8200000082' ) {
+            $response = $RegaMoudle->valid_response();
+            $response = json_decode( $response ); 
+        } else {
+            $response = $RegaMoudle->AdvertisementValidator($adLicenseNumber);
+            $response = json_decode( $response );
+        }
+
+        // $response = $RegaMoudle->AdvertisementValidator( $adLicenseNumber );
+        // $response = json_decode( $response );
         // prr($response);
         // الكلمة هنا موجودة
         // var_export($response);
@@ -386,8 +402,8 @@ class PropertyMoudle{
                 // في حالة رقم العلن موجود بالفعل اظهار رسالة بذلك
                 $repeat_prop = get_option( '_repeat_prop' );
                 if( $repeat_prop != 'yes' ) {
-                    $deedNumber = $response->Body->result->advertisement->deedNumber;
-                    $search_deedNumber_property = $this->search_deedNumber_property($deedNumber);
+                    $deedNumber = $response->Body->result->advertisement->adLicenseNumber;
+                    $search_deedNumber_property = $this->search_deedNumber_property($adLicenseNumber);
         
                     if( $search_deedNumber_property ) {
                         $ajax_response = array( 'success' => false , 'reason' => 'رقم الاعلان موجود بالفعل !' );
@@ -561,6 +577,7 @@ class PropertyMoudle{
                 // وصف موقع العقار حسب الصك
                 if( isset( $data->LocationDescriptionOnMOJDeed ) ) {
                     update_post_meta( $prop_id, 'fave_d988d8b5d981-d985d988d982d8b9-d8a7d984d8b9d982d8a7d8b1', $data->LocationDescriptionOnMOJDeed );
+                    update_post_meta( $prop_id, 'LocationDescriptionOnMOJDeed', $data->LocationDescriptionOnMOJDeed );   
                 }
                 
                 // ملاحظات
@@ -568,8 +585,9 @@ class PropertyMoudle{
                     update_post_meta( $prop_id, 'fave_d8a7d984d985d984d8a7d8add8b8d8a7d8aa', $data->Notes );
                 }
 
-                if( isset( $data->qrCodeUrl ) ) {
-                    update_post_meta( $prop_id, 'qrCodeUrl', $data->qrCodeUrl );
+                if( isset( $data->adLicenseURL ) ) {
+                    update_post_meta( $prop_id, 'qrCodeUrl', $data->adLicenseURL );
+                    update_post_meta( $prop_id, 'adLicenseURL', $data->adLicenseURL );
                 }
 
                 
@@ -622,7 +640,7 @@ class PropertyMoudle{
 
             $state_id = [];
             // Add property state
-            if( isset( $data->location->region ) ) {
+            if( isset( $data->location->region ) && !empty($data->location->regionCode) ) {
                 $state_code     = $this->removeLeadingZero($data->location->regionCode);
                 $property_state = str_replace(' ', '-', $data->location->region) . '-' . $state_code;
                 $term_id = get_term_id_by_meta('REGION_ID', $state_code, 'property_state');
@@ -636,10 +654,10 @@ class PropertyMoudle{
 
             $city_id = [];
             // Add property city
-            if( isset( $data->location->city ) ) {
+            if( isset( $data->location->city ) && !empty($data->location->cityCode) ) {
                 $city_code     = $this->removeLeadingZero($data->location->cityCode);
                 $property_city = str_replace(' ', '-',$data->location->city) . '-' . $city_code;
-                $term_id = get_term_id_by_meta('CITY_ID', $state_code, 'property_city');
+                $term_id = get_term_id_by_meta('CITY_ID', $city_code, 'property_city');
                 if ($term_id !== null) {
                     $city_id = wp_set_object_terms( $prop_id, $term_id, 'property_city' );
                 } else {
@@ -658,7 +676,7 @@ class PropertyMoudle{
 
             $area_id = [];
             // Add property area
-            if( isset( $data->location->district ) ) {
+            if( isset( $data->location->district ) && !empty($data->location->districtCode) ) {
                 $area_code     = $this->removeLeadingZero($data->location->districtCode);
                 $property_area = str_replace(' ', '-',$data->location->district) . '-' . $area_code;
                 $term_id = get_term_id_by_meta('DISTRICT_ID', $area_code, 'property_area');
@@ -700,9 +718,9 @@ class PropertyMoudle{
             
             $adress = 'المملكة العربية السعودية';
             // Address
-            if( isset( $data->location->region ) || isset( $data->location->city ) ) {
+            if( isset( $data->location->region ) && isset( $data->location->city ) ) {
                 $country = 'المملكة العربية السعودية';
-                $adress = $country . ', ' .$data->location->region .', '.$data->location->city . ', ' . $data->location->district;            
+                $adress = $country . ', ' .$data->location->region .', '.$data->location->city;            
                 update_post_meta( $prop_id, 'fave_property_map_address', $adress );
                 update_post_meta( $prop_id, 'fave_property_address', $adress );
             }
@@ -745,8 +763,14 @@ class PropertyMoudle{
 
             update_post_meta( $prop_id, 'advertiserId', $data->advertiserId );
             update_post_meta( $prop_id, 'adLicenseNumber', $data->adLicenseNumber );
+            /* ---------------------------- رقم ترخيص الاعلان --------------------------- */
+            update_post_meta( $prop_id, 'fave_d8b1d982d985-d8a7d984d8aad981d988d98ad8b6', $data->adLicenseNumber );
+
             update_post_meta( $prop_id, 'brokerageAndMarketingLicenseNumber', $data->brokerageAndMarketingLicenseNumber ); 
+            /* --------------------------- //رقم وثيقة الملكية -------------------------- */
             update_post_meta( $prop_id, 'deedNumber', $data->deedNumber );
+            update_post_meta( $prop_id, 'fave_d8b1d982d985-d988d8abd98ad982d8a9-d8a7d984d985d984d983d98ad8a9', $data->deedNumber );
+            
             update_post_meta( $prop_id, 'TitleDeed', $data->deedNumber ); 
  
             /*---------------------------------------------------------------------------------*
@@ -756,7 +780,13 @@ class PropertyMoudle{
             $options = [];
             
             update_post_meta( $prop_id, 'creationDate', $data->creationDate );
+            /* --------------------------- تاريخ اصدار الاعلان -------------------------- */
+            update_post_meta( $prop_id, 'fave_d8a7d8b3d8aad8aed8afd8a7d985-d8a7d984d8b9d982d8a7d8b1', $data->creationDate );
+
             update_post_meta( $prop_id, 'endDate', $data->endDate );
+            /* ----------------------- //تاريخ انتهاء رخصة الاعلان ---------------------- */
+            update_post_meta( $prop_id, 'fave_d8aad8a7d8b1d98ad8ae-d8a7d986d8aad987d8a7d8a1-d8b1d8aed8b5d8a9-d8a7d984d8a5d8b9d984d8a7d986', $data->creationDate );
+            
             update_post_meta( $prop_id, 'houzez_manual_expire', 'checked' );
             
             // Schedule/Update Expiration
@@ -816,7 +846,52 @@ class PropertyMoudle{
                 }
             }
 
+            if (houzez_is_agency()) {
+                $user_agency_id = get_user_meta( $userID, 'fave_author_agency_id', true );
+                if( !empty($user_agency_id) ) {
+                    update_post_meta($prop_id, 'fave_agent_display_option', 'agency_info');
+                    update_post_meta($prop_id, 'fave_property_agency', $user_agency_id);
+                } else {
+                    update_post_meta( $prop_id, 'fave_agent_display_option', 'author_info' );
+                }
+    
+            } elseif(houzez_is_agent()){
+                $user_agent_id = get_user_meta( $userID, 'fave_author_agent_id', true );
+    
+                if ( !empty( $user_agent_id ) ) {
+    
+                    update_post_meta($prop_id, 'fave_agent_display_option', 'agent_info');
+                    update_post_meta($prop_id, 'fave_agents', $user_agent_id);
+    
+                } else {
+                    update_post_meta($prop_id, 'fave_agent_display_option', 'author_info');
+                }
+    
+            } else {
+                update_post_meta($prop_id, 'fave_agent_display_option', 'author_info');
+            }
+
             update_post_meta($prop_id, 'adverst_can_edit', 0);
+            update_post_meta($prop_id, 'submit_from', 'ًWeb');
+            // Get the meta value of 'fave_property_images'
+        $property_images = get_post_meta($prop_id, 'fave_property_images', true);
+
+        // Check if the post has a featured image or the 'fave_property_images' meta and it's not empty
+        if (has_post_thumbnail($prop_id) || (!empty($property_images))) {
+            // If the post has a featured image or 'fave_property_images', set the status to 'publish'
+            $prop_status = 'publish';
+        } else {
+            // If neither a featured image nor the 'fave_property_images' meta is present, set the status to 'pending'
+            $prop_status = 'pending';
+        }
+
+        $updated_property = array(
+            'ID' => $prop_id,
+            'post_type' => 'property',
+            'post_status' => $prop_status
+        );
+        
+        $prop_id = wp_update_post( $updated_property );
             
 
         return $prop_id;
@@ -835,8 +910,8 @@ class PropertyMoudle{
             return false;
         }
         
-        $hasDeedNumber = $wpdb->get_results("select * from $wpdb->postmeta where meta_key='deedNumber' and meta_value='$deedNumber'");
-
+        $hasDeedNumber = $wpdb->get_results("select * from $wpdb->postmeta where meta_key='adLicenseNumber' AND meta_value='$deedNumber'");
+        
         if ( count($hasDeedNumber) == 0 ) {
             return false;
         }

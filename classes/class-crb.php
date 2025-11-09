@@ -31,6 +31,7 @@ class AG_CF
             $export_btn = '';$cache_btn = '';
             $state_btn = $city_btn = $area_btn_1 = $area_btn_2 = $area_btn_3 = '';
         }
+        $Base64 = base64_encode( get_option('_push_notification_user') . ':' . get_option('_push_notification_pass') );
         Container::make( 'theme_options','ag_settings', __( 'AG Settings' ) )
         
         ->add_tab(
@@ -47,9 +48,16 @@ class AG_CF
                 Field::make( 'checkbox', 'sandbox', 'Enable sandbox' ),
                 Field::make( 'checkbox', 'dummy', 'Enable dummy data' ),
                 Field::make( 'rich_text', 'add_propery_info', __( 'تعليمات نشر اعلان وترخيص' ) ),
-               
+                Field::make( 'text', 'propert_rega_response_msg', __( 'رسالة تحديث الإعلان التغذية الراجعة' ) ),
+                Field::make( 'text', 'propert_rega_confirm_msg', __( 'رسالة تاكيد ارسال الإعلان التغذية الراجعة' ) ),   
             )
         ) 
+        ->add_tab( __( 'الاشعارات' ), array(
+            Field::make( 'text', 'push_notification_user', __( 'push notification user', 'ag' ) ),
+            Field::make( 'text', 'push_notification_pass', __( 'push notification pass', 'ag' ) ),
+            Field::make( 'html', 'push_notification_base64' )
+            ->set_html( 'Base64: Basic ' .$Base64 )
+        ) )
         ->add_tab( __( 'Property Export' ), array(
             Field::make( 'html', 'crb_information_text' )
             ->set_html( $export_btn )
@@ -102,6 +110,19 @@ class AG_CF
                     ->set_header_template( '
                         <% if (id) { %>
                             [ <%- id %> ]
+                        <% } %>
+                    ' )
+            ] )
+            ->add_tab( __( 'APP' ), [
+                    Field::make( 'complex', 'app_ver', __( 'APP Ver' ) )
+                    ->set_layout( 'tabbed-vertical' )
+                    ->add_fields([
+                        Field::make('text', 'version_number', __('APP VER Number')),
+                        Field::make('checkbox', 'update', __('Must Update')),
+                    ] )
+                    ->set_header_template( '
+                        <% if (version_number) { %>
+                            [ <%- version_number %> ] - Must Update: <%- update %>
                         <% } %>
                     ' )
             ] );
