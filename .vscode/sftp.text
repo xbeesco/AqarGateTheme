@@ -8,7 +8,7 @@
     "uploadOnSave": true,
     "password": "@8VeC2ioPI",
     "ignore": [".vscode", ".git", ".DS_Store", ".gitignore"]
-}
+} 
 
 {
     "name": "aqar-gate",

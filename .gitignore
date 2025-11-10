@@ -1,4 +1,3 @@
-/.vscode
-/.vscode/*.json
-/.vscode/*.text
-/.vscode/sftp.json
+.vscode
+.docs
+*.md
