@@ -12,6 +12,7 @@ $garage = houzez_get_listing_data('property_garage');
 $property_status = houzez_taxonomy_simple('property_status');
 $property_type = houzez_taxonomy_simple('property_type');
 $garage_size = houzez_get_listing_data('property_garage_size');
+$property_usage = houzez_taxonomy_simple('property_label');
 $additional_features = get_post_meta( get_the_ID(), 'additional_features', true);
 $advertiserId = get_post_meta( get_the_ID(), 'adLicenseNumber', true );
 $creationDate = get_post_meta( get_the_ID(), 'creationDate', true );
@@ -78,6 +79,11 @@ $southLimitLengthChar = $borders['southLimitLengthChar'] ?? '';
         }
         if( !empty( $property_status ) && ($hide_fields['prop_status']) != 1 ) {
             echo '<tr class="prop_status" style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>'.houzez_option('spl_prop_status', 'Property Status').':</strong></td><td style="border: 1px solid #ddd;"><span>'.esc_attr( $property_status ).'</span></td></tr>';
+        }
+        // Property Usage (استخدام العقار)
+        if( ($hide_fields['prop_label']) != 1 ) {
+            $usage_value = !empty( $property_usage ) ? esc_attr( $property_usage ) : '-';
+            echo '<tr class="prop_usage" style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>استخدام العقار:</strong></td><td style="border: 1px solid #ddd;"><span>'.$usage_value.'</span></td></tr>';
         }
         //Custom Fields
         if(class_exists('Houzez_Fields_Builder')) {
