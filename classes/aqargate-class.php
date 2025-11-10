@@ -115,6 +115,12 @@ class AqarGate{
         $current_post_url   = urlencode(get_the_permalink($current_post_id));
 
         $advertisement_response = get_post_meta($current_post_id, 'advertisement_response', true);
+
+        // Convert object to array if needed
+        if( is_object($advertisement_response) ) {
+            $advertisement_response = (array) $advertisement_response;
+        }
+
         if( !empty($advertisement_response) && isset($advertisement_response['adLicenseUrl'])) {
             $current_post_url = $advertisement_response['adLicenseUrl'];
         } else if( !empty(get_post_meta($current_post_id, 'qrCodeUrl', true)) ) {
