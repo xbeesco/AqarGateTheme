@@ -569,6 +569,16 @@ class PropertyMoudle{
                     update_post_meta( $prop_id, 'fave_d985d8b5d8afd8b1-d8aad8b1d8aed98ad8b5-d8a7d984d8a7d8b9d984d8a7d986', $data->adSource );
                 }
 
+                // اسم مسؤول الإعلان (New field V3.2)
+                if( isset( $data->responsibleEmployeeName ) ) {
+                    update_post_meta( $prop_id, 'responsibleEmployeeName', $data->responsibleEmployeeName );
+                }
+
+                // رقم مسؤول الإعلان (New field V3.2)
+                if( isset( $data->responsibleEmployeePhoneNumber ) ) {
+                    update_post_meta( $prop_id, 'responsibleEmployeePhoneNumber', $data->responsibleEmployeePhoneNumber );
+                }
+
                 //  نوع وثيقة الملكية
                 if( isset( $data->titleDeedTypeName ) ) {
                     update_post_meta( $prop_id, 'fave_d986d988d8b9-d988d8abd98ad982d8a9-d8a7d984d985d984d983d98ad8a9', $data->titleDeedTypeName );
@@ -1335,7 +1345,17 @@ class PropertyMoudle{
             update_post_meta( $prop_id, 'number', $data->number );
             update_post_meta( $prop_id, 'fave_d8b1d982d985-d8a7d984d8aad981d988d98ad8b6', $data->number );
             update_post_meta( $prop_id, 'deedNumber', $data->deedNumber );
-            update_post_meta( $prop_id, 'fave_d8b1d982d985-d8b9d982d8af-d8a7d984d988d8b3d8a7d8b7d8a9-d8a7d984d8b9d982d8a7d8b1d98ad8a9', $data->contractNumber ); 
+            update_post_meta( $prop_id, 'fave_d8b1d982d985-d8b9d982d8af-d8a7d984d988d8b3d8a7d8b7d8a9-d8a7d984d8b9d982d8a7d8b1d98ad8a9', $data->contractNumber );
+
+            // اسم مسؤول الإعلان (New field V3.2)
+            if( isset( $data->responsibleEmployeeName ) ) {
+                update_post_meta( $prop_id, 'responsibleEmployeeName', $data->responsibleEmployeeName );
+            }
+
+            // رقم مسؤول الإعلان (New field V3.2)
+            if( isset( $data->responsibleEmployeePhoneNumber ) ) {
+                update_post_meta( $prop_id, 'responsibleEmployeePhoneNumber', $data->responsibleEmployeePhoneNumber );
+            } 
  
             /*---------------------------------------------------------------------------------*
             * Save expiration meta 

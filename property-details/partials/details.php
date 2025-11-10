@@ -120,6 +120,19 @@ $southLimitLengthChar = $borders['southLimitLengthChar'] ?? '';
         if( !empty( $endDate )  ) {
             echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong> تاريخ انتهاء ترخيص الاعلان :   </strong></td><td style="border: 1px solid #ddd;"><span>'.$endDate.'</span></td></tr>';
         }
+
+        // معلومات مسؤول الإعلان (حقول جديدة V3.2)
+        $responsibleEmployeeName = get_post_meta( get_the_ID(), 'responsibleEmployeeName', true );
+        $responsibleEmployeePhoneNumber = get_post_meta( get_the_ID(), 'responsibleEmployeePhoneNumber', true );
+
+        if( !empty( $responsibleEmployeeName )  ) {
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong> مسؤول الإعلان :   </strong></td><td style="border: 1px solid #ddd;"><span>'.$responsibleEmployeeName.'</span></td></tr>';
+        }
+
+        if( !empty( $responsibleEmployeePhoneNumber )  ) {
+            echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong> رقم مسؤول الإعلان :   </strong></td><td style="border: 1px solid #ddd;"><span>'.$responsibleEmployeePhoneNumber.'</span></td></tr>';
+        }
+
         if( !empty( $borders )  ) {
             echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>  الحد الشمالي :  </strong></td><td style="border: 1px solid #ddd;"><span>'.$northLimitName . ' / ' . $northLimitDescription . ' / ' . $northLimitLengthChar.'</span></td></tr>';
             echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong>  الحد الشرقي :  </strong></td><td style="border: 1px solid #ddd;"><span>'.$eastLimitName . ' / ' . $eastLimitDescription . ' / ' . $eastLimitLengthChar.'</span></td></tr>';
