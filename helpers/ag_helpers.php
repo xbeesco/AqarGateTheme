@@ -270,7 +270,7 @@ function houzez_get_agent_info_top($args, $type, $is_single = true)
 
                 $output .= '</div>';
 
-                $output .= '<ul class="agent-information list-unstyled" style="width: 100%; text-align: right;">';
+                $output .= '<ul class="list-unstyled" style="width: 100%; text-align: right;">';
 
                 // ========================================
                 // REGA COMPLIANCE - عرض معلومات الرخصة إذا موجودة
@@ -279,32 +279,25 @@ function houzez_get_agent_info_top($args, $type, $is_single = true)
 
                     if (!empty($responsibleEmployeeName)) {
                         $output .= '<li class="agent-name" style="margin-bottom: 10px;">';
-                            $output .= '<i class="houzez-icon icon-single-neutral mr-1"></i> <strong>مسؤول الإعلان ::</strong> '.$responsibleEmployeeName;
+                            $output .= '<i class="houzez-icon icon-single-neutral mr-1"></i> <strong>المسئول :</strong> '.$responsibleEmployeeName;
                         $output .= '</li>';
                     }
 
                     if (!empty($responsibleEmployeePhoneNumber)) {
                         $output .= '<li class="agent-phone" style="margin-bottom: 10px;">';
-                            $output .= '<i class="houzez-icon icon-phone mr-1"></i> <strong>رقم مسؤول الإعلان ::</strong> '.esc_attr($responsibleEmployeePhoneNumber);
+                            $output .= '<i class="houzez-icon icon-phone mr-1"></i> <strong>رقم التواصل :</strong> '.esc_attr($responsibleEmployeePhoneNumber);
                         $output .= '</li>';
                     }
 
-                    $output .= '<li style="font-size: 11px; color: #999; margin-top: 15px; padding-top: 15px; border-top: 1px solid #eee;">';
-                        $output .= '* معلومات التواصل المسجلة في رخصة الإعلان وفقاً لتعليمات الهيئة العامة للعقار';
+                }
+
+                // ========================================
+                // عرض رقم رخصة فال دائماً إذا موجود
+                // ========================================
+                if( $author_id  && !empty( $brokerage_license_number ) ) {
+                    $output .= '<li class="agent-ad-number" style="margin-bottom: 10px;">';
+                      $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i> <strong>رخصة فال :</strong> ' . esc_attr( $brokerage_license_number );
                     $output .= '</li>';
-
-                } else {
-                    // ========================================
-                    // عرض الشريط الجانبي بدون معلومات المستخدم
-                    // لا نعرض اسم الوسيط أو رقم الهاتف للعقارات غير المرخصة
-                    // ========================================
-
-                    // نعرض رقم رخصة فال إذا موجود (للتوافق مع النظام القديم)
-                    if( $author_id  && !empty( $brokerage_license_number ) ) {
-                        $output .= '<li class="agent-ad-number">';
-                          $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i> رقم رخصة فال :  ' . esc_attr( $brokerage_license_number );
-                        $output .= '</li>';
-                    }
                 }
 
                 $output .= '</ul>';
@@ -3779,3 +3772,363 @@ function custom_redirect_from_my_account() {
     }
 }
 add_action('template_redirect', 'custom_redirect_from_my_account');
+
+/**
+ * Save REGA property data to WordPress post meta
+ * This function is used both when adding a new property and when syncing existing properties
+ *
+ * @param int $property_id The WordPress post ID of the property
+ * @param object $data The REGA API response data object
+ * @return bool True on success, false on failure
+ */
+function save_rega_property_data($property_id, $data) {
+    if (empty($property_id) || empty($data)) {
+        return false;
+    }
+
+    // Helper function to remove leading zero from codes
+    $removeLeadingZero = function($string) {
+        if (substr($string, 0, 1) === '0' && ctype_digit(substr($string, 1, 1))) {
+            return substr($string, 1);
+        }
+        return $string;
+    };
+
+    // Save the complete advertisement response
+    $advertisement_response = json_decode(json_encode($data), true);
+    update_post_meta($property_id, 'advertisement_response', $advertisement_response);
+
+    /* -----------------------------------------------------------------------
+     *  New fields added in recent versions
+     * ----------------------------------------------------------------------*/
+
+    // حدود واطوال العقار من وزارة العدل
+    if (isset($data->borders)) {
+        $borders = json_decode(json_encode($data->borders), true);
+        update_post_meta($property_id, 'borders', $borders);
+    }
+
+    // وجود وقف ؟
+    if (isset($data->isHalted)) {
+        update_post_meta($property_id, 'fave_d988d8acd988d8af-d988d982d981', $data->isHalted);
+    }
+
+    // وجود وصية ؟
+    if (isset($data->isTestment)) {
+        update_post_meta($property_id, 'fave_d988d8acd988d8af-d988d8b5d98ad8a9', $data->isTestment);
+    }
+
+    // قيود السجل العيني
+    if (isset($data->rerConstraints)) {
+        update_post_meta($property_id, 'fave_d982d98ad988d8af-d8a7d984d8b3d8acd984-d8a7d984d8b9d98ad986d98a', $data->rerConstraints);
+    }
+
+    // رقم القطعة
+    if (isset($data->landNumber)) {
+        update_post_meta($property_id, 'fave_d8b1d982d985-d8a7d984d982d8b7d8b9d8a9', $data->landNumber);
+    }
+
+    // رابط ترخيص الاعلان
+    if (isset($data->adLicenseURL)) {
+        update_post_meta($property_id, 'fave_d8b1d8a7d8a8d8b7-d8aad8b1d8aed98ad8b5-d8a7d984d8a7d8b9d984d8a7d986', $data->adLicenseURL);
+    }
+
+    // مصدر ترخيص الاعلان
+    if (isset($data->adSource)) {
+        update_post_meta($property_id, 'fave_d985d8b5d8afd8b1-d8aad8b1d8aed98ad8b5-d8a7d984d8a7d8b9d984d8a7d986', $data->adSource);
+    }
+
+    // اسم مسؤول الإعلان (New field V3.2)
+    if (isset($data->responsibleEmployeeName)) {
+        update_post_meta($property_id, 'responsibleEmployeeName', $data->responsibleEmployeeName);
+    }
+
+    // رقم مسؤول الإعلان (New field V3.2)
+    if (isset($data->responsibleEmployeePhoneNumber)) {
+        update_post_meta($property_id, 'responsibleEmployeePhoneNumber', $data->responsibleEmployeePhoneNumber);
+    }
+
+    // نوع وثيقة الملكية
+    if (isset($data->titleDeedTypeName)) {
+        update_post_meta($property_id, 'fave_d986d988d8b9-d988d8abd98ad982d8a9-d8a7d984d985d984d983d98ad8a9', $data->titleDeedTypeName);
+    }
+
+    // وصف موقع العقار حسب الصك
+    if (isset($data->LocationDescriptionOnMOJDeed)) {
+        update_post_meta($property_id, 'fave_d988d8b5d981-d985d988d982d8b9-d8a7d984d8b9d982d8a7d8b1', $data->LocationDescriptionOnMOJDeed);
+        update_post_meta($property_id, 'LocationDescriptionOnMOJDeed', $data->LocationDescriptionOnMOJDeed);
+    }
+
+    // ملاحظات
+    if (isset($data->Notes)) {
+        update_post_meta($property_id, 'fave_d8a7d984d985d984d8a7d8add8b8d8a7d8aa', $data->Notes);
+    }
+
+    if (isset($data->adLicenseURL)) {
+        update_post_meta($property_id, 'qrCodeUrl', $data->adLicenseURL);
+        update_post_meta($property_id, 'adLicenseURL', $data->adLicenseURL);
+    }
+
+    /* -----------------------------------------------------------------------
+     *  Core property fields
+     * ----------------------------------------------------------------------*/
+
+    // Add price post meta
+    if (isset($data->propertyPrice)) {
+        update_post_meta($property_id, 'fave_property_price', $data->propertyPrice);
+    }
+
+    // Add property type
+    if (isset($data->propertyType) && ($data->propertyType != '')) {
+        $type = $data->propertyType;
+        wp_set_object_terms($property_id, $type, 'property_type');
+    } else {
+        wp_set_object_terms($property_id, '', 'property_type');
+    }
+
+    // Add property status
+    if (isset($data->advertisementType) && ($data->advertisementType != '')) {
+        $prop_status = $data->advertisementType;
+        wp_set_object_terms($property_id, $prop_status, 'property_status');
+    } else {
+        wp_set_object_terms($property_id, '', 'property_status');
+    }
+
+    // Postal Code
+    if (isset($data->location->postalCode)) {
+        update_post_meta($property_id, 'fave_property_zip', $data->location->postalCode);
+    }
+
+    // Street Width
+    if (isset($data->streetWidth)) {
+        update_post_meta($property_id, 'fave_d8b9d8b1d8b6-d8a7d984d8b4d8a7d8b1d8b9', $data->streetWidth);
+    }
+
+    // Property Age
+    if (isset($data->propertyAge)) {
+        update_post_meta($property_id, 'fave_property_year', $data->propertyAge);
+    }
+
+    // Number of Rooms
+    if (isset($data->numberOfRooms)) {
+        update_post_meta($property_id, 'fave_property_rooms', $data->numberOfRooms);
+    }
+
+    // Location taxonomies
+    $state_id = [];
+    // Add property state
+    if (isset($data->location->region) && !empty($data->location->regionCode)) {
+        $state_code = $removeLeadingZero($data->location->regionCode);
+        $property_state = str_replace(' ', '-', $data->location->region) . '-' . $state_code;
+        $term_id = get_term_id_by_meta('REGION_ID', $state_code, 'property_state');
+        if ($term_id !== null) {
+            $state_id = wp_set_object_terms($property_id, $term_id, 'property_state');
+        } else {
+            $state_id = wp_set_object_terms($property_id, $property_state, 'property_state');
+            if (!empty($state_id) && !is_wp_error($state_id)) {
+                update_term_meta($state_id[0], 'REGION_ID', $state_code);
+            }
+        }
+    }
+
+    $city_id = [];
+    // Add property city
+    if (isset($data->location->city) && !empty($data->location->cityCode)) {
+        $city_code = $removeLeadingZero($data->location->cityCode);
+        $property_city = str_replace(' ', '-', $data->location->city) . '-' . $city_code;
+        $term_id = get_term_id_by_meta('CITY_ID', $city_code, 'property_city');
+        if ($term_id !== null) {
+            $city_id = wp_set_object_terms($property_id, $term_id, 'property_city');
+        } else {
+            $city_id = wp_set_object_terms($property_id, $property_city, 'property_city');
+        }
+
+        if (!empty($state_id) && !is_wp_error($state_id)) {
+            $term_object = get_term($state_id[0]);
+            $parent_state = $term_object->slug;
+            $houzez_meta = array();
+            $houzez_meta['parent_state'] = $parent_state;
+            if (!empty($city_id) && !empty($houzez_meta['parent_state'])) {
+                update_option('_houzez_property_city_' . $city_id[0], $houzez_meta);
+                update_term_meta($city_id[0], 'CITY_ID', $city_code);
+            }
+        }
+    }
+
+    $area_id = [];
+    // Add property area
+    if (isset($data->location->district) && !empty($data->location->districtCode)) {
+        $area_code = $removeLeadingZero($data->location->districtCode);
+        $property_area = str_replace(' ', '-', $data->location->district) . '-' . $area_code;
+        $term_id = get_term_id_by_meta('DISTRICT_ID', $area_code, 'property_area');
+        if ($term_id !== null) {
+            $area_id = wp_set_object_terms($property_id, $term_id, 'property_area');
+        } else {
+            $area_id = wp_set_object_terms($property_id, $property_area, 'property_area');
+        }
+
+        if (!empty($city_id) && !is_wp_error($city_id)) {
+            $term_object = get_term($city_id[0]);
+            $parent_city = $term_object->slug;
+            $houzez_meta = array();
+            $houzez_meta['parent_city'] = $parent_city;
+            if (!empty($area_id) && !empty($houzez_meta['parent_city'])) {
+                update_option('_houzez_property_area_' . $area_id[0], $houzez_meta);
+                update_term_meta($area_id[0], 'DISTRICT_ID', $area_code);
+            }
+        }
+    }
+
+    // Property size
+    if (isset($data->propertyArea)) {
+        update_post_meta($property_id, 'fave_property_size', $data->propertyArea);
+    }
+
+    // Plan number
+    if (isset($data->planNumber)) {
+        update_post_meta($property_id, 'fave_d8b1d982d985-d8a7d984d985d8aed8b7d8b7', $data->planNumber);
+    }
+
+    // سعر متر البيع
+    if (isset($data->propertyPrice)) {
+        update_post_meta($property_id, 'fave_d8b3d8b9d8b1-d985d8aad8b1-d8a7d984d8a8d98ad8b9', $data->propertyPrice);
+    }
+
+    // obligationsOnTheProperty
+    if (isset($data->obligationsOnTheProperty)) {
+        update_post_meta($property_id, 'fave_d8a7d984d8add982d988d982-d988d8a7d984d8a7d984d8aad8b2d8a7d985d8a7d8aa-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1-d8a7d984d8bad98ad8b1-d985', $data->obligationsOnTheProperty);
+    }
+
+    $adress = 'المملكة العربية السعودية';
+    // Address
+    if (isset($data->location->region) && isset($data->location->city)) {
+        $country = 'المملكة العربية السعودية';
+        $adress = $country . ', ' . $data->location->region . ', ' . $data->location->city;
+        update_post_meta($property_id, 'fave_property_map_address', $adress);
+        update_post_meta($property_id, 'fave_property_address', $adress);
+    }
+
+    // lat & long
+    if ((isset($data->location->latitude) && !empty($data->location->latitude)) && (isset($data->location->longitude) && !empty($data->location->latitude))) {
+        $lat = $data->location->latitude;
+        $lng = $data->location->longitude;
+
+        /* Note: OpenStreet address search has been disabled to avoid dependency on PropertyModule */
+
+        $streetView = '';
+        $lat_lng = $lat . ',' . $lng;
+
+        update_post_meta($property_id, 'houzez_geolocation_lat', $lat);
+        update_post_meta($property_id, 'houzez_geolocation_long', $lng);
+        update_post_meta($property_id, 'fave_property_location', $lat_lng);
+        update_post_meta($property_id, 'fave_property_map', '1');
+        update_post_meta($property_id, 'fave_property_map_street_view', $streetView);
+    }
+
+    // Land Area Size
+    if (isset($data->propertyArea)) {
+        update_post_meta($property_id, 'fave_property_land', $data->propertyArea);
+    }
+
+    // Property Face
+    if (isset($data->propertyFace)) {
+        update_post_meta($property_id, 'fave_d988d8a7d8acd987d8a9-d8a7d984d8b9d982d8a7d8b1', $data->propertyFace);
+    }
+
+    // Advertiser and license information
+    update_post_meta($property_id, 'advertiserId', $data->advertiserId);
+    update_post_meta($property_id, 'adLicenseNumber', $data->adLicenseNumber);
+    /* ---------------------------- رقم ترخيص الاعلان --------------------------- */
+    update_post_meta($property_id, 'fave_d8b1d982d985-d8a7d984d8aad981d988d98ad8b6', $data->adLicenseNumber);
+
+    update_post_meta($property_id, 'brokerageAndMarketingLicenseNumber', $data->brokerageAndMarketingLicenseNumber);
+    /* --------------------------- //رقم وثيقة الملكية -------------------------- */
+    update_post_meta($property_id, 'deedNumber', $data->deedNumber);
+    update_post_meta($property_id, 'fave_d8b1d982d985-d988d8abd98ad982d8a9-d8a7d984d985d984d983d98ad8a9', $data->deedNumber);
+
+    update_post_meta($property_id, 'TitleDeed', $data->deedNumber);
+
+    /*---------------------------------------------------------------------------------*
+    * Save expiration meta
+    *----------------------------------------------------------------------------------*/
+    update_post_meta($property_id, 'creationDate', $data->creationDate);
+    /* --------------------------- تاريخ اصدار الاعلان -------------------------- */
+    update_post_meta($property_id, 'fave_d8a7d8b3d8aad8aed8a7d985-d8a7d984d8b9d982d8a7d8b1', $data->creationDate);
+
+    update_post_meta($property_id, 'endDate', $data->endDate);
+    /* ----------------------- //تاريخ انتهاء رخصة الاعلان ---------------------- */
+    update_post_meta($property_id, 'fave_d8aad8a7d8b1d98ad8ae-d8a7d986d8aad987d8a7d8a1-d8b1d8aed8b5d8a9-d8a7d984d8a5d8b9d984d8a7d986', $data->creationDate);
+
+    update_post_meta($property_id, 'houzez_manual_expire', 'checked');
+
+    // Schedule/Update Expiration
+    $options = [];
+    $options['id'] = $property_id;
+    $datetime = DateTime::createFromFormat('d/m/Y', $data->endDate);
+    $timestamp = $datetime->getTimestamp();
+
+    if (wp_next_scheduled('houzez_property_expirator_expire', [$property_id]) !== false) {
+        wp_clear_scheduled_hook('houzez_property_expirator_expire', [$property_id]); //Remove any existing hooks
+    }
+
+    wp_schedule_single_event($timestamp, 'houzez_property_expirator_expire', [$property_id]);
+
+    // Update Post Meta
+    update_post_meta($property_id, '_houzez_expiration_date', $timestamp);
+    update_post_meta($property_id, '_houzez_expiration_date_options', $options);
+
+    /*---------------------------------------------------------------------------------*
+    * End expiration meta
+    *----------------------------------------------------------------------------------*/
+
+    // Additional property information
+    if (isset($data->obligationsOnTheProperty)) {
+        update_post_meta($property_id, 'fave_d8a7d984d8a7d984d8aad8b2d8a7d985d8a7d8aa-d8a7d984d8a3d8aed8b1d989-d8b9d984d989-d8a7d984d8b9d982d8a7d8b1', $data->obligationsOnTheProperty);
+    }
+    if (isset($data->guaranteesAndTheirDuration)) {
+        update_post_meta($property_id, 'fave_d8a7d984d8b6d985d8a7d986d8a7d8aa-d988d985d8afd8aad987d8a7', $data->guaranteesAndTheirDuration);
+    }
+
+    if (isset($data->theBordersAndLengthsOfTheProperty)) {
+        update_post_meta($property_id, 'fave_d8add8afd988d8af-d988d8a3d8b7d988d8a7d984-d8a7d984d8b9d982d8a7d8b1', $data->theBordersAndLengthsOfTheProperty);
+    }
+
+    if (isset($data->complianceWithTheSaudiBuildingCode)) {
+        update_post_meta($property_id, 'fave_d985d8b7d8a7d8a8d982d8a9-d983d988d8af-d8a7d984d8a8d986d8a7d8a1-d8a7d984d8b3d8b9d988d8afd98a', $data->complianceWithTheSaudiBuildingCode);
+    }
+
+    // Property utilities (multiple values)
+    if (isset($data->propertyUtilities)) {
+        // First, delete all existing utilities for this property
+        delete_post_meta($property_id, 'fave_d8aed8afd985d8a7d8aa-d8a7d984d8b9d982d8a7d8b1');
+
+        if (is_array($data->propertyUtilities)) {
+            foreach ($data->propertyUtilities as $propertyUtiliti) {
+                add_post_meta($property_id, 'fave_d8aed8afd985d8a7d8aa-d8a7d984d8b9d982d8a7d8b1', $propertyUtiliti);
+            }
+        }
+    }
+
+    // Channels (multiple values)
+    if (isset($data->channels)) {
+        // First, delete all existing channels for this property
+        delete_post_meta($property_id, 'fave_d982d986d988d8a7d8aa-d8a7d984d8a5d8b9d984d8a7d986');
+
+        if (is_array($data->channels)) {
+            foreach ($data->channels as $channel) {
+                add_post_meta($property_id, 'fave_d982d986d988d8a7d8aa-d8a7d984d8a5d8b9d984d8a7d986', $channel);
+            }
+        }
+    }
+
+    // Property labels/usages
+    if (isset($data->propertyUsages)) {
+        if (is_array($data->propertyUsages)) {
+            foreach ($data->propertyUsages as $propertyUsage) {
+                wp_set_object_terms($property_id, $propertyUsage, 'property_label');
+            }
+        }
+    }
+
+    return true;
+}

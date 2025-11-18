@@ -869,16 +869,19 @@ function sync_advertisement_ajax() {
         } else {
             if( isset($response->Body->result->advertisement) ) {
                 $data = $response->Body->result->advertisement;
-                $advertisement_response = json_decode(json_encode($data), true);
-                /**
-                 * update response
-                 *---------------------------------------------------------------------*/ 
-                update_post_meta( $post_id, 'advertisement_response', $advertisement_response );
-                /**
-                 * update locations & insert term if not exsit
-                 *---------------------------------------------------------------------*/
 
-                $ajax_response = array( 'success' => true , 'message' => 'Data synchronized successfully!' );
+                /**
+                 * Save all REGA property data using the shared function
+                 * This ensures sync uses the same logic as initial property creation
+                 *---------------------------------------------------------------------*/
+                $save_result = save_rega_property_data( $post_id, $data );
+
+                if ( $save_result ) {
+                    $ajax_response = array( 'success' => true , 'message' => 'Data synchronized successfully!' );
+                } else {
+                    $ajax_response = array( 'success' => false , 'message' => 'Failed to save property data during sync!' );
+                }
+
                 echo wp_send_json( $ajax_response );
                 wp_die();
             } else if ($response->Body->result->isValid === false ) {
