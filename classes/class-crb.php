@@ -33,6 +33,8 @@ class AG_CF
         }
         $Base64 = base64_encode( get_option('_push_notification_user') . ':' . get_option('_push_notification_pass') );
         Container::make( 'theme_options','ag_settings', __( 'AG Settings' ) )
+        ->set_page_menu_position( 1 )
+        ->set_icon( 'dashicons-admin-settings' )
         
         ->add_tab(
             __( 'REGA', 'ag' ),
