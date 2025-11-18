@@ -844,59 +844,12 @@ function aqar_loader_style(){
 function sync_advertisement_ajax() {
     if (isset($_POST['post_id'])) {
         $post_id = $_POST['post_id'];
-        $advertiserId = get_post_meta($post_id, 'advertiserId', true);
-        $adLicenseNumber = get_post_meta($post_id, 'adLicenseNumber', true);
         
-        require_once AG_DIR . 'module/class-rega-module.php';
-        $RegaMoudle = new RegaMoudle();
-        $response = $RegaMoudle->sysnc_AdvertisementValidator($adLicenseNumber, $advertiserId);
-        //var_export($response);
-        $response = json_decode($response);
-        if( $response->Header->Status->Code != 200  ) {  
-            $msg = "هنالك مشكلة في الاتصال مع هيئة العقار<br>";
-            if( isset($response->Body->error->message) ) {
-                $msg .= $response->Body->error->message . '<br>';
-            } 
-            if( isset($response->Header->Status->Description) ) {
-                $msg .= $response->Header->Status->Description . '<br>';
-            }
-            if( isset($response->Body->error->message) ) {
-                $msg .= $response->Body->error->message . '<br>';
-            }
-            $ajax_response = array( 'success' => false , 'message' => $msg );
-            echo wp_send_json( $ajax_response );
-            wp_die();
-        } else {
-            if( isset($response->Body->result->advertisement) ) {
-                $data = $response->Body->result->advertisement;
-
-                /**
-                 * Save all REGA property data using the shared function
-                 * This ensures sync uses the same logic as initial property creation
-                 *---------------------------------------------------------------------*/
-                $save_result = save_rega_property_data( $post_id, $data );
-
-                if ( $save_result ) {
-                    $ajax_response = array( 'success' => true , 'message' => 'Data synchronized successfully!' );
-                } else {
-                    $ajax_response = array( 'success' => false , 'message' => 'Failed to save property data during sync!' );
-                }
-
-                echo wp_send_json( $ajax_response );
-                wp_die();
-            } else if ($response->Body->result->isValid === false ) {
-                wp_update_post(['ID' => $post_id, 'post_status' => 'expired']);
-                houzez_listing_expire_meta($post_id);
-                $ajax_response = array( 'success' => true , 'message' => $response->Body->result->message );
-                echo wp_send_json( $ajax_response );
-                wp_die();
-            } else{
-                $ajax_response = array( 'success' => false , 'message' => $response->Body->result->message );
-                echo wp_send_json( $ajax_response );
-                wp_die();
-            }
-        }
- 
+        // Use the shared sync function
+        $result = process_single_property_sync( $post_id );
+        
+        echo wp_send_json( $result );
+        wp_die();
     }
     wp_die();
 }
