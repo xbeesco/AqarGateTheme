@@ -58,6 +58,11 @@ require_once ( AG_DIR . 'helpers/ag_helpers.php' );
 // require_once ( AG_DIR . 'helpers/ag_get_array_property_data.php' );
 require_once ( AG_DIR . 'helpers/api-fields-controller.php' );
 require_once ( AG_DIR . 'helpers/aqar-ajax.php' );
+require_once ( AG_DIR . "helpers/property-sync-helper.php" );
+require_once ( AG_DIR . "helpers/ajax-props-resync.php" );
+require_once ( AG_DIR . "helpers/enqueue-props-resync.php" );
+require_once ( AG_DIR . "helpers/ajax-single-sync.php" );
+require_once ( AG_DIR . "helpers/enqueue-single-sync.php" );
 
 /* -------------------------------------------------------------------------- */
 /*                                 // Classes                                 */

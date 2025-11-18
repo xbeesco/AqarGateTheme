@@ -143,15 +143,50 @@ function display_custom_admin_page() {
 
 // Step 5: Hook into the WordPress admin menu to add your custom page
 function add_custom_admin_page() {
-    add_menu_page(
+    add_submenu_page(
+        'crb_carbon_fields_container_ag_settings.php',
         'Nafath Process',
         'Nafath Process',
         'manage_options',
         'custom-admin-page',
-        'display_custom_admin_page',
-        'dashicons-admin-generic',
-        30
+        'display_custom_admin_page'
     );
 }
 
-add_action( 'admin_menu', 'add_custom_admin_page' );
+add_action( 'admin_menu', 'add_custom_admin_page', 99 );
+
+// Add Props Re-Sync submenu page
+function add_props_resync_admin_page() {
+    add_submenu_page(
+        'crb_carbon_fields_container_ag_settings.php',
+        'Props Re-Sync',
+        'Props Re-Sync',
+        'manage_options',
+        'props-resync',
+        'display_props_resync_page'
+    );
+}
+
+function display_props_resync_page() {
+    include AG_DIR . 'admin/templates/props-resync-page.php';
+}
+
+add_action( 'admin_menu', 'add_props_resync_admin_page', 99 );
+
+// Add Single Property Sync submenu page
+function add_single_prop_sync_admin_page() {
+    add_submenu_page(
+        'crb_carbon_fields_container_ag_settings.php',
+        'Single Property Sync',
+        'Single Sync',
+        'manage_options',
+        'single-prop-sync',
+        'display_single_prop_sync_page'
+    );
+}
+
+function display_single_prop_sync_page() {
+    include AG_DIR . 'admin/templates/single-prop-sync-page.php';
+}
+
+add_action( 'admin_menu', 'add_single_prop_sync_admin_page', 99 );
