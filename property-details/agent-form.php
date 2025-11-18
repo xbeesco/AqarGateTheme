@@ -49,6 +49,50 @@ if( !empty($adLicenseNumber) && !empty($responsibleEmployeePhoneNumber) ) {
 }
 // ============================================================================
 
+// Override agent_data to show REGA responsible employee info
+if( !empty($adLicenseNumber) && !empty($responsibleEmployeePhoneNumber) ) {
+    // Build custom agent data HTML with REGA info
+    $custom_agent_data = '<div class="property-agent-info clearfix">';
+    
+    // Agent/Agency image (keep original)
+    if (!empty($return_array['picture'])) {
+        $custom_agent_data .= '<div class="agent-image">';
+        $custom_agent_data .= '<img src="' . esc_url($return_array['picture']) . '" alt="' . esc_attr($display_name) . '" width="150" height="150">';
+        $custom_agent_data .= '</div>';
+    }
+    
+    $custom_agent_data .= '<div class="agent-details">';
+    $custom_agent_data .= '<h3 class="agent-name">' . esc_html($display_name) . '</h3>';
+    
+    // Show position/company if available (from original agent)
+    if (!empty($return_array['agent_position'])) {
+        $custom_agent_data .= '<div class="agent-position">' . esc_html($return_array['agent_position']) . '</div>';
+    }
+    if (!empty($return_array['agent_company'])) {
+        $custom_agent_data .= '<div class="agent-company">' . esc_html($return_array['agent_company']) . '</div>';
+    }
+    
+    // Show REGA phone number
+    $custom_agent_data .= '<div class="agent-phone">';
+    $custom_agent_data .= '<i class="houzez-icon icon-phone mr-1"></i>';
+    $custom_agent_data .= '<a href="tel:' . esc_attr($agent_mobile_call) . '">' . esc_html($responsibleEmployeePhoneNumber) . '</a>';
+    $custom_agent_data .= '</div>';
+    
+    // Show ad license number
+    if (!empty($adLicenseNumber)) {
+        $custom_agent_data .= '<div class="agent-license text-muted small mt-2">';
+        $custom_agent_data .= '<i class="houzez-icon icon-certificate-streamline mr-1"></i>';
+        $custom_agent_data .= 'رقم الترخيص: ' . esc_html($adLicenseNumber);
+        $custom_agent_data .= '</div>';
+    }
+    
+    $custom_agent_data .= '</div>'; // .agent-details
+    $custom_agent_data .= '</div>'; // .property-agent-info
+    
+    // Override the agent_data in return_array
+    $return_array['agent_data'] = $custom_agent_data;
+}
+
 $user_name = $user_email = '';
 if(!houzez_is_admin()) {
 	$user_name =  $current_user->display_name;
