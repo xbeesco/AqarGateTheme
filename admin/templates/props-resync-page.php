@@ -45,6 +45,10 @@ $logo_width = houzez_option('retina_logo_width');
                 <span class="dashicons dashicons-no" style="margin-top: 3px;"></span>
                 <?php _e('إيقاف المزامنة', 'aqar-gate'); ?>
             </button>
+            <button type="button" id="resume-resync-btn" class="button button-primary button-large" style="display: none;">
+                <span class="dashicons dashicons-controls-play" style="margin-top: 3px;"></span>
+                <?php _e('استكمال المزامنة', 'aqar-gate'); ?>
+            </button>
         </p>
     </div>
 
@@ -92,16 +96,6 @@ $logo_width = houzez_option('retina_logo_width');
     <div id="resync-log-section" style="display: none; background: #fff; padding: 20px; border: 1px solid #ccd0d4; box-shadow: 0 1px 1px rgba(0,0,0,.04); margin: 20px 0;">
         <h2><?php _e('سجل العمليات', 'aqar-gate'); ?></h2>
 
-        <div style="margin: 15px 0;">
-            <button type="button" id="clear-log-btn" class="button">
-                <span class="dashicons dashicons-trash" style="margin-top: 3px;"></span>
-                <?php _e('مسح السجل', 'aqar-gate'); ?>
-            </button>
-            <button type="button" id="export-log-btn" class="button">
-                <span class="dashicons dashicons-download" style="margin-top: 3px;"></span>
-                <?php _e('تصدير السجل', 'aqar-gate'); ?>
-            </button>
-        </div>
 
         <div id="resync-log-container" style="max-height: 400px; overflow-y: auto; border: 1px solid #dcdcde; border-radius: 4px; background: #f6f7f7;">
             <table class="wp-list-table widefat fixed striped" style="margin: 0;">
@@ -149,6 +143,10 @@ $logo_width = houzez_option('retina_logo_width');
 .status-error {
     background: #f8d7da;
     color: #842029;
+}
+.status-duplicate {
+    background: #fff3cd;
+    color: #856404;
 }
 .property-link {
     color: #2271b1;
