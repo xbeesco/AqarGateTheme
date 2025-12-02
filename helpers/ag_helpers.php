@@ -244,24 +244,11 @@ function houzez_get_agent_info_top($args, $type, $is_single = true)
     } elseif ($type == 'agent_form') {
         $output = '';
 
-        $property_id = get_the_ID();
-        $adLicenseNumber = get_post_meta( $property_id, 'adLicenseNumber', true );
-        $responsibleEmployeeName = get_post_meta( $property_id, 'responsibleEmployeeName', true );
-        $responsibleEmployeePhoneNumber = get_post_meta( $property_id, 'responsibleEmployeePhoneNumber', true );
-
         $output .= '<div class="agent-details cc">';
             $output .= '<div class="d-flex flex-column align-items-center">';
-
-            // إذا كان العقار مرخص - عرض معلومات مسؤول الإعلان من الرخصة
-            if( !empty($adLicenseNumber) && !empty($responsibleEmployeePhoneNumber) ) {
-                $output .= '<h3> معلومات التواصل </h3>';
-            } else {
-                // إذا لم يكن مرخص - عرض العنوان التقليدي
-                $output .= '<h3> معلومات الوسيط </h3>';
-            }
-
+            $output .= '<h3> معلومات الوسيط </h3>';
                 $output .= '<div class="agent-image" style="margin-bottom: 20px;">';
-
+                    
                     if ( $is_single == false ) {
                         $output .= '<input type="checkbox" class="houzez-hidden" checked="checked" class="multiple-agent-check" name="target_email[]" value="' . $args['agent_email'] . '" >';
                     }
@@ -270,35 +257,38 @@ function houzez_get_agent_info_top($args, $type, $is_single = true)
 
                 $output .= '</div>';
 
-                $output .= '<ul class="list-unstyled" style="width: 100%; text-align: right;">';
+                $output .= '<ul class="agent-information list-unstyled">';
 
-                // ========================================
-                // REGA COMPLIANCE - عرض معلومات الرخصة إذا موجودة
-                // ========================================
-                if( !empty($adLicenseNumber) && !empty($responsibleEmployeePhoneNumber) ) {
-
-                    if (!empty($responsibleEmployeeName)) {
-                        $output .= '<li class="agent-name" style="margin-bottom: 10px;">';
-                            $output .= '<i class="houzez-icon icon-single-neutral mr-1"></i> <strong>المسئول :</strong> '.$responsibleEmployeeName;
+                    if (!empty($args['agent_name'])) {
+                        $output .= '<li class="agent-name">';
+                            $output .= '<i class="houzez-icon icon-single-neutral mr-1"></i> اسم الوسيط :  '.$args['agent_name'];
+                        $output .= '</li>';
+                    }
+                    if( $author_id  && !empty( $brokerage_license_number ) ) {
+                        $output .= '<li class="agent-ad-number">';
+                          $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i> رقم رخصة فال :  ' . esc_attr( $brokerage_license_number );
                         $output .= '</li>';
                     }
 
-                    if (!empty($responsibleEmployeePhoneNumber)) {
-                        $output .= '<li class="agent-phone" style="margin-bottom: 10px;">';
-                            $output .= '<i class="houzez-icon icon-phone mr-1"></i> <strong>رقم التواصل :</strong> '.esc_attr($responsibleEmployeePhoneNumber);
+                    // if( $author_id  && !empty( $Advertiser_character ) ) {
+                    //     $output .= '<li class="Advertiser_character">';
+                    //       $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i>  صفه المعلن :  ' . esc_attr( $Advertiser_character );
+                    //     $output .= '</li>';
+                    // }
+                    
+                    if ( $is_single == false && !empty($args['agent_mobile'])) {
+                        $output .= '<li class="agent-phone agent-phone-hidden">';
+                            $output .= '<i class="houzez-icon icon-phone mr-1"></i> ' . esc_attr($args['agent_mobile']);
                         $output .= '</li>';
                     }
 
-                }
+                    
+                    if($view_listing != 0) {
+                        $output .= '<li class="agent-link">';
+                            $output .= '<a href="' . $args['link'] . '">' . houzez_option('spl_con_view_listings', 'View listings') . '</a>';
+                        $output .= '</li>';
+                    }
 
-                // ========================================
-                // عرض رقم رخصة فال دائماً إذا موجود
-                // ========================================
-                if( $author_id  && !empty( $brokerage_license_number ) ) {
-                    $output .= '<li class="agent-ad-number" style="margin-bottom: 10px;">';
-                      $output .= '<i class="houzez-icon icon-accounting-document mr-1"></i> <strong>رخصة فال :</strong> ' . esc_attr( $brokerage_license_number );
-                    $output .= '</li>';
-                }
 
                 $output .= '</ul>';
             $output .= '</div>';
