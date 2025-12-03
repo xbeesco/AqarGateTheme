@@ -423,7 +423,10 @@ class RegaMoudle{
           "type": "قطعة",
           "length": "ثالثون متر"
         }
-      ]
+      ],
+      "responsibleEmployeeName": "عبدالله العتيبي",
+      "responsibleEmployeePhoneNumber": "0500000000",
+      "ownershipTransferFeeType": "المالك"
     },
     "message": null
   }

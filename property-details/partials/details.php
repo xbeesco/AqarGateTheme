@@ -130,6 +130,12 @@ $southLimitLengthChar = $borders['southLimitLengthChar'] ?? '';
         $responsibleEmployeePhoneValue = !empty($responsibleEmployeePhoneNumber) ? $responsibleEmployeePhoneNumber : 'غير معرفة';
         echo '<tr style="border: 1px solid #ddd;"><td style="border: 1px solid #ddd;"><strong> رقم مسؤول الإعلان </strong></td><td style="border: 1px solid #ddd;"><span>'.$responsibleEmployeePhoneValue.'</span></td></tr>';
 
+
+        // نوع رسوم نقل الملكية (New field V3.2)
+        $ownershipTransferFeeType = get_post_meta( get_the_ID(), "ownershipTransferFeeType", true );
+        $ownershipTransferFeeTypeValue = !empty($ownershipTransferFeeType) ? $ownershipTransferFeeType : "غير معرفة";
+        echo "<tr style=\"border: 1px solid #ddd;\"><td style=\"border: 1px solid #ddd;\"><strong> رسوم نقل الملكية </strong></td><td style=\"border: 1px solid #ddd;\"><span>".$ownershipTransferFeeTypeValue."</span></td></tr>";
+
         // الحدود - تظهر دائماً مع "غير معرفة" للقيم الفارغة
         $northValue = (!empty($northLimitName) || !empty($northLimitDescription) || !empty($northLimitLengthChar)) ? $northLimitName . ' / ' . $northLimitDescription . ' / ' . $northLimitLengthChar : 'غير معرفة';
         $eastValue = (!empty($eastLimitName) || !empty($eastLimitDescription) || !empty($eastLimitLengthChar)) ? $eastLimitName . ' / ' . $eastLimitDescription . ' / ' . $eastLimitLengthChar : 'غير معرفة';

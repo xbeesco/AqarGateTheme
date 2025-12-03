@@ -3838,6 +3838,12 @@ function save_rega_property_data($property_id, $data) {
         update_post_meta($property_id, 'responsibleEmployeePhoneNumber', $data->responsibleEmployeePhoneNumber);
     }
 
+
+    // نوع رسوم نقل الملكية (New field V3.2)
+    if (isset($data->ownershipTransferFeeType)) {
+        update_post_meta($property_id, "ownershipTransferFeeType", $data->ownershipTransferFeeType);
+    }
+
     // نوع وثيقة الملكية
     if (isset($data->titleDeedTypeName)) {
         update_post_meta($property_id, 'fave_d986d988d8b9-d988d8abd98ad982d8a9-d8a7d984d985d984d983d98ad8a9', $data->titleDeedTypeName);
