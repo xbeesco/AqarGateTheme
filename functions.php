@@ -63,6 +63,7 @@ require_once ( AG_DIR . "helpers/ajax-props-resync.php" );
 require_once ( AG_DIR . "helpers/enqueue-props-resync.php" );
 require_once ( AG_DIR . "helpers/ajax-single-sync.php" );
 require_once ( AG_DIR . "helpers/enqueue-single-sync.php" );
+require_once ( AG_DIR . "helpers/sync-buttons.php" );
 
 /* -------------------------------------------------------------------------- */
 /*                                 // Classes                                 */

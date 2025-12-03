@@ -3784,8 +3784,10 @@ function save_rega_property_data($property_id, $data) {
         return $string;
     };
 
-    // Save the complete advertisement response
+    // Save the complete advertisement response with sync timestamp
     $advertisement_response = json_decode(json_encode($data), true);
+    $advertisement_response["_sync_timestamp"] = current_time("mysql");
+    $advertisement_response["_sync_timestamp_unix"] = current_time("timestamp");
     update_post_meta($property_id, 'advertisement_response', $advertisement_response);
 
     /* -----------------------------------------------------------------------

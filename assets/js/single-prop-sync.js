@@ -1,298 +1,343 @@
 jQuery(document).ready(function($) {
     let selectedPropertyId = null;
-    let metaBefore = {};
+    let oldRegaData = null;
+    let currentPropertyTitle = "";
+
+    const fieldLabels = {
+        "advertiserId": "معرف المعلن",
+        "adLicenseNumber": "رقم ترخيص الإعلان",
+        "deedNumber": "رقم الصك",
+        "advertiserName": "اسم المعلن",
+        "responsibleEmployeeName": "اسم مسؤول الإعلان",
+        "responsibleEmployeePhoneNumber": "رقم مسؤول الإعلان",
+        "phoneNumber": "رقم الهاتف",
+        "brokerageAndMarketingLicenseNumber": "رقم رخصة الوساطة",
+        "isConstrained": "مقيد",
+        "isPawned": "مرهون",
+        "isHalted": "موقوف",
+        "isTestment": "وصية",
+        "streetWidth": "عرض الشارع",
+        "propertyArea": "مساحة العقار",
+        "propertyPrice": "السعر",
+        "landTotalPrice": "سعر الأرض",
+        "landTotalAnnualRent": "الإيجار السنوي",
+        "numberOfRooms": "عدد الغرف",
+        "propertyType": "نوع العقار",
+        "propertyAge": "عمر العقار",
+        "advertisementType": "نوع الإعلان",
+        "propertyFace": "واجهة العقار",
+        "planNumber": "رقم المخطط",
+        "landNumber": "رقم الأرض",
+        "creationDate": "تاريخ الإنشاء",
+        "endDate": "تاريخ الانتهاء",
+        "adLicenseUrl": "رابط الترخيص",
+        "adSource": "مصدر الإعلان",
+        "titleDeedTypeName": "نوع الصك",
+        "locationDescriptionOnMOJDeed": "وصف الموقع في الصك",
+        "notes": "ملاحظات",
+        "mainLandUseTypeName": "نوع استخدام الأرض",
+        "redZoneTypeName": "نوع المنطقة الحمراء",
+        "ownershipTransferFeeType": "رسوم نقل الملكية",
+        "propertyUsages": "استخدامات العقار",
+        "propertyUtilities": "خدمات العقار",
+        "location.region": "المنطقة",
+        "location.city": "المدينة", 
+        "location.district": "الحي",
+        "location.street": "الشارع",
+        "location.postalCode": "الرمز البريدي",
+        "location.buildingNumber": "رقم المبنى",
+        "location.longitude": "خط الطول",
+        "location.latitude": "خط العرض",
+        "borders.northLimitName": "الحد الشمالي",
+        "borders.northLimitDescription": "وصف الحد الشمالي",
+        "borders.northLimitLengthChar": "طول الحد الشمالي",
+        "borders.eastLimitName": "الحد الشرقي",
+        "borders.eastLimitDescription": "وصف الحد الشرقي",
+        "borders.eastLimitLengthChar": "طول الحد الشرقي",
+        "borders.southLimitName": "الحد الجنوبي",
+        "borders.southLimitDescription": "وصف الحد الجنوبي",
+        "borders.southLimitLengthChar": "طول الحد الجنوبي",
+        "borders.westLimitName": "الحد الغربي",
+        "borders.westLimitDescription": "وصف الحد الغربي",
+        "borders.westLimitLengthChar": "طول الحد الغربي"
+    };
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlPropertyId = urlParams.get("id");
+
+    // Flatten nested object
+    function flattenObject(obj, prefix) {
+        prefix = prefix || "";
+        var result = {};
+        for (var key in obj) {
+            if (!obj.hasOwnProperty(key)) continue;
+            var newKey = prefix ? prefix + "." + key : key;
+            var value = obj[key];
+            if (value !== null && typeof value === "object" && !Array.isArray(value)) {
+                Object.assign(result, flattenObject(value, newKey));
+            } else {
+                result[newKey] = value;
+            }
+        }
+        return result;
+    }
+
+    function formatValue(value) {
+        if (value === null) return "<span class=\"value-null\">null</span>";
+        if (value === undefined || value === "") return "<span class=\"value-null\">غير محدد</span>";
+        if (typeof value === "boolean") {
+            return value ? "<span class=\"value-boolean-true\">✓ نعم</span>" : "<span class=\"value-boolean-false\">✗ لا</span>";
+        }
+        if (Array.isArray(value)) {
+            if (value.length === 0) return "<span class=\"value-null\">[ ] فارغ</span>";
+            return value.map(function(item) {
+                return "<span class=\"value-array\">" + escapeHtml(String(item)) + "</span>";
+            }).join(" ");
+        }
+        if (typeof value === "number") return "<strong>" + value.toLocaleString("ar-SA") + "</strong>";
+        return escapeHtml(String(value));
+    }
+
+    function escapeHtml(str) {
+        var div = document.createElement("div");
+        div.textContent = str;
+        return div.innerHTML;
+    }
+
+    function isEmpty(value) {
+        if (value === null || value === undefined || value === "") return true;
+        if (Array.isArray(value) && value.length === 0) return true;
+        return false;
+    }
+
+    function valuesEqual(a, b) {
+        if (a === b) return true;
+        if (isEmpty(a) && isEmpty(b)) return true;
+        if (Array.isArray(a) && Array.isArray(b)) {
+            return JSON.stringify(a.sort()) === JSON.stringify(b.sort());
+        }
+        return String(a) === String(b);
+    }
+
+    function getFieldLabel(key) {
+        return fieldLabels[key] || key;
+    }
+
+    // Compare flattened data
+    function compareData(oldData, newData) {
+        var flatOld = flattenObject(oldData || {});
+        var flatNew = flattenObject(newData || {});
+        var allKeys = new Set([...Object.keys(flatOld), ...Object.keys(flatNew)]);
+        var changes = { added: [], modified: [], deleted: [] };
+
+        allKeys.forEach(function(key) {
+            var oldVal = flatOld[key];
+            var newVal = flatNew[key];
+
+            if (isEmpty(oldVal) && isEmpty(newVal)) return;
+            if (isEmpty(oldVal) && !isEmpty(newVal)) {
+                changes.added.push({ key: key, value: newVal });
+            } else if (!isEmpty(oldVal) && isEmpty(newVal)) {
+                changes.deleted.push({ key: key, value: oldVal });
+            } else if (!valuesEqual(oldVal, newVal)) {
+                changes.modified.push({ key: key, oldValue: oldVal, newValue: newVal });
+            }
+        });
+        return changes;
+    }
 
     // Initialize Select2
-    $('#property-select').select2({
+    $("#property-select").select2({
         ajax: {
             url: singlePropSyncData.ajaxurl,
-            dataType: 'json',
+            dataType: "json",
             delay: 250,
             data: function(params) {
-                return {
-                    action: 'search_properties',
-                    search: params.term,
-                    page: params.page || 1,
-                    nonce: singlePropSyncData.nonce
-                };
+                return { action: "search_properties", search: params.term, page: params.page || 1, nonce: singlePropSyncData.nonce };
             },
             processResults: function(data) {
-                return {
-                    results: data.results,
-                    pagination: {
-                        more: data.pagination.more
-                    }
-                };
+                return { results: data.results, pagination: { more: data.pagination.more } };
             },
             cache: true
         },
-        placeholder: 'ابحث عن العقار بالاسم أو رقم ID...',
+        placeholder: "ابحث عن العقار...",
         minimumInputLength: 0,
         language: {
-            inputTooShort: function() {
-                return 'ابدأ بالكتابة للبحث...';
-            },
-            searching: function() {
-                return 'جاري البحث...';
-            },
-            noResults: function() {
-                return 'لم يتم العثور على نتائج';
-            },
-            loadingMore: function() {
-                return 'جاري تحميل المزيد...';
-            }
+            searching: function() { return "جاري البحث..."; },
+            noResults: function() { return "لم يتم العثور على نتائج"; }
         },
-        dir: 'rtl'
+        dir: "rtl"
     });
 
-    // Handle property selection
-    $('#property-select').on('select2:select', function(e) {
-        selectedPropertyId = e.params.data.id;
-        $('#sync-single-btn').prop('disabled', false);
-
-        // Load property details
-        loadPropertyDetails(selectedPropertyId);
-    });
-
-    // Load property details before sync
-    function loadPropertyDetails(propertyId) {
-        $.ajax({
-            url: singlePropSyncData.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'get_property_details',
-                property_id: propertyId,
-                nonce: singlePropSyncData.nonce
-            },
-            success: function(response) {
-                if (response.success) {
-                    metaBefore = response.data.meta_before;
-                }
-            }
-        });
-    }
-
-    // Sync button click
-    $('#sync-single-btn').on('click', function() {
+    // Unified sync function
+    function startSync() {
         if (!selectedPropertyId) return;
 
-        // Show loading
-        $('#sync-loading').show();
-        $('#sync-results').hide();
-        $('#sync-single-btn').prop('disabled', true);
+        $("#auto-loading-section").removeClass("hidden");
+        $("#manual-selection-section, #sync-results").addClass("hidden");
+        $("#sync-single-btn").prop("disabled", true);
+        updateProgress(20, "جاري تحميل بيانات العقار...");
 
-        // Run sync
+        // Step 1: Get old REGA data
         $.ajax({
             url: singlePropSyncData.ajaxurl,
-            type: 'POST',
-            data: {
-                action: 'sync_single_property',
-                property_id: selectedPropertyId,
-                nonce: singlePropSyncData.nonce
-            },
+            type: "POST",
+            data: { action: "get_property_details", property_id: selectedPropertyId, nonce: singlePropSyncData.nonce },
             success: function(response) {
-                $('#sync-loading').hide();
-                $('#sync-single-btn').prop('disabled', false);
-
                 if (response.success) {
-                    displayResults(response.data);
+                    currentPropertyTitle = response.data.title;
+                    oldRegaData = response.data.old_rega_data;
+                    $("#auto-loading-title").text(currentPropertyTitle);
+                    updateProgress(50, "جاري المزامنة مع هيئة العقار...");
+                    runSync();
                 } else {
-                    alert('خطأ: ' + response.data.message);
+                    showError("لم يتم العثور على العقار");
                 }
             },
-            error: function(xhr, status, error) {
-                $('#sync-loading').hide();
-                $('#sync-single-btn').prop('disabled', false);
-                alert('حدث خطأ في الاتصال: ' + error);
+            error: function() { showError("خطأ في الاتصال"); }
+        });
+    }
+
+    function runSync() {
+        $.ajax({
+            url: singlePropSyncData.ajaxurl,
+            type: "POST",
+            data: { action: "sync_single_property", property_id: selectedPropertyId, nonce: singlePropSyncData.nonce },
+            success: function(response) {
+                updateProgress(100, "تمت المزامنة!");
+                setTimeout(function() {
+                    $("#auto-loading-section").addClass("hidden");
+                    $("#sync-single-btn").prop("disabled", false);
+                    if (response.success) {
+                        displayResults(response.data);
+                    } else {
+                        alert("خطأ في المزامنة");
+                    }
+                }, 300);
+            },
+            error: function() {
+                showError("خطأ في المزامنة");
+                $("#sync-single-btn").prop("disabled", false);
             }
         });
+    }
+
+    function updateProgress(percent, text) {
+        $("#auto-loading-progress").css("width", percent + "%");
+        $("#auto-loading-status").text(text);
+    }
+
+    function showError(message) {
+        $("#auto-loading-section").css("background", "#fcf0f1").css("border-color", "#d63638");
+        $("#auto-loading-title").html("❌ خطأ").css("color", "#d63638");
+        $("#auto-loading-status").text(message).css("color", "#d63638");
+    }
+
+    // Auto-load if id in URL
+    if (urlPropertyId) {
+        selectedPropertyId = urlPropertyId;
+        var option = new Option("جاري التحميل...", urlPropertyId, true, true);
+        $("#property-select").append(option);
+        startSync();
+    }
+
+    // Event handlers
+    $("#property-select").on("select2:select", function(e) {
+        selectedPropertyId = e.params.data.id;
+        currentPropertyTitle = e.params.data.text;
+        $("#sync-single-btn").prop("disabled", false);
     });
 
-    // Display results
-    function displayResults(data) {
-        $('#sync-results').show();
-        $('#clear-results-btn').show();
+    $("#sync-single-btn, #resync-btn").on("click", function() { startSync(); });
 
-        // Show status message
-        const syncResult = data.sync_result;
-        const statusBox = $('#sync-status-box');
-        const statusMsg = $('#sync-status-message');
+    $("#new-property-btn").on("click", function() {
+        window.location.href = window.location.pathname + "?page=single-prop-sync";
+    });
+
+    function displayResults(data) {
+        $("#sync-results").removeClass("hidden");
+        $("#manual-selection-section").addClass("hidden");
+
+        var syncResult = data.sync_result;
+        var newRegaData = syncResult.data;
+        var statusBox = $("#sync-status-box");
+        var statusMsg = $("#sync-status-message");
 
         if (syncResult.success) {
-            statusBox.removeClass('notice-error').addClass('notice notice-success');
-            statusMsg.html('<strong>✅ نجحت المزامنة!</strong> ' + syncResult.message +
-                          ' <br><small>وقت التنفيذ: ' + data.execution_time + ' ثانية</small>');
+            statusBox.removeClass("hidden notice-error").addClass("notice notice-success");
+            statusMsg.html("<strong>نجحت المزامنة!</strong> " + (syncResult.message || "") + 
+                " <small>(وقت التنفيذ: " + data.execution_time + " ثانية)</small>");
         } else {
-            statusBox.removeClass('notice-success').addClass('notice notice-error');
-            statusMsg.html('<strong>❌ فشلت المزامنة!</strong> ' + syncResult.message);
-        }
-        statusBox.show();
-
-        // Display property info
-        displayPropertyInfo();
-
-        // Display meta comparison
-        displayMetaComparison(data.meta_after);
-
-        // Display REGA data
-        if (syncResult.data) {
-            displayRegaData(syncResult.data);
+            statusBox.removeClass("hidden notice-success").addClass("notice notice-error");
+            statusMsg.html("<strong>❌ فشلت المزامنة!</strong> " + (syncResult.message || ""));
         }
 
-        // Scroll to results
-        $('html, body').animate({
-            scrollTop: $('#sync-results').offset().top - 50
-        }, 500);
-    }
+        $("#property-title-display").text(currentPropertyTitle);
+        var metaHtml = "رقم العقار: <strong>" + selectedPropertyId + "</strong>";
+        if (newRegaData && newRegaData.adLicenseNumber) {
+            metaHtml += " | رقم الترخيص: <strong>" + newRegaData.adLicenseNumber + "</strong>";
+        }
+        metaHtml += " | <a href=\"" + singlePropSyncData.siteurl + "/?p=" + selectedPropertyId + "\" target=\"_blank\">عرض</a>";
+        metaHtml += " | <a href=\"" + singlePropSyncData.adminurl + "post.php?post=" + selectedPropertyId + "&action=edit\" target=\"_blank\">تحرير</a>";
+        $("#property-meta-display").html(metaHtml);
 
-    // Display property info
-    function displayPropertyInfo() {
-        const selectedOption = $('#property-select').select2('data')[0];
-        const propertyInfo = `
-            <tr>
-                <th style="width: 200px;">رقم ID</th>
-                <td>${selectedPropertyId}</td>
-            </tr>
-            <tr>
-                <th>العنوان</th>
-                <td>${selectedOption.text}</td>
-            </tr>
-            <tr>
-                <th>رابط العقار</th>
-                <td><a href="${singlePropSyncData.siteurl}/?p=${selectedPropertyId}" target="_blank">عرض العقار</a></td>
-            </tr>
-            <tr>
-                <th>رابط التحرير</th>
-                <td><a href="${singlePropSyncData.adminurl}/post.php?post=${selectedPropertyId}&action=edit" target="_blank">تحرير العقار</a></td>
-            </tr>
-        `;
-        $('#property-info-table').html(propertyInfo);
-    }
+        // Compare old REGA data vs new REGA data
+        displayChanges(oldRegaData, newRegaData);
 
-    // Display meta comparison
-    function displayMetaComparison(metaAfter) {
-        const metaKeys = {
-            'advertiserId': 'معرف المعلن',
-            'adLicenseNumber': 'رقم الترخيص الإعلاني',
-            'responsibleEmployeeName': 'اسم المسؤول',
-            'responsibleEmployeePhoneNumber': 'رقم المسؤول',
-            'advertiserName': 'اسم المعلن',
-            'phoneNumber': 'رقم الهاتف',
-            'brokerageAndMarketingLicenseNumber': 'رقم ترخيص الوساطة',
-            'propertyPrice': 'السعر',
-            'propertyType': 'نوع العقار',
-            'propertyAge': 'عمر العقار'
-        };
-
-        let beforeHtml = '';
-        let afterHtml = '';
-
-        Object.keys(metaKeys).forEach(function(key) {
-            const label = metaKeys[key];
-            const valueBefore = metaBefore[key] || '<em style="color: #999;">غير محدد</em>';
-            const valueAfter = metaAfter[key] || '<em style="color: #999;">غير محدد</em>';
-
-            const isChanged = valueBefore !== valueAfter;
-            const changedClass = isChanged ? ' class="meta-changed"' : '';
-
-            beforeHtml += `<tr${changedClass}>
-                <td><strong>${label}</strong></td>
-                <td>${valueBefore}</td>
-            </tr>`;
-
-            afterHtml += `<tr${changedClass}>
-                <td><strong>${label}</strong></td>
-                <td>${valueAfter}</td>
-            </tr>`;
-        });
-
-        $('#meta-before-table').html(beforeHtml);
-        $('#meta-after-table').html(afterHtml);
-    }
-
-    // Display REGA data
-    function displayRegaData(regaData) {
-        // Main data
-        const mainFields = {
-            'advertiserId': 'معرف المعلن',
-            'adLicenseNumber': 'رقم الترخيص',
-            'advertiserName': 'اسم المعلن',
-            'responsibleEmployeeName': 'المسؤول',
-            'responsibleEmployeePhoneNumber': 'رقم المسؤول',
-            'phoneNumber': 'رقم الهاتف',
-            'brokerageAndMarketingLicenseNumber': 'رقم الوساطة',
-            'propertyType': 'نوع العقار',
-            'propertyAge': 'عمر العقار',
-            'propertyPrice': 'السعر',
-            'propertyArea': 'المساحة',
-            'numberOfRooms': 'عدد الغرف',
-            'advertisementType': 'نوع الإعلان',
-            'creationDate': 'تاريخ الإنشاء',
-            'endDate': 'تاريخ الانتهاء'
-        };
-
-        let mainHtml = '';
-        Object.keys(mainFields).forEach(function(key) {
-            if (regaData[key] !== undefined) {
-                mainHtml += `<tr>
-                    <th style="width: 250px;">${mainFields[key]}</th>
-                    <td>${regaData[key]}</td>
-                </tr>`;
-            }
-        });
-        $('#rega-main-data').html(mainHtml);
-
-        // Location data
-        if (regaData.location) {
-            const location = regaData.location;
-            const locationHtml = `
-                <tr><th style="width: 250px;">المنطقة</th><td>${location.region || ''} (${location.regionCode || ''})</td></tr>
-                <tr><th>المدينة</th><td>${location.city || ''} (${location.cityCode || ''})</td></tr>
-                <tr><th>الحي</th><td>${location.district || ''} (${location.districtCode || ''})</td></tr>
-                <tr><th>الشارع</th><td>${location.street || ''}</td></tr>
-                <tr><th>الرمز البريدي</th><td>${location.postalCode || ''}</td></tr>
-                <tr><th>رقم المبنى</th><td>${location.buildingNumber || ''}</td></tr>
-                <tr><th>الإحداثيات</th><td>خط الطول: ${location.longitude || ''}, خط العرض: ${location.latitude || ''}</td></tr>
-            `;
-            $('#rega-location-data').html(locationHtml);
+        if (newRegaData) {
+            $("#rega-full-json").text(JSON.stringify(newRegaData, null, 2));
         }
 
-        // Borders data
-        if (regaData.borders) {
-            const borders = regaData.borders;
-            const bordersHtml = `
-                <tr><th style="width: 250px;">الحد الشمالي</th><td>${borders.northLimitName || ''} ${borders.northLimitDescription || ''} (${borders.northLimitLengthChar || ''})</td></tr>
-                <tr><th>الحد الشرقي</th><td>${borders.eastLimitName || ''} ${borders.eastLimitDescription || ''} (${borders.eastLimitLengthChar || ''})</td></tr>
-                <tr><th>الحد الجنوبي</th><td>${borders.southLimitName || ''} ${borders.southLimitDescription || ''} (${borders.southLimitLengthChar || ''})</td></tr>
-                <tr><th>الحد الغربي</th><td>${borders.westLimitName || ''} ${borders.westLimitDescription || ''} (${borders.westLimitLengthChar || ''})</td></tr>
-            `;
-            $('#rega-borders-data').html(bordersHtml);
-        }
-
-        // Full JSON
-        $('#rega-full-json').text(JSON.stringify(regaData, null, 2));
+        $("html, body").animate({ scrollTop: $("#sync-results").offset().top - 50 }, 500);
     }
 
-    // Toggle JSON
-    $('#toggle-json-btn').on('click', function() {
-        $('#rega-full-json').slideToggle();
-    });
+    function displayChanges(oldData, newData) {
+        var changes = compareData(oldData, newData);
+        var totalChanges = changes.added.length + changes.modified.length + changes.deleted.length;
 
-    // Copy JSON
-    $('#copy-json-btn').on('click', function() {
-        const jsonText = $('#rega-full-json').text();
-        navigator.clipboard.writeText(jsonText).then(function() {
-            alert('تم نسخ JSON إلى الحافظة');
-        });
-    });
+        $("#changes-count").text(totalChanges);
+        $("#new-values-section, #modified-values-section, #deleted-values-section, #no-changes-message").addClass("hidden");
+        $("#new-values-table, #modified-values-table, #deleted-values-table").empty();
 
-    // Clear results
-    $('#clear-results-btn').on('click', function() {
-        $('#sync-results').hide();
-        $('#clear-results-btn').hide();
-        $('#property-select').val(null).trigger('change');
-        selectedPropertyId = null;
-        metaBefore = {};
-        $('#sync-single-btn').prop('disabled', true);
+        if (totalChanges === 0) {
+            $("#no-changes-message").removeClass("hidden");
+            return;
+        }
+
+        if (changes.added.length > 0) {
+            $("#new-values-section").removeClass("hidden");
+            var html = "";
+            changes.added.forEach(function(item) {
+                html += "<tr class=\"value-new\"><td><strong>" + getFieldLabel(item.key) + "</strong></td>";
+                html += "<td>" + formatValue(item.value) + "</td></tr>";
+            });
+            $("#new-values-table").html(html);
+        }
+
+        if (changes.modified.length > 0) {
+            $("#modified-values-section").removeClass("hidden");
+            var html = "";
+            changes.modified.forEach(function(item) {
+                html += "<tr><td><strong>" + getFieldLabel(item.key) + "</strong></td>";
+                html += "<td class=\"value-modified-old\">" + formatValue(item.oldValue) + "</td>";
+                html += "<td class=\"value-modified-new\">" + formatValue(item.newValue) + "</td></tr>";
+            });
+            $("#modified-values-table").html(html);
+        }
+
+        if (changes.deleted.length > 0) {
+            $("#deleted-values-section").removeClass("hidden");
+            var html = "";
+            changes.deleted.forEach(function(item) {
+                html += "<tr class=\"value-deleted\"><td><strong>" + getFieldLabel(item.key) + "</strong></td>";
+                html += "<td>" + formatValue(item.value) + "</td></tr>";
+            });
+            $("#deleted-values-table").html(html);
+        }
+    }
+
+    $("#toggle-json-btn").on("click", function() { $("#rega-full-json").toggleClass("hidden"); });
+    $("#copy-json-btn").on("click", function() {
+        navigator.clipboard.writeText($("#rega-full-json").text()).then(function() { alert("تم النسخ"); });
     });
 });

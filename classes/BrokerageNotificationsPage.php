@@ -38,7 +38,7 @@ if (!class_exists('BrokerageNotificationsPage')) {
             }
 
             if (!$this->dublicate) {
-                // ✅ Filter: keep only latest for each AdlicenseNumber
+                // Filter: keep only latest for each AdlicenseNumber
                 $latest_notifications = [];
                 foreach ($notifications as $item) {
                     $body = $item['NotificationBody'];

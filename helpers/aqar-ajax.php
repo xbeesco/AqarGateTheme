@@ -791,7 +791,8 @@ function custom_columns_manage($columns){
                 $REDF_btnClass = ' button-sysnc';
             }
             if( get_post_status($post->ID) === 'publish' && !empty($advertiserId) && !empty($adLicenseNumber)) {
-                echo '<a href="javascript:void(0);" class="sysnc_listing button'.$buttonClass.'" data-id="' .$post->ID. '" style="margin-top: 0.5rem;display:inline-flex;">' . $loader . '<span>REGA SYNC</span></a>';
+                $sync_url = admin_url("admin.php?page=single-prop-sync&id=" . $post->ID);
+                echo "<a href=\"" . esc_url($sync_url) . "\" class=\"button" . $buttonClass . "\" style=\"margin-top: 0.5rem;display:inline-flex;\" target=\"_blank\"><span>REGA SYNC</span></a>";
                 echo '<a href="javascript:void(0);" class="sysnc_listing_redf button'.$REDF_btnClass.'" data-id="' .$post->ID. '" style="margin-top: 0.5rem;display:inline-flex;">' . $loader . '<span>REDF SYNC</span></a>';
             } 
             if( get_post_status($post->ID) === 'draft' || get_post_status($post->ID) === 'pending' ) {
