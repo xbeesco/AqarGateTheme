@@ -8,6 +8,8 @@ class RegaMoudle{
 
     protected $dummy = true;
 
+    public $current_property_id = null;
+
 
     public function __construct() {
         $this->sandbox  = get_option( '_sandbox' );
@@ -61,6 +63,65 @@ class RegaMoudle{
         $httpcode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
         
         curl_close($curl);
+
+        // Initialize Log DB
+        $logDB = new RegaLogDB();
+        
+        $request_data = [
+            'url'     => $url,
+            'method'  => $type,
+            'body'    => $body,
+            'headers' => $headers
+        ];
+        
+        // Log the request
+        $status = ($httpcode >= 200 && $httpcode < 300) ? 'Success' : 'Failed';
+        $response_data_decoded = json_decode($response);
+        
+        // Advanced Status Check based on Body content
+        if (isset($response_data_decoded->Body->result->response) && $response_data_decoded->Body->result->response === false) {
+             $status = 'Failed';
+        } elseif (isset($response_data_decoded->Body->success) && $response_data_decoded->Body->success === false) {
+             $status = 'Failed';
+        }
+
+        // simple error message if failed (or even success message)
+        $simple_error = '';
+        
+        // check specific locations for friendly messages
+        if(isset($response_data_decoded->Body->result->message)) {
+             $simple_error = $response_data_decoded->Body->result->message;
+        } elseif(isset($response_data_decoded->message)) {
+             $simple_error = $response_data_decoded->message;
+        } elseif(isset($response_data_decoded->httpMessage)) {
+             $simple_error = $response_data_decoded->httpMessage;
+        } elseif (isset($response_data_decoded->Body->error->message)) {
+             $simple_error = $response_data_decoded->Body->error->message;
+        } else {
+             $simple_error = ($status === 'Success') ? 'تمت العملية بنجاح' : 'HTTP Code: ' . $httpcode;
+        }
+
+        // Determine operation name from endpoint or caller
+        $operation = 'API Request';
+        if(strpos($endpoint, 'advertisements/validator') !== false) {
+            $operation = 'ValidateLicense';
+        } elseif (strpos($endpoint, 'advertisements/compliance') !== false || strpos($endpoint, 'PlatformCompliance') !== false ) {
+             $operation = 'PlatformCompliance';
+        } elseif (strpos($endpoint, 'CreateADLicense') !== false) {
+             $operation = 'CreateADLicense';
+        } elseif (strpos($endpoint, 'Feedback') !== false) {
+             $operation = 'Feedback';
+        }
+
+        $logDB->log([
+            'operation' => $operation,
+            'status' => $status,
+            'status_code' => $httpcode,
+            'request_body' => json_encode($request_data),
+            'response_body' => $response,
+            'simple_error' => $simple_error,
+            'property_id' => $this->current_property_id
+        ]);
 
         $data = [];
 		
@@ -253,6 +314,21 @@ class RegaMoudle{
         );
 
         // $response = $this->test_response();
+        return $response;
+    }
+
+    public function Feedback( $bodyData = array() )
+    {
+        $data = json_encode($bodyData);
+        $response = $this->do_request(
+            '',
+            'POST',
+            'v2/brokerage/Feedback',
+            $this->credential(),
+            $data,
+            array(),
+        );
+
         return $response;
     }
 

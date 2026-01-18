@@ -664,15 +664,49 @@ if( !function_exists('aqargate_edit_api_property') ) {
         $property_statusName = $property_status->name ?? null;
         $property_statusName = isset($advertisementTypeMapping[$property_statusName]) ? $advertisementTypeMapping[$property_statusName] : 'Sell';
         
+        // Ensure clean URL without HTML entities
+        $adLinkInPlatform = get_the_permalink($prop_id);
+        $adLinkInPlatform = html_entity_decode($adLinkInPlatform);
+
+        // Transform borders object to array of objects
+        $formatted_borders = [];
+        $directions = [
+            ['key' => 'north', 'name_key' => 'northLimitName', 'desc_key' => 'northLimitDescription', 'len_key' => 'northLimitLengthChar'],
+            ['key' => 'east', 'name_key'  => 'eastLimitName', 'desc_key'  => 'eastLimitDescription', 'len_key'  => 'eastLimitLengthChar'],
+            ['key' => 'west', 'name_key'  => 'westLimitName', 'desc_key'  => 'westLimitDescription', 'len_key'  => 'westLimitLengthChar'],
+            ['key' => 'south', 'name_key' => 'southLimitName', 'desc_key' => 'southLimitDescription', 'len_key' => 'southLimitLengthChar']
+        ];
+        
+        if (is_array($borders) || is_object($borders)) {
+            $borders_array = (array) $borders;
+            foreach ($directions as $dir) {
+                if (isset($borders_array[$dir['name_key']]) || isset($borders_array[$dir['desc_key']])) {
+                    $formatted_borders[] = [
+                        'direction' => $borders_array[$dir['desc_key']] ?? '', // Description maps to direction usually in these APIs
+                        'type'      => $borders_array[$dir['name_key']] ?? '', // Name maps to type
+                        'length'    => $borders_array[$dir['len_key']] ?? ''
+                    ];
+                }
+            }
+        }
+        
+        // If empty, define as empty array
+        if(empty($formatted_borders)){
+             $formatted_borders = [];
+        }
+
+        $operationReason = 'Other';
 
         $advertisement_request = '{
             "adLicenseNumber": "'.$adLicenseNumber.'",
+            "adLicenseUrl": "'.$adLinkInPlatform.'",
             "adLinkInPlatform": "'.$adLinkInPlatform.'",
-            "adSource": "REGA",
+            "adSource": "AqarGate",
             "adType": "'.$property_statusName.'",
             "advertiserId": "'.$advertiserId.'",
-            "advertiserMobile": "'.$advertisement_response['phoneNumber'].'",
+            "advertiserMobile": "'.$cleanedPhoneNumber.'",
             "advertiserName": "'.$user_title.'",
+            "borders": '.json_encode($formatted_borders).',
             "brokerageAndMarketingLicenseNumber": "'.$brokerageAndMarketingLicenseNumber.'",
             "channels": [
                 "LicensedPlatform"
@@ -681,35 +715,43 @@ if( !function_exists('aqargate_edit_api_property') ) {
             "creationDate": "'.$creationDate.'",
             "endDate": "'.$endDate.'",
             "nationalAddress": {
-                "additionalNo": '.$additionalNumber.',
+                "additionalNo": "'.$additionalNumber.'",
                 "adMapLatitude": '.$latitude.',
                 "adMapLongitude": '.$longitude.',
-                "buildingNo": '.$buildingNumber.',
+                "buildingNo": "'.$buildingNumber.'",
                 "city": "'.$city.'",
                 "district": "'.$district.'",
-                "postalCode": '. $postalCode .',
+                "postalCode": "'. $postalCode .'",
                 "region": "'.$region.'",
                 "streetName": "'.$street.'"
             },
             "operationReason": "'.$operationReason.'",
-            "operationType": "UpdateAd",
+            "operationType": "DisplayAd",
             "platformId": "'.get_option( '_platformid' ).'",
             "platformOwnerId": "'.get_option( '_platformownerid' ).'",
             "price": '.intval($formDataArray['prop_price']).',
-            "propertyArea": '.$propertyArea.',
+            "propertyArea": '.(float)$propertyArea.',
             "propertyType": "'.$property_typeName.'",
             "propertyUsage": [
-                "Commercial"
+                "Residential"
             ],
             "propertyUtilities": ['. $implodedUtilities .'],
             "qrCode": "",
             "titleDeedNumber": "'.$deedNumber.'",
             "titleDeedType": "ElectronicDeed",
+            "landTotalPrice": "'. (string)(floatval($formDataArray['prop_price']) * floatval($propertyArea)) .'",
+            "landTotalAnnualRent": "0",
+            "ownershipTransferFeeType": "المالك",
+            "responsibleEmployeeName": "'.$display_name.'",
+            "responsibleEmployeePhoneNumber": "'.$cleanedPhoneNumber.'",
+            "notes": "'.$notes.'",
+            "titleDeedTypeName": "'.$titleDeedTypeName.'"
         }';
 
         require_once AG_DIR . 'module/class-rega-module.php';
 
         $RegaMoudle = new RegaMoudle();
+        $RegaMoudle->current_property_id = $prop_id;
 
         $response = $RegaMoudle->PlatformCompliance($advertisement_request);
         $response = json_decode( $response );
@@ -724,6 +766,9 @@ if( !function_exists('aqargate_edit_api_property') ) {
         $update_log = [];
 
         if( isset($response->Body) && $response->Body->result->response === true ){
+            // Auto-publish the property
+            wp_update_post( array( 'ID' => $prop_id, 'post_status' => 'publish' ) );
+
             update_post_meta($prop_id, 'adverst_can_edit', 0);  
             update_post_meta($prop_id, 'advertisement_response', $advertisement_response );
 
