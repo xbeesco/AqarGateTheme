@@ -8,6 +8,52 @@ REGA API    : 3.2
 
 @import url("../houzez/style.css");
 
+/* Start Loader For All Buttons */
+.btn-loader.houzez-loader-js {
+    width: 16px;
+    height: 16px;
+    display: none;
+    box-sizing: border-box;
+    opacity: 1;
+    visibility: visible;
+    border: 2px solid #ffffff;
+    border-top-color: #ffffff;
+    border-right-color: #ffffff;
+    border-bottom-color: transparent;
+    border-left-color: #ffffff;
+    border-radius: 50%;
+    background-color: transparent;
+    animation: spin 1s linear infinite;
+}
+
+.btn-loader.houzez-loader-js.loader-show {
+    display: inline-block;
+}
+
+.btn-loader.houzez-loader-js::before,
+.btn-loader.houzez-loader-js::after {
+    content: none;
+    border: none;
+    background: none;
+}
+/* End Loader */
+
+#get_ad_info {
+    width: 160px;
+    height: 44px;
+    gap: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    direction: ltr;
+    margin-top: 9px;
+}
+
+#check_aqar_isvalid {
+    gap: 15px;
+    direction: ltr;
+}
+
 .alert-dismissible .close {
     right: auto !important;
 }
@@ -64,7 +110,8 @@ form#submit_aqar_isvalid_form {
     }
 
     .addProperty_card.mobile {
-        flex-direction: column-reverse;
+        flex-direction: column;
+        padding-bottom: 20px;
     }
 
     .addProperty_card.mobile .addProperty_line {

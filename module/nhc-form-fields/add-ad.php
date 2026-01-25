@@ -25,15 +25,14 @@
             <div class="addPropert-wrap mobile"> 
                 <div class="addProperty_container_ad">
                     <div class="addProperty_card mobile">
-                        <button id="get_ad_info" type="submit" class="btn houzez-submit-js btn-success">
-                            <span class="btn-loader houzez-loader-js"></span>عرض الاعلان
-                        </button>
-                        <div class="addProperty_line"></div>
                         <div class="form-group col-md-9 col-sm-12">
                             <label for="adLicenseNumber"> * رقم ترخيص الاعلان</label>
                             <input class="form-control" id="adLicenseNumber" required name="adLicenseNumber" value=""
                                 placeholder="" type="text">
                         </div>
+                        <button id="get_ad_info" type="submit" class="btn houzez-submit-js btn-success">
+                            <span class="btn-loader houzez-loader-js"></span>عرض الاعلان
+                        </button>
                     </div>
                 </div>
             </div>

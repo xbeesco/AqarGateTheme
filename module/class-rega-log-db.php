@@ -23,24 +23,19 @@ class RegaLogDB {
         $table_name = $wpdb->prefix.'rega_log';
         $charset_collate = $wpdb->get_charset_collate(); // utf8mb4
 
-        // Check if table exists
-        if($wpdb->get_var("SHOW TABLES LIKE '$table_name'") != $table_name) {
-             $sql = "CREATE TABLE $table_name (
-                id mediumint(9) NOT NULL AUTO_INCREMENT,        -- Log Number
-                user_id bigint(20) NOT NULL,                    -- ID for user who performed the action
-                property_id bigint(20) DEFAULT NULL,            -- Number of property
-                operation varchar(100) NOT NULL,                -- Operation performed ( Verify / Create / Update / Delete )  
-                status varchar(20) NOT NULL,                    -- Status: Success/Failed
-                status_code int(5) DEFAULT NULL,                -- HTTP Status Code ( 200 / 400 / 500 )
-                request_body longtext DEFAULT NULL,             -- Request Body
-                response_body longtext DEFAULT NULL,            -- Response Body
-                simple_error text DEFAULT NULL,                 -- Simple error message to normal users to understand errors
-                created_at datetime DEFAULT CURRENT_TIMESTAMP,
-                PRIMARY KEY  (id)
-            ) $charset_collate;";
-            
-            dbDelta( $sql );
-        }
+        $sql = "CREATE TABLE $table_name (
+            id mediumint(9) NOT NULL AUTO_INCREMENT,
+            user_id bigint(20) NOT NULL,
+            ad_license_number varchar(255) DEFAULT NULL,
+            operation varchar(255) NOT NULL,
+            status varchar(50) NOT NULL,
+            message text DEFAULT NULL,
+            details longtext DEFAULT NULL,
+            created_at datetime DEFAULT CURRENT_TIMESTAMP,
+            PRIMARY KEY  (id)
+        ) $charset_collate;";
+        
+        dbDelta( $sql );
     }
 /*
 |--------------------------------------------------------------------------------------------
@@ -54,21 +49,35 @@ class RegaLogDB {
         
         $defaults = [
             'user_id'       => get_current_user_id(),
-            'property_id'   => null,
-            'operation'     => 'Unknown',
+            'ad_license_number'   => 'Not linked to a property yet',
+            'operation'     => 'Unknown Operation',
             'status'        => 'Failed',
-            'status_code'   => 0,
-            'request_body'  => '',
-            'response_body' => '',
-            'simple_error'  => '',
+            'message'       => '',
+            'details'       => '{}',
             'created_at'    => current_time('mysql'),
         ];
 
         $data = wp_parse_args($data, $defaults);
         
-        $format = ['%d', '%d', '%s', '%s', '%d', '%s', '%s', '%s', '%s'];
+        // Prepare record for DB to avoid legacy fields issues
+        $record = [
+            'user_id'     => $data['user_id'],
+            'ad_license_number' => $data['ad_license_number'],
+            'operation'   => $data['operation'],
+            'status'      => $data['status'],
+            'message'     => $data['message'],
+            'details'     => $data['details'],
+            'created_at'  => $data['created_at']
+        ];
         
-        return $wpdb->insert($table_name, $data, $format);
+        // Ensure details is a valid JSON string
+        if ( is_array($record['details']) || is_object($record['details']) ) {
+            $record['details'] = wp_json_encode( $record['details'] );
+        }
+        
+        $format = ['%d', '%s', '%s', '%s', '%s', '%s', '%s'];
+        
+        return $wpdb->insert($table_name, $record, $format);
     }
 }
 

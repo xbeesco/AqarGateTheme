@@ -17,28 +17,29 @@ class Rega_Log_List_Table extends WP_List_Table {
 
     public function column_default( $item, $column_name ) {
         switch ( $column_name ) {
-            case 'property_id':
-                return $item['property_id'] ? '<a href="'.get_edit_post_link($item['property_id']).'" target="_blank">#'.$item['property_id'].'</a>' : '-';
+            case 'ad_license_number':
+                
+                if ( is_numeric($item['ad_license_number']) && $item['ad_license_number'] > 0 ) {
+                     return '<a href="'.get_edit_post_link($item['ad_license_number']).'" target="_blank">#'.$item['ad_license_number'].'</a>';
+                }
+                return esc_html($item['ad_license_number']);
+                
             case 'user_id':
                 $user_info = get_userdata($item['user_id']);
                 return $user_info ? '<a href="'.get_edit_user_link($item['user_id']).'" target="_blank">'.$user_info->display_name.'</a>' : 'Guest';
             case 'status':
                 $status = $item['status'];
                 $color = ($status === 'Success') ? '#4CAF50' : '#F44336';
-                return sprintf('<span style="color: #fff; background: %s; padding: 3px 8px; border-radius: 3px;">%s</span>', $color, $status);
+                return sprintf('<span style="color: #fff; background: %s; padding: 3px 8px; border-radius: 3px;">%s</span>', $color, esc_html($status));         
             case 'created_at':
                 return $item['created_at'];
             case 'operation':
-                $labels = [
-                    'ValidateLicense'    => 'تحقق من رخصة الإعلان',
-                    'PlatformCompliance' => 'توافق العقار مع المنصة',
-                    'CreateADLicense'    => 'إنشاء ترخيص إعلان',
-                    'Feedback'           => 'تغذية راجعة',
-                    'API Request'        => 'طلب عام / غير مصنف'
-                ];
-                return isset($labels[$item['operation']]) ? $labels[$item['operation']] : $item['operation'];
-            case 'simple_error':
-                 return $item['simple_error'] ? $item['simple_error'] : '-';
+                // Now stored as human readable text
+                return esc_html($item['operation']);
+                
+            case 'message':
+                 return $item['message'] ? esc_html($item['message']) : '-';
+                 
             case 'actions':
                 return sprintf('<button class="button view-details-btn" data-log-id="%d">Details</button>', $item['id']);
             default:
@@ -49,14 +50,53 @@ class Rega_Log_List_Table extends WP_List_Table {
     // Columns In Admin GUI
     public function get_columns() {
         return array(
-            'cb'           => '<input type="checkbox" />',
-            'created_at'   => 'Date',
-            'operation'    => 'Operation',
-            'user_id'      => 'User',
-            'property_id'  => 'Property ID',
-            'status'       => 'Status',
-            'simple_error' => 'Message',
-            'actions'      => 'Details',
+            'cb'                => '<input type="checkbox" />',
+            'created_at'        => 'Date',
+            'operation'         => 'Operation',
+            'user_id'           => 'User',
+            'ad_license_number' => 'Ad License Number',
+            'status'            => 'Status',
+            'message'           => 'Message',
+            'actions'           => 'Details',
+        );
+    }
+    
+    // Handle Delete Action in admin dashboard in Rega logs table
+    public function process_bulk_action() {
+        // Check if delete button was clicked
+        if ( ! isset( $_POST['delete_logs'] ) ) {
+            return;
+        }
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            return;
+        }
+
+        if ( ! isset( $_POST['rega_logs_delete_nonce'] ) || 
+             ! wp_verify_nonce( $_POST['rega_logs_delete_nonce'], 'rega_logs_delete_action' ) ) {
+            return;
+        }
+
+        if ( empty( $_POST['log'] ) || ! is_array( $_POST['log'] ) ) {
+            return;
+        }
+
+        global $wpdb;
+        $table_name = $wpdb->prefix . 'rega_log';
+
+        $ids = array_map( 'intval', $_POST['log'] );
+        $ids = array_filter( $ids );
+
+        if ( empty( $ids ) ) {
+            return;
+        }
+
+        $placeholders = implode( ',', array_fill( 0, count( $ids ), '%d' ) );
+        $wpdb->query(
+            $wpdb->prepare(
+                "DELETE FROM $table_name WHERE id IN ($placeholders)",
+                $ids
+            )
         );
     }
     
@@ -99,6 +139,8 @@ class Rega_Log_List_Table extends WP_List_Table {
 
     public function prepare_items() {
         $this->_column_headers = array( $this->get_columns(), array(), $this->get_sortable_columns() );
+        // Handle bulk actions (e.g. delete)
+        $this->process_bulk_action();
         $this->items = $this->get_data();
     }
     
@@ -113,6 +155,7 @@ class Rega_Log_List_Table extends WP_List_Table {
                 </select>
                 <input type="date" name="filter_date" value="<?php echo isset($_GET['filter_date']) ? esc_attr($_GET['filter_date']) : ''; ?>">
                 <input type="submit" name="filter_action" id="post-query-submit" class="button" value="Filter">
+                <input type="submit" name="delete_logs" id="delete-selected-logs" class="button button-secondary" value="Delete Selected" style="margin-left: 10px;">
             </div>
             <?php
         }
@@ -125,8 +168,9 @@ function display_rega_log_page() {
     ?>
     <div class="wrap">
         <h1>REGA API Logs</h1>
-        <form method="get">
-            <input type="hidden" name="page" value="<?php echo $_REQUEST['page'] ?>" />
+        <form method="post">
+            <?php wp_nonce_field( 'rega_logs_delete_action', 'rega_logs_delete_nonce' ); ?>
+            <input type="hidden" name="page" value="<?php echo esc_attr( $_REQUEST['page'] ); ?>" />
             <?php $list_table->display(); ?>
         </form>
     </div>
@@ -163,12 +207,16 @@ function display_rega_log_page() {
                 if(response.success) {
                     var data = response.data;
                     
-                    // Format JSON
-                    var reqJSON = data.request_body;
-                    try { reqJSON = JSON.stringify(JSON.parse(data.request_body), null, 4); } catch(e){}
-                    
-                    var resJSON = data.response_body;
-                    try { resJSON = JSON.stringify(JSON.parse(data.response_body), null, 4); } catch(e){}
+                    // Parse Details JSON
+                    var detailsObj = {};
+                    try {
+                        detailsObj = JSON.parse(data.details);
+                    } catch(e){
+                         console.error('Failed to parse details', e);
+                    }
+
+                    var reqJSON = detailsObj.request ? JSON.stringify(detailsObj.request, null, 4) : JSON.stringify(data, null, 4);
+                    var resJSON = detailsObj.response ? JSON.stringify(detailsObj.response, null, 4) : (detailsObj.request ? '' : 'No response data'); 
 
                     $('#req-code').text(reqJSON);
                     $('#res-code').text(resJSON);

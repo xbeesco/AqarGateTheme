@@ -8,7 +8,7 @@ class RegaMoudle{
 
     protected $dummy = true;
 
-    public $current_property_id = null;
+    public $current_ad_license_number = null;
 
 
     public function __construct() {
@@ -63,64 +63,103 @@ class RegaMoudle{
         $httpcode = curl_getinfo($curl, CURLINFO_RESPONSE_CODE);
         
         curl_close($curl);
-
         // Initialize Log DB
         $logDB = new RegaLogDB();
         
-        $request_data = [
-            'url'     => $url,
-            'method'  => $type,
-            'body'    => $body,
-            'headers' => $headers
+        $operation = 'تواصل غير معروف مع هيئة العقار';
+        if (stripos($endpoint, 'AdvertisementValidator') !== false) {
+            $operation = 'استعلام عن حالة الإعلان من هيئة العقار';
+        } elseif (stripos($endpoint, 'PlatformCompliance') !== false) {
+            $operation = 'إرسال / تحديث بيانات الإعلان في هيئة العقار';
+        } elseif (stripos($endpoint, 'Feedback') !== false) {
+            $operation = 'إرسال تغذية راجعة للهيئة حول الإعلان';
+        } elseif (stripos($endpoint, 'CreateADLicense') !== false) {
+            $operation = 'إنشاء ترخيص إعلان جديد في هيئة العقار';
+        } elseif (stripos($endpoint, 'SendAttachment') !== false) {
+            $operation = 'إرسال مرفقات الإعلان إلى هيئة العقار';
+        }
+
+        // 2. Property ID
+        $ad_license_number = '';
+        
+        // Priority 1: Ad License Number (User Input)
+        if ( isset($params['adLicenseNumber']) && !empty($params['adLicenseNumber']) ) {
+            $ad_license_number = $params['adLicenseNumber'];
+        } elseif ( is_array($body) && isset($body['adLicenseNumber']) && !empty($body['adLicenseNumber']) ) {
+            $ad_license_number = $body['adLicenseNumber'];
+        } elseif ( is_string($body) ) {
+            $bodyDecoded = json_decode($body, true);
+            if ( isset($bodyDecoded['adLicenseNumber']) ) {
+                $ad_license_number = $bodyDecoded['adLicenseNumber'];
+            }
+        }
+
+        // Priority 2: After Post the Advertisement
+        if ( empty($ad_license_number) && !empty($this->current_ad_license_number) ) {
+             $adLicenseNumber = get_post_meta( $this->current_ad_license_number, 'adLicenseNumber', true );
+             if( !empty($adLicenseNumber) ) {
+                $ad_license_number = $adLicenseNumber;
+             }
+        }
+        
+        // Priority 3: Fallback Text
+        if ( empty($ad_license_number) ) {
+            $ad_license_number = 'لا يوجد عقار مرتبط بهذه المعاملة';
+        }
+
+        // 3. Status Check
+        $status = 'Failed';
+        $response_decoded = json_decode($response, true);
+        
+        // Basic HTTP check
+        if ($httpcode >= 200 && $httpcode < 300) {
+            $status = 'Success';
+            
+            if (isset($response_decoded['Body']['result']['response']) && $response_decoded['Body']['result']['response'] === false) {
+                $status = 'Failed';
+            } elseif (isset($response_decoded['Body']['success']) && $response_decoded['Body']['success'] === false) {
+             $status = 'Failed';
+            } elseif (isset($response_decoded['success']) && $response_decoded['success'] === false) {
+             $status = 'Failed';
+        }
+        }
+
+        $message = '';
+        if (isset($response_decoded['Body']['result']['message'])) {
+             $message = $response_decoded['Body']['result']['message'];
+        } elseif(isset($response_decoded['message'])) {
+             $message = $response_decoded['message'];
+        } elseif(isset($response_decoded['httpMessage'])) {
+             $message = $response_decoded['httpMessage'];
+        } elseif (isset($response_decoded['Body']['error']['message'])) {
+             $message = $response_decoded['Body']['error']['message'];
+        }
+
+        if (empty($message)) {
+            $message = ($status === 'Success')
+                ? 'تم تنفيذ العملية بنجاح لدى هيئة العقار'
+                : 'فشلت العملية لدى هيئة العقار، يرجى مراجعة التفاصيل';
+        }
+
+        // 5. Details
+        $details = [
+            'request' => [
+                'url'     => $url,
+                'method'  => $type,
+                'headers' => $headers,
+                'body'    => is_string($body) ? json_decode($body, true) : $body
+            ],
+            'response' => $response_decoded
         ];
-        
-        // Log the request
-        $status = ($httpcode >= 200 && $httpcode < 300) ? 'Success' : 'Failed';
-        $response_data_decoded = json_decode($response);
-        
-        // Advanced Status Check based on Body content
-        if (isset($response_data_decoded->Body->result->response) && $response_data_decoded->Body->result->response === false) {
-             $status = 'Failed';
-        } elseif (isset($response_data_decoded->Body->success) && $response_data_decoded->Body->success === false) {
-             $status = 'Failed';
-        }
 
-        // simple error message if failed (or even success message)
-        $simple_error = '';
-        
-        // check specific locations for friendly messages
-        if(isset($response_data_decoded->Body->result->message)) {
-             $simple_error = $response_data_decoded->Body->result->message;
-        } elseif(isset($response_data_decoded->message)) {
-             $simple_error = $response_data_decoded->message;
-        } elseif(isset($response_data_decoded->httpMessage)) {
-             $simple_error = $response_data_decoded->httpMessage;
-        } elseif (isset($response_data_decoded->Body->error->message)) {
-             $simple_error = $response_data_decoded->Body->error->message;
-        } else {
-             $simple_error = ($status === 'Success') ? 'تمت العملية بنجاح' : 'HTTP Code: ' . $httpcode;
-        }
-
-        // Determine operation name from endpoint or caller
-        $operation = 'API Request';
-        if(strpos($endpoint, 'advertisements/validator') !== false) {
-            $operation = 'ValidateLicense';
-        } elseif (strpos($endpoint, 'advertisements/compliance') !== false || strpos($endpoint, 'PlatformCompliance') !== false ) {
-             $operation = 'PlatformCompliance';
-        } elseif (strpos($endpoint, 'CreateADLicense') !== false) {
-             $operation = 'CreateADLicense';
-        } elseif (strpos($endpoint, 'Feedback') !== false) {
-             $operation = 'Feedback';
-        }
-
+        // Execute Log
         $logDB->log([
-            'operation' => $operation,
-            'status' => $status,
-            'status_code' => $httpcode,
-            'request_body' => json_encode($request_data),
-            'response_body' => $response,
-            'simple_error' => $simple_error,
-            'property_id' => $this->current_property_id
+            'operation'         => $operation,
+            'ad_license_number' => $ad_license_number,
+            'status'            => $status,
+            'message'           => $message,
+            'details'           => $details,
+            'status_code'       => $httpcode
         ]);
 
         $data = [];
@@ -317,8 +356,11 @@ class RegaMoudle{
         return $response;
     }
 
-    public function Feedback( $bodyData = array() )
+    public function Feedback( $bodyData = array(), $ad_license_number = null )
     {
+        if( $ad_license_number ) {
+            $this->current_ad_license_number = $ad_license_number;
+        }
         $data = json_encode($bodyData);
         $response = $this->do_request(
             '',

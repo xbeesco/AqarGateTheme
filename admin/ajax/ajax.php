@@ -784,7 +784,7 @@ function PlatformCompliance_property($operationType = 'UpdateAd', $prop_id = '')
 
         $RegaMoudle = new RegaMoudle();
 
-        $response = $RegaMoudle->PlatformCompliance($advertisement_request);
+        $response = $RegaMoudle->PlatformCompliance($advertisement_request, $prop_id);
         $response = json_decode( $response );
         //prr($response);wp_die();
         // echo json_encode( $advertisement_request, JSON_PRETTY_PRINT);
@@ -797,6 +797,17 @@ function PlatformCompliance_property($operationType = 'UpdateAd', $prop_id = '')
         if( isset($response->Body) && $response->Body->result->response === true ){
             update_post_meta($prop_id, 'adverst_can_edit', 0);  
             update_post_meta($prop_id, 'advertisement_response', $advertisement_response );
+
+            // Send Feedback
+            if( $operationType !== 'CancelAd' ) {
+                $feedback_data = [
+                    "adLicenseNumber" => $adLicenseNumber,
+                    "adUrl"           => $adLinkInPlatform,
+                    "advertiserId"    => $advertiserId
+                ];
+                $RegaMoudle->Feedback($feedback_data, $prop_id);
+            }
+
             $msg =  json_encode(['success' => true, 'reason' => 'تم ارسال التعديل بنجاح الي الهيئة العقارية']);
             return $msg;
         } else {

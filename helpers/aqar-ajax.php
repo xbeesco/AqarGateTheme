@@ -497,7 +497,7 @@ if( !function_exists('aqargate_edit_api_property') ) {
         $deedNumber      = $advertisement_response['deedNumber'];
         $advertiserName  = $advertisement_response['advertiserName'];
         if( $adLicenseNumber === '7200000895' ){
-            echo json_encode(['success' => true, 'reason' => 'تم ارسال التعديل بنجاح الي الهيئة العقارية'] );
+            echo json_encode(['success' => true, 'reason' => 'تم إرسال الإعلان بنجاح إلى الهيئة العقارية'] );
             wp_die();
         }
         // Remove any non-numeric characters from the phone number
@@ -751,7 +751,7 @@ if( !function_exists('aqargate_edit_api_property') ) {
         require_once AG_DIR . 'module/class-rega-module.php';
 
         $RegaMoudle = new RegaMoudle();
-        $RegaMoudle->current_property_id = $prop_id;
+        $RegaMoudle->current_ad_license_number = $prop_id;
 
         $response = $RegaMoudle->PlatformCompliance($advertisement_request);
         $response = json_decode( $response );
@@ -784,7 +784,7 @@ if( !function_exists('aqargate_edit_api_property') ) {
                 'response_header' => $response->Header ?? null
             ];
             update_post_meta($prop_id, 'PlatformCompliance', $update_log);
-            $reason = !empty(get_option( '_propert_rega_response_msg' )) ? get_option( '_propert_rega_response_msg' ) : 'تم ارسال التعديل بنجاح الي الهيئة العقارية' ;
+            $reason = !empty(get_option( '_propert_rega_response_msg' )) ? get_option( '_propert_rega_response_msg' ) : 'تم إرسال الإعلان بنجاح إلى الهيئة العقارية' ;
             echo json_encode(['success' => true, 'reason' => $reason]);
             wp_die();
         } else {
