@@ -23,7 +23,7 @@ function handle_add_property_location() {
             
             $exists = false;
             foreach ($terms as $term) {
-                $province_Id = get_option('_houzez_property_state_' . $term->term_id, true);
+                $province_Id = get_term_meta( $term->term_id, '_houzez_property_state', true);
                 if (isset($province_Id['REGION_ID']) && $province_Id['REGION_ID'] === $province['LKRegionId']) {
                     $exists = true;
                     break;
@@ -50,7 +50,7 @@ function handle_add_property_location() {
                 $houzez_meta['parent_country'] = 'saudi-arabia';
                 $houzez_meta['REGION_ID'] = $provinc_id;
 
-                update_option('_houzez_property_state_' . $new_term_id, $houzez_meta);
+                update_term_meta( $new_term_id, '_houzez_property_state', $houzez_meta);
             }
         }
         echo 'All regions have been added successfully!';
@@ -76,7 +76,7 @@ function handle_add_property_location() {
             $slug       = str_replace(' ', '-',$nameAr) . '-' . $_id;
 
             foreach ($property_state as $term) {
-                $province_Id = get_option('_houzez_property_state_' . $term->term_id, true);
+                $province_Id = get_term_meta( $term->term_id, '_houzez_property_state', true);
                 if ($provinceId == $province_Id['REGION_ID']) {
                     $houzez_meta['parent_state'] = $term->slug;
                 }
@@ -96,7 +96,7 @@ function handle_add_property_location() {
 
             $houzez_meta['CITY_ID'] = $_id;
 
-            update_option('_houzez_property_city_' . $new_term_id, $houzez_meta);
+            update_term_meta( $new_term_id, '_houzez_property_city', $houzez_meta);
         }
         echo 'City file ' . $file_number . ' part ' . $part . ' processed successfully!';
     } elseif ($location_type === 'DISTRICT') {
@@ -137,7 +137,7 @@ function handle_add_property_location() {
 
             $houzez_meta['DISTRICT_ID'] = $_id;
 
-            update_option('_houzez_property_area_' . $new_term_id, $houzez_meta);
+            update_term_meta( $new_term_id, '_houzez_property_area', $houzez_meta);
         }
         echo 'District file ' . $file_number . ' part ' . $part . ' processed successfully!';
     } else {
@@ -220,7 +220,7 @@ function handle_sync_property_locations() {
                 $houzez_meta = array();
                 $houzez_meta['parent_state'] = $parent_state;
                 if (!empty($city_id) && !empty($houzez_meta['parent_state'])) {
-                    update_option('_houzez_property_city_' . $city_id, $houzez_meta);
+                    update_term_meta( $city_id, '_houzez_property_city', $houzez_meta);
                     update_term_meta($city_id, 'CITY_ID', $city_code);
                     update_term_meta($city_id, 'term_from_file', 'CSV-SYNC');
 
@@ -246,7 +246,7 @@ function handle_sync_property_locations() {
                 $houzez_meta = array();
                 $houzez_meta['parent_city'] = $parent_city;
                 if (!empty($area_id) && !empty($houzez_meta['parent_city'])) {
-                    update_option('_houzez_property_area_' . $area_id, $houzez_meta);
+                    update_term_meta( $area_id, '_houzez_property_area', $houzez_meta);
                     update_term_meta($area_id, 'DISTRICT_ID', $area_code);
                     update_term_meta($area_id, 'term_from_file', 'CSV-SYNC');
 

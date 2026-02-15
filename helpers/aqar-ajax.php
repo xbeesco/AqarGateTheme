@@ -1071,7 +1071,7 @@ function _fix_property_location() {
                 $houzez_meta = array();
                 $houzez_meta['parent_city'] = $parent_city;
                 if( !empty( $area_id) && !empty($houzez_meta['parent_city'])  ) {
-                    update_option('_houzez_property_area_' . $area_id[0], $houzez_meta);
+                    update_term_meta( $area_id[0], '_houzez_property_area', $houzez_meta);
                     update_term_meta( $area_id[0], 'DISTRICT_ID', $district_code );
                     update_term_meta( $area_id[0], 'term_from_file', 'CSV-SYNC' );
 

@@ -8,7 +8,7 @@
     // 1- insert province to property term .
     foreach ( $property_provinces as $province ) {
         foreach($terms as $term){
-            $province_Id = get_option( '_houzez_property_state_'.$term->term_id, true );
+            $province_Id = get_term_meta( $term->term_id, '_houzez_property_state', true);
             if( isset($province_Id['REGION_ID']) ){
                 continue;
             } 
@@ -33,5 +33,5 @@
             $houzez_meta['parent_country'] = 'saudi-arabia';
             $houzez_meta['REGION_ID'] = $provinc_id;
     
-            update_option('_houzez_property_state_'.$new_term_id, $houzez_meta);
+            update_term_meta( $new_term_id, '_houzez_property_state', $houzez_meta);
     }   

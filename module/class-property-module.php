@@ -929,7 +929,7 @@ class PropertyMoudle{
                 $houzez_meta = array();
                 $houzez_meta['parent_state'] = $parent_state;
                 if( !empty( $city_id) && !empty($houzez_meta['parent_state'])  ) {
-                    update_option('_houzez_property_city_' . $city_id[0], $houzez_meta);
+                    update_term_meta( $city_id[0], '_houzez_property_city', $houzez_meta);
                 }
             }
   
@@ -944,7 +944,7 @@ class PropertyMoudle{
                 $houzez_meta = array();
                 $houzez_meta['parent_city'] = $parent_city;
                 if( !empty( $area_id) && !empty($houzez_meta['parent_city'])  ) {
-                    update_option('_houzez_property_area_' . $area_id[0], $houzez_meta);
+                    update_term_meta( $area_id[0], '_houzez_property_area', $houzez_meta);
                 }
             }
 

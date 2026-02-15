@@ -57,21 +57,21 @@ function houzez_get_search_taxonomies($taxonomy_name, $searched_data = "", $args
             $data_attr = $data_subtext = '';
 
             if( $taxonomy_name == 'property_city' ) {
-                $term_meta= get_option( "_houzez_property_city_$category->term_id");
+                $term_meta= get_term_meta( $category->term_id, '_houzez_property_city', true);
                 $parent_state = isset($term_meta['parent_state']) ? $term_meta['parent_state'] : '';
                 $parent_state = sanitize_title($parent_state);
                 $data_attr = 'data-belong="'.esc_attr($parent_state).'"';
                 $data_subtext = '';
 
             } elseif( $taxonomy_name == 'property_area' ) {
-                $term_meta= get_option( "_houzez_property_area_$category->term_id");
+                $term_meta= get_term_meta( $category->term_id, '_houzez_property_area', true);
                 $parent_city = isset($term_meta['parent_city']) ? $term_meta['parent_city'] : '';
                 $parent_city = sanitize_title($parent_city);
                 $data_attr = 'data-belong="'.esc_attr($parent_city).'"';
                 $data_subtext = '';
 
             } elseif( $taxonomy_name == 'property_state' ) {
-                $term_meta = get_option( "_houzez_property_state_$category->term_id");
+                $term_meta = get_term_meta( $category->term_id, '_houzez_property_state', true);
                 $parent_country = isset($term_meta['parent_country']) ? $term_meta['parent_country'] : '';
                 $parent_country = sanitize_title($parent_country);
                 $data_attr = 'data-belong="'.esc_attr($parent_country).'"';
@@ -90,19 +90,19 @@ function houzez_get_search_taxonomies($taxonomy_name, $searched_data = "", $args
 
                     $data_attr_child = '';
                     if( $taxonomy_name == 'property_city' ) {
-                        $term_meta= get_option( "_houzez_property_city_$subcategory->term_id");
+                        $term_meta= get_term_meta( $subcategory->term_id, '_houzez_property_city', true);
                         $parent_state = isset($term_meta['parent_state']) ? $term_meta['parent_state'] : '';
                         $parent_state = sanitize_title($parent_state);
                         $data_attr_child = 'data-belong="'.esc_attr($parent_state).'"';
 
                     } elseif( $taxonomy_name == 'property_area' ) {
-                        $term_meta= get_option( "_houzez_property_area_$subcategory->term_id");
+                        $term_meta= get_term_meta( $subcategory->term_id, '_houzez_property_area', true);
                         $parent_city = isset($term_meta['parent_city']) ? $term_meta['parent_city'] : '';
                         $parent_city = sanitize_title($parent_city);
                         $data_attr_child = 'data-belong="'.esc_attr($parent_city).'"';
 
                     } elseif( $taxonomy_name == 'property_state' ) {
-                        $term_meta= get_option( "_houzez_property_state_$subcategory->term_id");
+                        $term_meta= get_term_meta( $subcategory->term_id, '_houzez_property_state', true);
                         $parent_country = isset($term_meta['parent_country']) ? $term_meta['parent_country'] : '';
                         $parent_country = sanitize_title($parent_country);
                         $data_attr_child = 'data-belong="'.esc_attr($parent_country).'"';
@@ -119,19 +119,19 @@ function houzez_get_search_taxonomies($taxonomy_name, $searched_data = "", $args
 
                             $data_attr_child = '';
                             if( $taxonomy_name == 'property_city' ) {
-                                $term_meta= get_option( "_houzez_property_city_$subsubcategory->term_id");
+                                $term_meta= get_term_meta( $subsubcategory->term_id, '_houzez_property_city', true);
                                 $parent_state = isset($term_meta['parent_state']) ? $term_meta['parent_state'] : '';
                                 $parent_state = sanitize_title($parent_state);
                                 $data_attr_child = '';
 
                             } elseif( $taxonomy_name == 'property_area' ) {
-                                $term_meta= get_option( "_houzez_property_area_$subsubcategory->term_id");
+                                $term_meta= get_term_meta( $subsubcategory->term_id, '_houzez_property_area', true);
                                 $parent_city = isset($term_meta['parent_city']) ? $term_meta['parent_city'] : '';
                                 $parent_city = sanitize_title($parent_city);
                                 $data_attr_child = 'data-belong="'.esc_attr($parent_city).'"';
 
                             } elseif( $taxonomy_name == 'property_state' ) {
-                                $term_meta= get_option( "_houzez_property_state_$subsubcategory->term_id");
+                                $term_meta= get_term_meta( $subsubcategory->term_id, '_houzez_property_state', true);
                                 $parent_country = isset($term_meta['parent_country']) ? $term_meta['parent_country'] : '';
                                 $parent_country = sanitize_title($parent_country);
                                 $data_attr_child = 'data-belong="'.esc_attr($parent_country).'"';
@@ -511,7 +511,7 @@ function ag_make_json_file( $data = array(), $filename = 'ag-cache-data' ){
             }
         }
     }  
-}   
+}
 
 /*-----------------------------------------------------------------------------------*/
 // make json file for rest api
@@ -815,14 +815,14 @@ function ag_hirarchical_location_data($taxonomy_name, $taxonomy_terms, $searched
         foreach ($taxonomy_terms as $term) {
 
             if( $taxonomy_name == 'property_area' ) {
-                $term_meta= get_option( "_houzez_property_area_$term->term_id");
+                $term_meta= get_term_meta( $term->term_id, '_houzez_property_area', true);
                 $parent_city = sanitize_title($term_meta['parent_city']);
                 $parent_city_id = get_term_by( 'slug', urldecode($parent_city), 'property_city' )->term_id;
 
                 if ( class_exists( 'sitepress' ) ) {
                     $default_lang = apply_filters( 'wpml_default_language', NULL );
                     $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_area', true, $default_lang );
-                    $term_meta = get_option( "_houzez_property_area_$term_id_default");
+                    $term_meta = get_term_meta( $term_id_default, '_houzez_property_area', true);
                     $parent_city = sanitize_title($term_meta['parent_city']);
                     $parent_city = get_term_by( 'slug', $parent_city, 'property_city' )->slug;
                 }
@@ -845,13 +845,13 @@ function ag_hirarchical_location_data($taxonomy_name, $taxonomy_terms, $searched
                 }
                 
             } elseif( $taxonomy_name == 'property_city' ) {
-                $term_meta= get_option( "_houzez_property_city_$term->term_id");
+                $term_meta= get_term_meta( $term->term_id, '_houzez_property_city', true);
                 $parent_state = sanitize_title($term_meta['parent_state']);
                 $parent_state_id = get_term_by( 'slug', urldecode($parent_state), 'property_state' )->term_id;
                 if ( class_exists( 'sitepress' ) ) {
                     $default_lang = apply_filters( 'wpml_default_language', NULL );
                     $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_city', true, $default_lang );
-                    $term_meta= get_option( "_houzez_property_city_$term_id_default");
+                    $term_meta= get_term_meta( $term_id_default, '_houzez_property_city', true);
                     $parent_state = sanitize_title($term_meta['parent_state']);
                     $parent_state = get_term_by( 'slug', $parent_state, 'property_state' )->slug;
                 }
@@ -875,14 +875,14 @@ function ag_hirarchical_location_data($taxonomy_name, $taxonomy_terms, $searched
 
             } elseif( $taxonomy_name == 'property_state' ) {
 
-                $term_meta = get_option( "_houzez_property_state_$term->term_id");
+                $term_meta = get_term_meta( $term->term_id, '_houzez_property_state', true);
                 $parent_country = sanitize_title($term_meta['parent_country']);
                 $parent_country_id = get_term_by( 'slug', urldecode($parent_country), 'property_country' )->term_id;
 
                 if ( class_exists( 'sitepress' ) ) {
                     $default_lang = apply_filters( 'wpml_default_language', NULL );
                     $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_state', true, $default_lang );
-                    $term_meta= get_option( "_houzez_property_state_$term_id_default");
+                    $term_meta= get_term_meta( $term_id_default, '_houzez_property_state', true);
                     $parent_country = sanitize_title($term_meta['parent_country']);
                     $parent_country = get_term_by( 'slug', $parent_country, 'property_country' )->slug;       
                 }
@@ -1344,7 +1344,7 @@ function ag_maybe_create_term ( $prop_id = '' , $response = '' ){
         $houzez_state_meta['parent_country'] = 'saudi-arabia';
         $houzez_state_meta['provinceId'] = $new_term_id;
         $state_id = wp_set_object_terms( $prop_id, $new_term_id, 'property_state' );
-        update_option('_houzez_property_state_'.$new_term_id, $houzez_state_meta);
+        update_term_meta( $new_term_id, '_houzez_property_state', $houzez_state_meta);
         $term_ids['property_state'] = $new_term_id;
     }
     
@@ -1356,7 +1356,7 @@ function ag_maybe_create_term ( $prop_id = '' , $response = '' ){
         ) );
 
         foreach($terms as $term){
-            $state_Id = get_option( '_houzez_property_state_'.$term->term_id, true );
+            $state_Id = get_term_meta( $term->term_id, '_houzez_property_state', true);
             if($term_ids['property_state'] == $state_Id['provinceId'] ){
                 $houzez_city_meta['parent_state'] = $term->slug;
             }
@@ -1371,7 +1371,7 @@ function ag_maybe_create_term ( $prop_id = '' , $response = '' ){
 
         $houzez_city_meta['cityId'] = $new_term_id;
         $city_id = wp_set_object_terms( $prop_id, $new_term_id, 'property_city' );
-        update_option( '_houzez_property_city_'.$new_term_id, $houzez_city_meta );
+        update_term_meta( $new_term_id, '_houzez_property_city', $houzez_city_meta);
         $term_ids['property_city'] = $new_term_id;
     }
 
@@ -1385,7 +1385,7 @@ function ag_maybe_create_term ( $prop_id = '' , $response = '' ){
         ) );
 
         foreach( $terms as $term ){
-            $City_Id = get_option( '_houzez_property_city_'.$term->term_id, true );
+            $City_Id = get_term_meta( $term->term_id, '_houzez_property_city', true);
             if( $term_ids['property_city'] == $City_Id['cityId'] ){
                 $houzez_area_meta['parent_city'] = $term->slug;
             }
@@ -1400,7 +1400,7 @@ function ag_maybe_create_term ( $prop_id = '' , $response = '' ){
 
         $houzez_area_meta['areaId'] = $new_term_id;
         $area_id = wp_set_object_terms( $prop_id, $new_term_id, 'property_area' );
-        update_option( '_houzez_property_area_'.$new_term_id, $houzez_area_meta );
+        update_term_meta( $new_term_id, '_houzez_property_area', $houzez_area_meta);
         $term_ids['property_erea'] = $new_term_id;
     }
 
@@ -3255,7 +3255,7 @@ function houzez_submit_listing($new_property) {
             $houzez_meta = array();
             $houzez_meta['parent_state'] = isset( $_POST['administrative_area_level_1'] ) ? $_POST['administrative_area_level_1'] : '';
             if( !empty( $city_id) && isset( $_POST['administrative_area_level_1'] ) ) {
-                update_option('_houzez_property_city_' . $city_id[0], $houzez_meta);
+                update_term_meta( $city_id[0], '_houzez_property_city', $houzez_meta);
             }
         }
 
@@ -3266,7 +3266,7 @@ function houzez_submit_listing($new_property) {
             $houzez_meta = array();
             $houzez_meta['parent_city'] = isset( $_POST['locality'] ) ? $_POST['locality'] : '';
             if( !empty( $area_id) && isset( $_POST['locality'] ) ) {
-                update_option('_houzez_property_area_' . $area_id[0], $houzez_meta);
+                update_term_meta( $area_id[0], '_houzez_property_area', $houzez_meta);
             }
         }
 
@@ -3286,7 +3286,7 @@ function houzez_submit_listing($new_property) {
             
             $houzez_meta['parent_country'] = $country_short;
             if( !empty( $state_id) ) {
-                update_option('_houzez_property_state_' . $state_id[0], $houzez_meta);
+                update_term_meta( $state_id[0], '_houzez_property_state', $houzez_meta);
             }
         }
        
@@ -3645,13 +3645,13 @@ function houzez_hirarchical_options($taxonomy_name, $taxonomy_terms, $searched_t
             $formatted_term_name = format_term_name($term->name, $term_meta);
 
             if( $taxonomy_name == 'property_area' ) {
-                $term_meta= get_option( "_houzez_property_area_$term->term_id");
+                $term_meta= get_term_meta( $term->term_id, '_houzez_property_area', true);
                 $parent_city = sanitize_title($term_meta['parent_city']);
 
                 if ( class_exists( 'sitepress' ) ) {
                     $default_lang = apply_filters( 'wpml_default_language', NULL );
                     $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_area', true, $default_lang );
-                    $term_meta= get_option( "_houzez_property_area_$term_id_default");
+                    $term_meta= get_term_meta( $term_id_default, '_houzez_property_area', true);
                     $parent_city = sanitize_title($term_meta['parent_city']);
                     $parent_city = get_term_by( 'slug', $parent_city, 'property_city' )->slug;
                 }
@@ -3659,13 +3659,13 @@ function houzez_hirarchical_options($taxonomy_name, $taxonomy_terms, $searched_t
                 echo '<option data-ref="' . urldecode($term->slug) . '" data-belong="'.urldecode($parent_city).'" value="' . urldecode($term->slug) . '"' . ($searched_term == $term->slug ? ' selected="selected"' : '') . '>' . esc_attr($prefix) . $formatted_term_name . '</option>';
 
             } elseif( $taxonomy_name == 'property_city' ) {
-                $term_meta= get_option( "_houzez_property_city_$term->term_id");
+                $term_meta= get_term_meta( $term->term_id, '_houzez_property_city', true);
                 $parent_state = sanitize_title($term_meta['parent_state']);
 
                 if ( class_exists( 'sitepress' ) ) {
                     $default_lang = apply_filters( 'wpml_default_language', NULL );
                     $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_city', true, $default_lang );
-                    $term_meta= get_option( "_houzez_property_city_$term_id_default");
+                    $term_meta= get_term_meta( $term_id_default, '_houzez_property_city', true);
                     $parent_state = sanitize_title($term_meta['parent_state']);
                     $parent_state = get_term_by( 'slug', $parent_state, 'property_state' )->slug;
                 }
@@ -3673,13 +3673,13 @@ function houzez_hirarchical_options($taxonomy_name, $taxonomy_terms, $searched_t
                 echo '<option data-ref="' . urldecode($term->slug) . '" data-belong="'.urldecode($parent_state).'" value="' . urldecode($term->slug) . '"' . ($searched_term == $term->slug ? ' selected="selected"' : '') . '>' . esc_attr($prefix) . esc_attr($formatted_term_name) . '</option>';
 
             } elseif( $taxonomy_name == 'property_state' ) {
-                $term_meta = get_option( "_houzez_property_state_$term->term_id");
+                $term_meta = get_term_meta( $term->term_id, '_houzez_property_state', true);
                 $parent_country = sanitize_title($term_meta['parent_country']);
 
                 if ( class_exists( 'sitepress' ) ) {
                     $default_lang = apply_filters( 'wpml_default_language', NULL );
                     $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_state', true, $default_lang );
-                    $term_meta= get_option( "_houzez_property_state_$term_id_default");
+                    $term_meta= get_term_meta( $term_id_default, '_houzez_property_state', true);
                     $parent_country = sanitize_title($term_meta['parent_country']);
                     $parent_country = get_term_by( 'slug', $parent_country, 'property_country' )->slug;
                 }
@@ -3947,7 +3947,7 @@ function save_rega_property_data($property_id, $data) {
             $houzez_meta = array();
             $houzez_meta['parent_state'] = $parent_state;
             if (!empty($city_id) && !empty($houzez_meta['parent_state'])) {
-                update_option('_houzez_property_city_' . $city_id[0], $houzez_meta);
+                update_term_meta( $city_id[0], '_houzez_property_city', $houzez_meta);
                 update_term_meta($city_id[0], 'CITY_ID', $city_code);
             }
         }
@@ -3971,7 +3971,7 @@ function save_rega_property_data($property_id, $data) {
             $houzez_meta = array();
             $houzez_meta['parent_city'] = $parent_city;
             if (!empty($area_id) && !empty($houzez_meta['parent_city'])) {
-                update_option('_houzez_property_area_' . $area_id[0], $houzez_meta);
+                update_term_meta( $area_id[0], '_houzez_property_area', $houzez_meta);
                 update_term_meta($area_id[0], 'DISTRICT_ID', $area_code);
             }
         }

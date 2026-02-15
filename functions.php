@@ -2,6 +2,10 @@
 if( ! defined('AGDEBUG') ) {
     define( 'AGDEBUG', false );
 }
+
+// Redirect _houzez_property_* options to wp_termmeta
+require_once __DIR__ . '/helpers/houzez-options-termmeta.php';
+
 // add_action( 'wp_enqueue_scripts', 'ag_enqueue_styles' );
 function ag_enqueue_styles() {
     wp_enqueue_style( 'aqar-child', get_stylesheet_uri() );

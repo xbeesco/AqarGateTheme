@@ -16,7 +16,7 @@
 
                 foreach( $property_cities as $_term ){
                     $slug = $_term->slug;
-                    $city_Id = get_option( '_houzez_property_city_'.$_term->term_id, true ); 
+                    $city_Id = get_term_meta( $_term->term_id, '_houzez_property_city', true); 
                     if( $cityId == $city_Id['CITY_ID'] ){
                         $houzez_meta['parent_city'] = $slug;
                     }
@@ -36,5 +36,5 @@
             // var_dump($new_term_id);wp_die();
             $houzez_meta['DISTRICT_ID'] = $_id;
             
-            update_option( '_houzez_property_area_'.$new_term_id, $houzez_meta );
+            update_term_meta( $new_term_id, '_houzez_property_area', $houzez_meta);
         }    

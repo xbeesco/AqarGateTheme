@@ -882,14 +882,14 @@ function ag_get_taxonomies_with_id_value($taxonomy, $parent_taxonomy, $taxonomy_
             foreach ($taxonomy_terms as $term) {
 
                 if( $taxonomy_name == 'property_area' ) {
-                    $term_meta= get_option( "_houzez_property_area_$term->term_id");
+                    $term_meta= get_term_meta( $term->term_id, '_houzez_property_area', true);
                     $parent_city = sanitize_title($term_meta['parent_city']);
                     $parent_city_id = get_term_by( 'slug', urldecode($parent_city), 'property_city' )->term_id;
 
                     if ( class_exists( 'sitepress' ) ) {
                         $default_lang = apply_filters( 'wpml_default_language', NULL );
                         $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_area', true, $default_lang );
-                        $term_meta= get_option( "_houzez_property_area_$term_id_default");
+                        $term_meta= get_term_meta( $term_id_default, '_houzez_property_area', true);
                         $parent_city = sanitize_title($term_meta['parent_city']);
                         $parent_city = get_term_by( 'slug', $parent_city, 'property_city' )->slug;
                     }
@@ -912,13 +912,13 @@ function ag_get_taxonomies_with_id_value($taxonomy, $parent_taxonomy, $taxonomy_
                     }
                     
                 } elseif( $taxonomy_name == 'property_city' ) {
-                    $term_meta= get_option( "_houzez_property_city_$term->term_id");
+                    $term_meta= get_term_meta( $term->term_id, '_houzez_property_city', true);
                     $parent_state = sanitize_title($term_meta['parent_state']);
                     $parent_state_id = get_term_by( 'slug', urldecode($parent_state), 'property_state' )->term_id;
                     if ( class_exists( 'sitepress' ) ) {
                         $default_lang = apply_filters( 'wpml_default_language', NULL );
                         $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_city', true, $default_lang );
-                        $term_meta= get_option( "_houzez_property_city_$term_id_default");
+                        $term_meta= get_term_meta( $term_id_default, '_houzez_property_city', true);
                         $parent_state = sanitize_title($term_meta['parent_state']);
                         $parent_state = get_term_by( 'slug', $parent_state, 'property_state' )->slug;
                     }
@@ -942,14 +942,14 @@ function ag_get_taxonomies_with_id_value($taxonomy, $parent_taxonomy, $taxonomy_
 
                 } elseif( $taxonomy_name == 'property_state' ) {
 
-                    $term_meta = get_option( "_houzez_property_state_$term->term_id");
+                    $term_meta = get_term_meta( $term->term_id, '_houzez_property_state', true);
                     $parent_country = sanitize_title($term_meta['parent_country']);
                     $parent_country_id = get_term_by( 'slug', urldecode($parent_country), 'property_country' )->term_id;
 
                     if ( class_exists( 'sitepress' ) ) {
                         $default_lang = apply_filters( 'wpml_default_language', NULL );
                         $term_id_default = apply_filters( 'wpml_object_id', $term->term_id, 'property_state', true, $default_lang );
-                        $term_meta = get_option( "_houzez_property_state_$term_id_default");
+                        $term_meta = get_term_meta( $term_id_default, '_houzez_property_state', true);
                         $parent_country = sanitize_title($term_meta['parent_country']);
                         $parent_country = get_term_by( 'slug', $parent_country, 'property_country' )->slug;       
                     }

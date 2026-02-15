@@ -26,9 +26,9 @@ class Aqar_tax_column {
         
     public function taxonomy_rows( $row, $column_name, $term_id ) {
         $meta       = get_term_meta( $term_id, 'term_from_file', true ) ?? 'API-SYNC';
-        $state_meta = !empty(get_term_meta( $term_id, 'REGION_ID', true )) ? get_term_meta( $term_id, 'REGION_ID', true ) : get_option('_houzez_property_state_'.$term_id);
-        $city_meta  = !empty(get_term_meta( $term_id, 'CITY_ID', true )) ? get_term_meta( $term_id, 'CITY_ID', true ) : get_option('_houzez_property_city_'.$term_id);
-        $area_meta  = !empty(get_term_meta( $term_id, 'DISTRICT_ID', true )) ? get_term_meta( $term_id, 'DISTRICT_ID', true ) : get_option('_houzez_property_area_'.$term_id);
+        $state_meta = !empty(get_term_meta( $term_id, 'REGION_ID', true )) ? get_term_meta( $term_id, 'REGION_ID', true ) : get_term_meta( $term_id, '_houzez_property_state', true);
+        $city_meta  = !empty(get_term_meta( $term_id, 'CITY_ID', true )) ? get_term_meta( $term_id, 'CITY_ID', true ) : get_term_meta( $term_id, '_houzez_property_city', true);
+        $area_meta  = !empty(get_term_meta( $term_id, 'DISTRICT_ID', true )) ? get_term_meta( $term_id, 'DISTRICT_ID', true ) : get_term_meta( $term_id, '_houzez_property_area', true);
    
         if ( 'termstatus' === $column_name ) {
             echo $row . '<span style="color:green;font-weight: bold;">'.$meta.'</span>';

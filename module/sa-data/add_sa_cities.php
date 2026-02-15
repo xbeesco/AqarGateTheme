@@ -15,7 +15,7 @@
 
         
         foreach($property_state as $term){
-            $province_Id = get_option( '_houzez_property_state_'.$term->term_id, true );
+            $province_Id = get_term_meta( $term->term_id, '_houzez_property_state', true);
             if( $provinceId == $province_Id['REGION_ID'] ){
                 $houzez_meta['parent_state'] = $term->slug;
             }   
@@ -36,5 +36,5 @@
         // var_dump($new_term_id);wp_die();
         $houzez_meta['CITY_ID'] = $_id;
 
-        update_option( '_houzez_property_city_'.$new_term_id, $houzez_meta );
+        update_term_meta( $new_term_id, '_houzez_property_city', $houzez_meta);
     }     
