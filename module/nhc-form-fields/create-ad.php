@@ -314,7 +314,7 @@
                 <div class="d-flex justify-content-between add-new-listing-bottom-nav-wrap">
                     <a href="<?php echo $cancel_link; ?>" class="btn-cancel btn btn-primary-outlined">
                         إلغاء </a>
-                    <button id="CreateADLicense" type="submit" class="btn houzez-submit-js btn-primary houzez-hidden">
+                    <button id="CreateADLicense" type="submit" class="btn houzez-submit-js btn-info houzez-hidden">
                         <span class="btn-loader houzez-loader-js"></span>إنشاء ترخيص إعلان
                     </button>
                 </div>

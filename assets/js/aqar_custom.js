@@ -1,16 +1,16 @@
-jQuery(document).ready(function($){	
+jQuery(document).ready(function($){
 
 	//attach a change event listener to the radio buttons -- could give them a common class
-    $(':radio[name=aqar_author_type_id]').on('change', function() {
+	$(':radio[name=aqar_author_type_id]').on('change', function() {
 
 		let _val = $(this).val();
-        //reset labels
+		//reset labels
 		if( _val == 2 ) {
 			$('#change-lable').text('رقم الهوية');
 		} else {
 			$('#change-lable').text('رقم الهوية');
 		}
-    });
+	});
 
 	var screen_1 = $('#register-screen-1');
 	var screen_2 = $('#aq-register-form');
@@ -21,18 +21,18 @@ jQuery(document).ready(function($){
 		var currnt = $(this);
 		var form = currnt.parents('form');
 		const aqar_author_type_id = $("input[name=aqar_author_type_id]:checked").val();
-        const authorid = $("input[name=id]").val();
+		const authorid = $("input[name=id]").val();
 
 		if( aqar_author_type_id === undefined ) {
 			alert('اختار نوع التسجيل اولا');
 			return;
 		}
 		// الدخول عن طريق نفاذ
-		if( aqar_author_type_id === '1' ||  
-		    aqar_author_type_id === '2' ||
+		if( aqar_author_type_id === '1' ||
+			aqar_author_type_id === '2' ||
 			aqar_author_type_id === '3' ||
-			aqar_author_type_id === '4' 
-		  ) 
+			aqar_author_type_id === '4'
+		)
 		{
 			if(  authorid== null ||  authorid == ""  ) {
 				alert('ادخل رقم الهوية');
@@ -46,17 +46,17 @@ jQuery(document).ready(function($){
 	$('#nic').on('click', function(e){
 		e.preventDefault();
 		var nafath_id = $('#nafath_id');
-			nafath_id.fadeIn( 300, function() {
-				nafath_id.show();
-			});
-			$('#next-register-btn').fadeIn( 300, function() {
-				$('#next-register-btn').show();
-			});
-      });
+		nafath_id.fadeIn( 300, function() {
+			nafath_id.show();
+		});
+		$('#next-register-btn').fadeIn( 300, function() {
+			$('#next-register-btn').show();
+		});
+	});
 
-		function updateTimer() {
-			var timeleft = 180;
-			var downloadTimer = setInterval(function(){
+	function updateTimer() {
+		var timeleft = 180;
+		var downloadTimer = setInterval(function(){
 			if(timeleft <= 0){
 				clearInterval(downloadTimer);
 				$('#time-model').fadeOut( 1000, function() {
@@ -68,153 +68,153 @@ jQuery(document).ready(function($){
 				document.getElementById("timer").innerHTML = timeleft;
 			}
 			timeleft -= 1;
-			}, 1000);
-		}
+		}, 1000);
+	}
 
-		
 
-		function nafathApi(authorid, aqar_author_type_id) {
-			$.ajax({
-				type: 'post',
-				url: ajax_aqar.ajaxurl,
-				dataType: 'json',
-				data:{
-					action: 'nafathApi',
-					id: authorid,
-				},	
-				beforeSend: function() {
-					$('.sync__loader').show();
-				},
-				complete: function(){
-					$('.sync__loader').hide();
-				},
-				success: function( response ) {
-					if( response.success ) {
-						var transId	= response.transId;
-						$('#id-number > #nafathNumber').empty().html(response.number);
-						$('#time-model').fadeIn( 1000, function() {
-							$(this).show();
-						});
-						updateTimer();
-						fetchdata(authorid, aqar_author_type_id, transId);
-					} else {
-						$messages.empty().append('<div dir="ltr" class="alert alert-danger" role="alert"><i class="houzez-icon icon-check-circle-1 mr-1"></i>'+ response.message +'</div>');
-						return false;
-					}
-				},
-				error: function(xhr, status, error) {
-					var err = eval("(" + xhr.responseText + ")");
-					console.log(err.Message);
+
+	function nafathApi(authorid, aqar_author_type_id) {
+		$.ajax({
+			type: 'post',
+			url: ajax_aqar.ajaxurl,
+			dataType: 'json',
+			data:{
+				action: 'nafathApi',
+				id: authorid,
+			},
+			beforeSend: function() {
+				$('.sync__loader').show();
+			},
+			complete: function(){
+				$('.sync__loader').hide();
+			},
+			success: function( response ) {
+				if( response.success ) {
+					var transId	= response.transId;
+					$('#id-number > #nafathNumber').empty().html(response.number);
+					$('#time-model').fadeIn( 1000, function() {
+						$(this).show();
+					});
+					updateTimer();
+					fetchdata(authorid, aqar_author_type_id, transId);
+				} else {
+					$messages.empty().append('<div dir="ltr" class="alert alert-danger" role="alert"><i class="houzez-icon icon-check-circle-1 mr-1"></i>'+ response.message +'</div>');
+					return false;
 				}
-			});
-		}
- 
-		function fetchdata(authorid, aqar_author_type_id, transId){
-			var role = 'houzez_agent';
-			 $.ajax({
-					type: 'post',
-					url: ajax_aqar.ajaxurl,
-					dataType: 'json',
-					data:{
-						action: 'fetchdata',
-						authorid: authorid,
-						transId: transId,
-						aqar_author_type_id: aqar_author_type_id
-					},
-					success: function(data){
-					// Perform operation on return value
-					    if( data.success && data.reload ) {
-							setTimeout(function(){
-								window.location.reload();
-					   		}, 5000);
-						}
-						else if( data.success ){
-							screen_1.fadeOut( 200, function() {
-								screen_1.hide();
-							});
-							screen_2.html(data.html);
-							$("input[name=full_name]").val(data.arFullName);
-							$("input[name=first_name]").val(data.arFirst);
-							$("input[name=last_name]").val(data.arGrand);
-
-							if( aqar_author_type_id == '1' ) {
-								role  = 'houzez_agent';
-							}
-							if( aqar_author_type_id == '2' ) {
-								role  = 'houzez_agency';
-							}
-							if( aqar_author_type_id == '3' ) {
-								role  = 'houzez_owner';
-							}
-							if( aqar_author_type_id == '4' ) {
-								role  = 'houzez_buyer';
-							}
-							 
-							$("input[name=role]").val(role);
-							$("input[name=id_number]").val(data.id);
-
-							
-						} else {
-							timer = setTimeout(function(){fetchdata(authorid, aqar_author_type_id, transId);}, 1000);
-						}
-					},
-					complete:function(data){
-						
-					}
-				});
-			}		
-
-			$('#aq-register-form').submit(function(event) {
-				event.preventDefault();
-				var currnt = $(this);
-				houzez_register( currnt );
-			});
-
-			var houzez_register = function ( currnt ) {
-
-				var $form = currnt;
-				var $messages = $('#hz-register-messages');
-
-				$.ajax({
-					type: 'post',
-					url: ajax_aqar.ajaxurl,
-					dataType: 'json',
-					data: $form.serialize(),
-					beforeSend: function( ) {
-						currnt.find('.houzez-loader-js').addClass('loader-show');
-					},
-					complete: function(){
-						currnt.find('.houzez-loader-js').removeClass('loader-show');
-					},
-					success: function( response ) {
-						if( response.success ) {
-							$messages.empty().append('<div class="alert alert-success" role="alert"><i class="houzez-icon icon-check-circle-1 mr-1"></i>'+ response.msg +'</div>');
-						} else {
-							$messages.empty().append('<div class="alert alert-danger" role="alert"><i class="houzez-icon icon-check-circle-1 mr-1"></i>'+ response.msg +'</div>');
-						}
-		
-						currnt.find('.houzez-loader-js').removeClass('loader-show');
-
-						// if(houzez_reCaptcha == 1) {
-						// 	$form.find('.g-recaptcha-response').remove();
-						// 	if( g_recaptha_version == 'v3' ) {
-						// 		houzezReCaptchaLoad();
-						// 	} else {
-						// 		houzezReCaptchaReset();
-						// 	}
-						// }
-						
-					},
-					error: function(xhr, status, error) {
-						var err = eval("(" + xhr.responseText + ")");
-						console.log(err.Message);
-					}
-				});
+			},
+			error: function(xhr, status, error) {
+				var err = eval("(" + xhr.responseText + ")");
+				console.log(err.Message);
 			}
+		});
+	}
+
+	function fetchdata(authorid, aqar_author_type_id, transId){
+		var role = 'houzez_agent';
+		$.ajax({
+			type: 'post',
+			url: ajax_aqar.ajaxurl,
+			dataType: 'json',
+			data:{
+				action: 'fetchdata',
+				authorid: authorid,
+				transId: transId,
+				aqar_author_type_id: aqar_author_type_id
+			},
+			success: function(data){
+				// Perform operation on return value
+				if( data.success && data.reload ) {
+					setTimeout(function(){
+						window.location.reload();
+					}, 5000);
+				}
+				else if( data.success ){
+					screen_1.fadeOut( 200, function() {
+						screen_1.hide();
+					});
+					screen_2.html(data.html);
+					$("input[name=full_name]").val(data.arFullName);
+					$("input[name=first_name]").val(data.arFirst);
+					$("input[name=last_name]").val(data.arGrand);
+
+					if( aqar_author_type_id == '1' ) {
+						role  = 'houzez_agent';
+					}
+					if( aqar_author_type_id == '2' ) {
+						role  = 'houzez_agency';
+					}
+					if( aqar_author_type_id == '3' ) {
+						role  = 'houzez_owner';
+					}
+					if( aqar_author_type_id == '4' ) {
+						role  = 'houzez_buyer';
+					}
+
+					$("input[name=role]").val(role);
+					$("input[name=id_number]").val(data.id);
+
+
+				} else {
+					timer = setTimeout(function(){fetchdata(authorid, aqar_author_type_id, transId);}, 1000);
+				}
+			},
+			complete:function(data){
+
+			}
+		});
+	}
+
+	$('#aq-register-form').submit(function(event) {
+		event.preventDefault();
+		var currnt = $(this);
+		houzez_register( currnt );
+	});
+
+	var houzez_register = function ( currnt ) {
+
+		var $form = currnt;
+		var $messages = $('#hz-register-messages');
+
+		$.ajax({
+			type: 'post',
+			url: ajax_aqar.ajaxurl,
+			dataType: 'json',
+			data: $form.serialize(),
+			beforeSend: function( ) {
+				currnt.find('.houzez-loader-js').addClass('loader-show');
+			},
+			complete: function(){
+				currnt.find('.houzez-loader-js').removeClass('loader-show');
+			},
+			success: function( response ) {
+				if( response.success ) {
+					$messages.empty().append('<div class="alert alert-success" role="alert"><i class="houzez-icon icon-check-circle-1 mr-1"></i>'+ response.msg +'</div>');
+				} else {
+					$messages.empty().append('<div class="alert alert-danger" role="alert"><i class="houzez-icon icon-check-circle-1 mr-1"></i>'+ response.msg +'</div>');
+				}
+
+				currnt.find('.houzez-loader-js').removeClass('loader-show');
+
+				// if(houzez_reCaptcha == 1) {
+				// 	$form.find('.g-recaptcha-response').remove();
+				// 	if( g_recaptha_version == 'v3' ) {
+				// 		houzezReCaptchaLoad();
+				// 	} else {
+				// 		houzezReCaptchaReset();
+				// 	}
+				// }
+
+			},
+			error: function(xhr, status, error) {
+				var err = eval("(" + xhr.responseText + ")");
+				console.log(err.Message);
+			}
+		});
+	}
 
 	/* ------------------------------------------------------------------------ */
-    /* login and register links for elementor button
-    /* ------------------------------------------------------------------------ */
+	/* login and register links for elementor button
+	/* ------------------------------------------------------------------------ */
 	const elements_link = document.querySelector('[data-target="#login-register-form"]  a');
 	const element = document.querySelector('[data-target="#login-register-form"]');
 	const userID = ajax_aqar.userID;
@@ -237,33 +237,33 @@ jQuery(document).ready(function($){
 		$(elements_link).attr('href', add_listing);
 	}
 
-		
-		
 
-		var processing_text = (typeof houzezProperty !== 'undefined' && typeof houzezProperty.processing_text !== 'undefined') ? houzezProperty.processing_text : "جارى المعالجة .. انتظر من فضلك...";
 
-		var are_you_sure_text = ajax_aqar.are_you_sure_text;
-		/*--------------------------------------------------------------------------
-         *  update property
-         * -------------------------------------------------------------------------*/
-        $( 'a.update-property' ).on( 'click', function (){
-            
-			var $this     = $( this );
-			var propID    = $this.data('id');
-			var propNonce = $this.data('nonce');
-			var editLink  = $this.data('edit');
 
-			bootbox.confirm({
+	var processing_text = (typeof houzezProperty !== 'undefined' && typeof houzezProperty.processing_text !== 'undefined') ? houzezProperty.processing_text : "جارى المعالجة .. انتظر من فضلك...";
+
+	var are_you_sure_text = ajax_aqar.are_you_sure_text;
+	/*--------------------------------------------------------------------------
+	 *  update property
+	 * -------------------------------------------------------------------------*/
+	$( 'a.update-property' ).on( 'click', function (){
+
+		var $this     = $( this );
+		var propID    = $this.data('id');
+		var propNonce = $this.data('nonce');
+		var editLink  = $this.data('edit');
+
+		bootbox.confirm({
 			title: "سبب التعديل ?",
 			message: '<select class="form-control" id="update-notes"><option value="newMarketing">تسويق جديد</option><option value="Other">اخري</option></select>',
 			buttons: {
 				confirm: {
-				label: 'موافقة',
-				className: 'btn-primary'
+					label: 'موافقة',
+					className: 'btn-primary'
 				},
 				cancel: {
-				label: 'الغاء',
-				className: 'btn-secondary'
+					label: 'الغاء',
+					className: 'btn-secondary'
 				}
 			},
 			callback: function (result) {
@@ -273,12 +273,12 @@ jQuery(document).ready(function($){
 					// User clicked the confirm button
 					var textareaValue = document.getElementById('update-notes').value;
 					if (textareaValue.trim() !== '') {
-					  console.log('Textarea value:', textareaValue);
-					  // Perform further actions with the textarea value
+						console.log('Textarea value:', textareaValue);
+						// Perform further actions with the textarea value
 					} else {
-					  // Textarea is empty, display an error message or take appropriate action
-					  	jQuery('#fave_modal').modal('hide');
-					  	alert( 'من فضلك اكتب سبب التعديل' );
+						// Textarea is empty, display an error message or take appropriate action
+						jQuery('#fave_modal').modal('hide');
+						alert( 'من فضلك اكتب سبب التعديل' );
 						return false;
 					}
 					$.ajax({
@@ -309,30 +309,30 @@ jQuery(document).ready(function($){
 		});
 
 		return false;
-		
-		});
 
-		/*--------------------------------------------------------------------------
-         *  cancel property
-         * -------------------------------------------------------------------------*/
-        $( 'a.cancel-property' ).on( 'click', function (){
-            
-			var $this = $( this );
-			var propID = $this.data('id');
-			var propNonce = $this.data('nonce');
-			var editLink = $this.data('edit');
+	});
 
-			bootbox.confirm({
+	/*--------------------------------------------------------------------------
+	 *  cancel property
+	 * -------------------------------------------------------------------------*/
+	$( 'a.cancel-property' ).on( 'click', function (){
+
+		var $this = $( this );
+		var propID = $this.data('id');
+		var propNonce = $this.data('nonce');
+		var editLink = $this.data('edit');
+
+		bootbox.confirm({
 			title: "سبب الالغاء ?",
 			message: '<select class="form-control" id="cancel-notes"><option value="SoldProperty">تم بيع العقار</option><option value="RentedProperty">تم تأجير العقار</option><option value="TransferredProperty">تم نقل ملكية العقار</option><option value="IncorrectAdvertising">بيانات ترخيص الإعلان العقاري غير صحيحة</option><option value="Other">اخري</option></select>',
 			buttons: {
 				confirm: {
-				label: 'موافقة',
-				className: 'btn-primary'
+					label: 'موافقة',
+					className: 'btn-primary'
 				},
 				cancel: {
-				label: 'الغاء',
-				className: 'btn-secondary'
+					label: 'الغاء',
+					className: 'btn-secondary'
 				}
 			},
 			callback: function (result) {
@@ -340,12 +340,12 @@ jQuery(document).ready(function($){
 					// User clicked the confirm button
 					var textareaValue = document.getElementById('cancel-notes').value;
 					if (textareaValue.trim() !== '') {
-					  console.log('Textarea value:', textareaValue);
-					  // Perform further actions with the textarea value
+						console.log('Textarea value:', textareaValue);
+						// Perform further actions with the textarea value
 					} else {
-					  // Textarea is empty, display an error message or take appropriate action
-					  	jQuery('#fave_modal').modal('hide');
-					  	alert( 'من فضلك اكتب سبب الالغاء .' );
+						// Textarea is empty, display an error message or take appropriate action
+						jQuery('#fave_modal').modal('hide');
+						alert( 'من فضلك اكتب سبب الالغاء .' );
 						return false;
 					}
 					$.ajax({
@@ -385,62 +385,99 @@ jQuery(document).ready(function($){
 		});
 
 		return false;
-		
+
+	});
+
+
+	/*--------------------------------------------------------------------------
+	 *  draft property
+	 * -------------------------------------------------------------------------*/
+	$( '.draft-property' ).on( 'click', function( e ) {
+		e.preventDefault();
+		var $this = $( this );
+		var propid = $this.data( 'property' );
+		$.ajax({
+			url: ajax_aqar.ajaxurl,
+			data: {
+				'action': 'aqargate_property_draft',
+				'propID': propid
+			},
+			method: 'POST',
+			dataType: "JSON",
+
+			beforeSend: function( ) {
+				houzez_processing_modal(processing_text);
+			},
+			success: function( response ) {
+				window.location.reload();
+			},
+			complete: function(){
+			}
 		});
 
+	});
 
-		/*--------------------------------------------------------------------------
-         *  draft property
-         * -------------------------------------------------------------------------*/
-        $( '.draft-property' ).on( 'click', function( e ) {
-            e.preventDefault();
-            var $this = $( this );
-            var propid = $this.data( 'property' );
-            $.ajax({
-                url: ajax_aqar.ajaxurl,
-                data: {
-                    'action': 'aqargate_property_draft',
-                    'propID': propid
-                },
-                method: 'POST',
-                dataType: "JSON",
+	/*--------------------------------------------------------------------------
+	 *  edit property
+	 * -------------------------------------------------------------------------*/
+	$( '#edit-property' ).on( 'click', function( e ) {
+		e.preventDefault();
 
-                beforeSend: function( ) {
-                    houzez_processing_modal(processing_text);
-                },
-                success: function( response ) {
-                    window.location.reload();
-                },
-                complete: function(){
-                }
-            });
+		// Client-side Validation
+		var prop_title = $('#prop_title').val();
 
-        });
+		var prop_description = '';
 
-		/*--------------------------------------------------------------------------
-         *  edit property
-         * -------------------------------------------------------------------------*/
-        $( '#edit-property' ).on( 'click', function( e ) {
-            e.preventDefault();
-			var $this    = $( this );
-			var propID   = $this.data('property');
-			var form     = $("#submit_property_form");
-			var editLink = $this.data('edit');
-			var are_you_sure_text = 'هل تريد ارسال التعديلات الي الهيئة العامة للعقار !';
-			bootbox.confirm({
-				message: "<p><strong>"+are_you_sure_text+"</strong></p>",
-				buttons: {
-					confirm: {
+		if (typeof tinyMCE !== 'undefined' && tinyMCE.get('prop_des')) {
+			prop_description = tinyMCE.get('prop_des').getContent({ format: 'text' }).trim();
+		} else {
+			prop_description = $('#prop_des').val();
+		}
+		
+		var prop_images = $('input[name="propperty_image_ids[]"]').length;
+
+		var missing_fields = [];
+
+		if (!prop_title || prop_title.trim() === '') {
+			missing_fields.push('عنوان الإعلان');
+		}
+
+		if (!prop_description || prop_description.trim() === '') {
+			missing_fields.push('وصف العقار');
+		}
+
+		if (prop_images === 0) {
+			missing_fields.push('يرجى إضافة صورة واحدة على الأقل');
+		}
+
+		if (missing_fields.length > 0) {
+			bootbox.alert({
+				title: 'بيانات الإعلان غير مكتملة',
+				message: 'من فضلك اكمل البيانات التالية:<br><br>- ' + missing_fields.join('<br>- '),
+				centerVertical: true
+			});
+			return false;
+		}
+
+		var $this = $(this);
+		var propID   = $this.data('property');
+		var form     = $("#submit_property_form");
+		var editLink = $this.data('edit');
+		var are_you_sure_text = ': إعلانك سيصبح متاحًا للجمهور الآن. هل تريد تأكيد النشر؟';
+		bootbox.confirm({
+			message: "<p><strong>"+are_you_sure_text+"</strong></p>",
+			buttons: {
+				confirm: {
 					label: 'موافقة',
 					className: 'btn-primary'
-					},
-					cancel: {
+				},
+				cancel: {
 					label: 'الغاء',
 					className: 'btn-secondary'
-					}
-				},
-				callback: function (result) {
-					if(result==true) {
+				}
+			},
+			callback: function (result) {
+				if(result==true) {
 					// User clicked the confirm button
 					$.ajax({
 						type: 'POST',
@@ -485,154 +522,187 @@ jQuery(document).ready(function($){
 
 		return false;
 
-        });
+	});
 
-		var houzez_processing_modal = function ( msg ) {
-            var process_modal ='<div class="modal fade" id="fave_modal" tabindex="-1" role="dialog" aria-labelledby="faveModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-body houzez_messages_modal">'+msg+'</div></div></div></div></div>';
-            jQuery('body').append(process_modal);
-            jQuery('#fave_modal').modal();
-        };
+	var houzez_processing_modal = function ( msg ) {
+		var process_modal ='<div class="modal fade" id="fave_modal" tabindex="-1" role="dialog" aria-labelledby="faveModalLabel" aria-hidden="true"><div class="modal-dialog"><div class="modal-content"><div class="modal-body houzez_messages_modal">'+msg+'</div></div></div></div></div>';
+		jQuery('body').append(process_modal);
+		jQuery('#fave_modal').modal();
+	};
+	/** -------------------------------------------------------------------------
+	 *   Client-side validation for Ad License Number
+	 *-------------------------------------------------------------------------*/
 
-		/** -------------------------------------------------------------------------
-		 * Summary of  
-		 *-------------------------------------------------------------------------*/
-		var aqarProductsTabs = function() {
-			var alreadyProcessed = false;
-		
-			$('.houzez-products-tabs-js').each(function() {
-				var $this = $(this);
-				var $html_container = $this.find('.houzez-tab-content');
-				var $products_cache = [];
-		        
-				function loadTabContent($tab) {
-					var settings = $tab.data('json');
-					var data_index = $tab.index();
-					var city_id = $('#aqarCityFilter').val(); // Get the selected city term ID
-		            var ajaxurl = ajax_aqar.ajaxurl;
-					var houzez_rtl = ajax_aqar.houzez_rtl;
-					if( houzez_rtl == 'yes' ) {
-						houzez_rtl = true;
-					} else {
-						houzez_rtl = false;
-					}
-					// if (alreadyProcessed || $tab.find('a').hasClass('active')) {
-					// 	return;
-					// }
-		
-					alreadyProcessed = true;
-		
-					// Add the selected city ID to the settings
-					settings['property_city'] = [city_id];
+	$(document).on('mousedown', '#get_ad_info', function (e) {
 
-					console.log(settings);
+		if (e.which !== 1) { // To prevent trigger on right click
+			return;
+		}
 		
-					// if ($products_cache[data_index]) {
-					// 	setTimeout(function() {
-					// 		$html_container.html($products_cache[data_index].html);
-					// 		alreadyProcessed = false;
-					// 	}, 300);
-					// 	return;
-					// }
-		
-					$.ajax({
-						url: ajaxurl,
-						data: {
-							action: 'houzez_get_properties_tab_content',
-							settings: settings
-						},
-						dataType: 'json',
-						method: 'POST',
-						beforeSend: function() {
-							$html_container.empty().append(''
-								+ '<div id="houzez-map-loading">'
-								+ '<div class="mapPlaceholder">'
-								+ '<div class="loader-ripple spinner">'
-								+ '<div class="bounce1"></div>'
-								+ '<div class="bounce2"></div>'
-								+ '<div class="bounce3"></div>'
-								+ '</div>'
-								+ '</div>'
-								+ '</div>'
-							);
-						},
-						success: function(data) {
-							$products_cache[data_index] = data;
-							$html_container.html(data.html);
-		
-							houzez_init_add_favorite(ajaxurl, userID);
-							houzez_init_remove_favorite(ajaxurl, userID);
-							houzez_listing_lightbox(ajaxurl, ajax_aqar.processing_text, houzez_rtl, userID);
-							houzez_grid_image_gallery();
-							houzez_grid_call_to_action();
-							// compare_for_ajax();
-							$('[data-toggle="tooltip"]').tooltip();
-						},
-						error: function(xhr, status, error) {
-							var err = eval("(" + xhr.responseText + ")");
-							console.log(err.Message);
-						},
-						complete: function() {
-							alreadyProcessed = false;
-						}
-					});
+		var adLicenseNumber = $('#adLicenseNumber').val().trim();
+
+		if (adLicenseNumber === '') {
+			e.preventDefault();
+			e.stopImmediatePropagation(); // Stop Backend Validation 
+
+			// Stop loader
+			var $btn = $(this);
+			$btn.removeClass('loading');
+			$btn.find('.houzez-loader-js').hide();
+
+			bootbox.alert({
+				title: 'تنبيه',
+				message: 'رقم الإعلان مطلوب',
+				centerVertical: true,
+				callback: function () {
+					$('#adLicenseNumber').focus();
 				}
-		
-				// Handle tab click
-				$this.find('ul.property-nav-tabs li').on('click', function(e) {
-					e.preventDefault();
-					$('#aqarCityFilter').val(''); // Clear the selected city
-            		$('.selectpicker').selectpicker('refresh'); // Refresh the selectpicker to update the UI
-				});
-		
-				// Handle city select change
-				$(document).on('change', "#aqarCityFilter", function() {
-					var $active_tab = $this.find('ul.property-nav-tabs li a.active').parent();
-					loadTabContent($active_tab);
-				});
 			});
-		};
-		aqarProductsTabs();
-		
+
+			return false;
+		}
+	});
+
+	/** -------------------------------------------------------------------------
+	 * Summary of  
+	 *-------------------------------------------------------------------------*/
+	var aqarProductsTabs = function() {
+		var alreadyProcessed = false;
+
+		$('.houzez-products-tabs-js').each(function() {
+			var $this = $(this);
+			var $html_container = $this.find('.houzez-tab-content');
+			var $products_cache = [];
+
+			function loadTabContent($tab) {
+				var settings = $tab.data('json');
+				var data_index = $tab.index();
+				var city_id = $('#aqarCityFilter').val(); // Get the selected city term ID
+				var ajaxurl = ajax_aqar.ajaxurl;
+				var houzez_rtl = ajax_aqar.houzez_rtl;
+				if( houzez_rtl == 'yes' ) {
+					houzez_rtl = true;
+				} else {
+					houzez_rtl = false;
+				}
+				// if (alreadyProcessed || $tab.find('a').hasClass('active')) {
+				// 	return;
+				// }
+
+				alreadyProcessed = true;
+
+				// Add the selected city ID to the settings
+				settings['property_city'] = [city_id];
+
+				console.log(settings);
+
+				// if ($products_cache[data_index]) {
+				// 	setTimeout(function() {
+				// 		$html_container.html($products_cache[data_index].html);
+				// 		alreadyProcessed = false;
+				// 	}, 300);
+				// 	return;
+				// }
+
+				$.ajax({
+					url: ajaxurl,
+					data: {
+						action: 'houzez_get_properties_tab_content',
+						settings: settings
+					},
+					dataType: 'json',
+					method: 'POST',
+					beforeSend: function() {
+						$html_container.empty().append(''
+							+ '<div id="houzez-map-loading">'
+							+ '<div class="mapPlaceholder">'
+							+ '<div class="loader-ripple spinner">'
+							+ '<div class="bounce1"></div>'
+							+ '<div class="bounce2"></div>'
+							+ '<div class="bounce3"></div>'
+							+ '</div>'
+							+ '</div>'
+							+ '</div>'
+						);
+					},
+					success: function(data) {
+						$products_cache[data_index] = data;
+						$html_container.html(data.html);
+
+						houzez_init_add_favorite(ajaxurl, userID);
+						houzez_init_remove_favorite(ajaxurl, userID);
+						houzez_listing_lightbox(ajaxurl, ajax_aqar.processing_text, houzez_rtl, userID);
+						houzez_grid_image_gallery();
+						houzez_grid_call_to_action();
+						// compare_for_ajax();
+						$('[data-toggle="tooltip"]').tooltip();
+					},
+					error: function(xhr, status, error) {
+						var err = eval("(" + xhr.responseText + ")");
+						console.log(err.Message);
+					},
+					complete: function() {
+						alreadyProcessed = false;
+					}
+				});
+			}
+
+			// Handle tab click
+			$this.find('ul.property-nav-tabs li').on('click', function(e) {
+				e.preventDefault();
+				$('#aqarCityFilter').val(''); // Clear the selected city
+				$('.selectpicker').selectpicker('refresh'); // Refresh the selectpicker to update the UI
+			});
+
+			// Handle city select change
+			$(document).on('change', "#aqarCityFilter", function() {
+				var $active_tab = $this.find('ul.property-nav-tabs li a.active').parent();
+				loadTabContent($active_tab);
+			});
+		});
+	};
+	aqarProductsTabs();
+
 	/* ------------------------------------------------------------------------ */
-    /* WooCommerce Pay Package
-    /* ------------------------------------------------------------------------ */
-    $('.aqargate-woocommerce-package').on('click', function(e) {
-        e.preventDefault();
+	/* WooCommerce Pay Package
+	/* ------------------------------------------------------------------------ */
+	$('.aqargate-woocommerce-package').on('click', function(e) {
+		e.preventDefault();
 
-        if( parseInt( userID, 10 ) === 0 || userID == undefined) {
-            
-            jQuery('#login-register-form').modal('show');
-            jQuery('.login-form-tab').addClass('active show');
-            jQuery('.modal-toggle-1.nav-link').addClass('active');
+		if( parseInt( userID, 10 ) === 0 || userID == undefined) {
 
-        } else {
+			jQuery('#login-register-form').modal('show');
+			jQuery('.login-form-tab').addClass('active show');
+			jQuery('.modal-toggle-1.nav-link').addClass('active');
+
+		} else {
 			let packid  = $(this).data('packid');
 			let ajaxurl = ajax_aqar.ajaxurl;
-            fave_processing_modal( processing_text );
+			fave_processing_modal( processing_text );
 
-            $.ajax({
-                type: 'POST',
-                url: ajaxurl,
-                data: {
-                    'action': 'aqar_woo_pay_package',
-                    'package_id': packid
-                },
-                success: function(response) { 
-                    if ( response.success != false ) {
+			$.ajax({
+				type: 'POST',
+				url: ajaxurl,
+				data: {
+					'action': 'aqar_woo_pay_package',
+					'package_id': packid
+				},
+				success: function(response) {
+					if ( response.success != false ) {
 						console.log(response.data.checkout_url);
 						if( response.data.checkout_url ) {
 							window.location.href= response.data.checkout_url;
 						}
-                    } else {
-                        jQuery('#fave_modal').modal('hide');
-                    }
-                },
-                error: function(errorThrown) {
+					} else {
+						jQuery('#fave_modal').modal('hide');
+					}
+				},
+				error: function(errorThrown) {
 
-                }
-            }); // $.ajax
+				}
+			}); // $.ajax
 
-        } // login
+		} // login
 
-    });
+	});
 });
