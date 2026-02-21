@@ -2,7 +2,7 @@
 Theme Name  : AqarGate
 Theme URI   : http://houzez.co/
 Template: houzez
-Version     : 7.4.5
+Version     : 7.5
 REGA API    : 3.2
 */
 
@@ -36,6 +36,7 @@ REGA API    : 3.2
     border: none;
     background: none;
 }
+
 /* End Loader */
 
 #get_ad_info {
