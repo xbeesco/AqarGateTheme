@@ -421,16 +421,16 @@ class PropertyMoudle{
                         $key == 'borders'
                       ){
                         foreach ($advertisement as $k => $v) {
-                            $data[]= $translate[$k] . ' : '  . $v . '<br>';
+                            $data[]= ($translate[$k] ?? '') . ' : '  . $v . '<br>';
                         }
                     }else if (
                         $key == 'propertyUsages' ||
                         $key == 'propertyUtilities' ||
                         $key == 'channels' 
                     ){ 
-                        $data[]= $translate[$key] . ' : '  . $advertisement[0] . '<br>';
+                        $data[]= ($translate[$key] ?? '') . ' : '  . ($advertisement[0] ?? '') . '<br>';
                     }else{
-                        $data[]= $translate[$key] . ' : '  . $advertisement . '<br>';
+                        $data[]= ($translate[$key] ?? '') . ' : '  . $advertisement . '<br>';
                     }
                 }
                 
