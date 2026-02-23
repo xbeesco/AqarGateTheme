@@ -46,7 +46,7 @@ function ajax_get_props_sync_count() {
             'total' => $total_count,
             'filter' => $filter
         ));
-    } catch ( Exception $e ) {
+    } catch ( \Throwable $e ) {
         log_props_resync( 'Error getting count: ' . $e->getMessage(), 'error' );
         wp_send_json_error( array( 'message' => 'Error: ' . $e->getMessage() ) );
     }
@@ -117,7 +117,7 @@ function ajax_process_bulk_props_sync() {
 
                 if ( $sync_result['success'] ) {
                     $success_count++;
-                    $status = $sync_result['expired'] ? 'expired' : 'success';
+                    $status = !empty($sync_result['expired']) ? 'expired' : 'success';
                 } else {
                     $error_count++;
                     $status = 'failed';
@@ -126,7 +126,7 @@ function ajax_process_bulk_props_sync() {
                 $prop_time = round( ( microtime( true ) - $prop_start_time ), 2 );
                 log_props_resync( "Property #{$property_id} - Status: {$status}, Time: {$prop_time}s", 'info' );
 
-            } catch ( Exception $e ) {
+            } catch ( \Throwable $e ) {
                 $error_count++;
                 $error_message = 'Exception: ' . $e->getMessage();
                 
@@ -164,7 +164,7 @@ function ajax_process_bulk_props_sync() {
             'batch_time' => $batch_time
         ));
 
-    } catch ( Exception $e ) {
+    } catch ( \Throwable $e ) {
         $error_message = 'Fatal error in batch processing: ' . $e->getMessage();
         log_props_resync( $error_message, 'error' );
         

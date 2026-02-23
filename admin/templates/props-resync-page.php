@@ -156,4 +156,11 @@ $logo_width = houzez_option('retina_logo_width');
     color: #135e96;
     text-decoration: underline;
 }
+.failed-row {
+    background: #fcf0f1 !important;
+    border-right: 3px solid #d63638;
+}
+.failed-row td {
+    font-weight: 500;
+}
 </style>

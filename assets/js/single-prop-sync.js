@@ -150,6 +150,7 @@ jQuery(document).ready(function($) {
     $("#property-select").select2({
         ajax: {
             url: singlePropSyncData.ajaxurl,
+            type: "POST",
             dataType: "json",
             delay: 250,
             data: function(params) {

@@ -367,19 +367,35 @@ jQuery(document).ready(function($) {
             statusClass = 'status-duplicate';
         }
 
-        let row = '<tr>' +
+        let syncLink = '';
+        if (!result.success && isNewProperty) {
+            syncLink = ' <a href="' + propsResyncData.ajaxurl.replace('admin-ajax.php', 'admin.php') + '?page=single-prop-sync&id=' + result.id + '" target="_blank" class="button button-small" style="margin-right: 5px; font-size: 11px;">مزامنة فردية</a>';
+        }
+
+        let row = '<tr class="' + (!result.success ? 'failed-row' : '') + '">' +
             '<td>' + logCounter + '</td>' +
             '<td>' + result.id + duplicateMarker + '</td>' +
             '<td><a href="' + result.url + '" target="_blank" class="property-link">' + result.title + '</a></td>' +
             '<td><span class="status-badge ' + statusClass + '">' + statusText + '</span></td>' +
-            '<td>' + result.message + '</td>' +
+            '<td>' + result.message + syncLink + '</td>' +
             '<td>' + result.time + '</td>' +
             '</tr>';
 
-        $('#resync-log-tbody').prepend(row);
+        // Locate the row
+        if (!result.success) {
+            let $firstSuccessRow = $('#resync-log-tbody tr:not(.failed-row)').first();
+            if ($firstSuccessRow.length) {
+                $firstSuccessRow.before(row);
+            } else {
+                $('#resync-log-tbody').prepend(row);
+            }
+        } else {
+            $('#resync-log-tbody').append(row);
+        }
 
-        // Scroll to top of log
-        $('#resync-log-container').scrollTop(0);
+        if (!result.success) {
+            $('#resync-log-container').scrollTop(0);
+        }
     }
 
     // Complete sync process
