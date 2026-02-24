@@ -750,7 +750,7 @@ function PlatformCompliance_property($operationType = 'UpdateAd', $prop_id = '')
             "channels": [
                 "LicensedPlatform"
             ],
-            "constraints": "'.$constraints.'",
+            "isConstrained": "'.$constraints.'",
             "creationDate": "'.$creationDate.'",
             "endDate": "'.$endDate.'",
             "nationalAddress": {
@@ -777,7 +777,7 @@ function PlatformCompliance_property($operationType = 'UpdateAd', $prop_id = '')
             "propertyUtilities": ['. $implodedUtilities .'],
             "qrCode": "",
             "titleDeedNumber": "'.$deedNumber.'",
-            "titleDeedType": "ElectronicDeed",
+            "titleDeedType": "ElectronicDeed"
         }';
 
         require_once AG_DIR . 'module/class-rega-module.php';

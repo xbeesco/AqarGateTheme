@@ -2,8 +2,9 @@
 Theme Name: AqarGate
 Theme URI: http://houzez.co/
 Template: houzez
-Version: 7.5
+Version: 7.5.1
 REGA API: 3.2
+REGA Notify API: 1.2
 */
 
 @import url("../houzez/style.css");

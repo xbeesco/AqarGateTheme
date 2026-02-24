@@ -308,7 +308,7 @@ if ( !function_exists( 'aqar_cancel_property' ) ) {
             "channels": [
                 "LicensedPlatform"
             ],
-            "constraints": "'.$constraints.'",
+            "isConstrained": "'.$constraints.'",
             "creationDate": "'.$creationDate.'",
             "endDate": "'.$endDate.'",
             "nationalAddress": {
@@ -335,7 +335,7 @@ if ( !function_exists( 'aqar_cancel_property' ) ) {
             "propertyUtilities": ['. $implodedUtilities .'],
             "qrCode": "",
             "titleDeedNumber": "'.$deedNumber.'",
-            "titleDeedType": "ElectronicDeed",
+            "titleDeedType": "ElectronicDeed"
         }';
     
     
@@ -711,7 +711,7 @@ if( !function_exists('aqargate_edit_api_property') ) {
             "channels": [
                 "LicensedPlatform"
             ],
-            "constraints": "'.$constraints.'",
+            "isConstrained": "'.$constraints.'",
             "creationDate": "'.$creationDate.'",
             "endDate": "'.$endDate.'",
             "nationalAddress": {
