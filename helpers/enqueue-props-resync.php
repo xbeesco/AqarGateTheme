@@ -14,7 +14,7 @@ function enqueue_props_resync_scripts( $hook ) {
         'props-resync-js',
         get_stylesheet_directory_uri() . '/assets/js/props-resync.js',
         array( 'jquery' ),
-        '1.0.0',
+        '1.0.1',
         true
     );
 

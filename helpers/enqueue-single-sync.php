@@ -32,7 +32,7 @@ function enqueue_single_prop_sync_scripts( $hook ) {
         'single-prop-sync-js',
         get_stylesheet_directory_uri() . '/assets/js/single-prop-sync.js',
         array( 'jquery', 'select2-js' ),
-        '1.0.0',
+        '1.0.1',
         true
     );
 

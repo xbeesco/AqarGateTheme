@@ -185,7 +185,7 @@ class PropertyMoudle{
         $nonce = isset($_POST['aqar_isvalid_api']) ? $_POST['aqar_isvalid_api'] : '';
         if ( ! wp_verify_nonce( $nonce, 'aqar_isvalid_api' ) ) {
             $ajax_response = array( 'success' => false , 'reason' => esc_html__( 'Security check failed!', 'houzez' ) );
-            echo wp_send_json( $ajax_response );
+            wp_send_json( $ajax_response );
             wp_die();
         }
         $userID          = get_current_user_id();
@@ -195,7 +195,7 @@ class PropertyMoudle{
         
         if ( empty( $adLicenseNumber ) ) {
             $ajax_response = array( 'success' => false , 'reason' => esc_html__( 'رقم ترخيص الإعلان  مطلوب', 'houzez' ) );
-            echo wp_send_json( $ajax_response );
+            wp_send_json( $ajax_response );
             wp_die();
         }
 
@@ -229,7 +229,7 @@ class PropertyMoudle{
     
                 if( $search_deedNumber_property ) {
                     $ajax_response = array( 'success' => false , 'reason' => 'رقم الاعلان موجود بالفعل !' );
-                    echo wp_send_json( $ajax_response );
+                    wp_send_json( $ajax_response );
                     wp_die(); 
                 }
                 
@@ -245,11 +245,11 @@ class PropertyMoudle{
                     'reason'  => 'تم نشر الاعلان بنجاح -> ' . $property_id . ' سوف يتم اعادة توجيهك الي الاعلان ... ',
                     'redir'   => $edit_link
                 );
-                echo wp_send_json( $ajax_response );
+                wp_send_json( $ajax_response );
                 wp_die();
             } else {
                 $ajax_response = array( 'success' => false , 'reason' => 'لم يتم اضافة الاعلان !');
-                echo wp_send_json( $ajax_response );
+                wp_send_json( $ajax_response );
                 wp_die();
             }
             
@@ -258,7 +258,7 @@ class PropertyMoudle{
                 'success' => false , 
                 'reason' => 'هنالك مشكلة في الاتصال مع هيئة العقار'
             );
-            echo wp_send_json( $ajax_response );
+            wp_send_json( $ajax_response );
             wp_die();
         }
 
@@ -274,7 +274,7 @@ class PropertyMoudle{
         $nonce = isset($_POST['aqar_isvalid_api']) ? $_POST['aqar_isvalid_api'] : '';
         if ( ! wp_verify_nonce( $nonce, 'aqar_isvalid_api' ) ) {
             $ajax_response = array( 'success' => false , 'reason' => esc_html__( 'Security check failed!', 'houzez' ) );
-            echo wp_send_json( $ajax_response );
+            wp_send_json( $ajax_response );
             wp_die();
         }
 
@@ -285,7 +285,7 @@ class PropertyMoudle{
 
         if ( empty( $adLicenseNumber ) ) {
             $ajax_response = array( 'success' => false , 'reason' => esc_html__( 'رقم ترخيص الإعلان  مطلوب', 'houzez' ) );
-            echo wp_send_json( $ajax_response );
+            wp_send_json( $ajax_response );
             wp_die();
         }
 
@@ -321,7 +321,7 @@ class PropertyMoudle{
                 $msg .= $response->Body->error->message . '<br>';
             }
             $ajax_response = array( 'success' => false , 'reason' => $msg );
-            echo wp_send_json( $ajax_response );
+            wp_send_json( $ajax_response );
             wp_die();
         } else {
             $translate = [
@@ -407,7 +407,7 @@ class PropertyMoudle{
         
                     if( $search_deedNumber_property ) {
                         $ajax_response = array( 'success' => false , 'reason' => 'رقم الاعلان موجود بالفعل !' );
-                        echo wp_send_json( $ajax_response );
+                        wp_send_json( $ajax_response );
                         wp_die(); 
                     }    
                 }
@@ -421,30 +421,30 @@ class PropertyMoudle{
                         $key == 'borders'
                       ){
                         foreach ($advertisement as $k => $v) {
-                            $data[]= $translate[$k] . ' : '  . $v . '<br>';
+                            $data[]= ($translate[$k] ?? '') . ' : '  . $v . '<br>';
                         }
                     }else if (
                         $key == 'propertyUsages' ||
                         $key == 'propertyUtilities' ||
                         $key == 'channels' 
                     ){ 
-                        $data[]= $translate[$key] . ' : '  . $advertisement[0] . '<br>';
+                        $data[]= ($translate[$key] ?? '') . ' : '  . ($advertisement[0] ?? '') . '<br>';
                     }else{
-                        $data[]= $translate[$key] . ' : '  . $advertisement . '<br>';
+                        $data[]= ($translate[$key] ?? '') . ' : '  . $advertisement . '<br>';
                     }
                 }
                 
                 $ajax_response = array( 'success' => true , 'reason' => $data );
-                echo wp_send_json( $ajax_response );
+                wp_send_json( $ajax_response );
                 wp_die();
 
             } else if ($response->Body->result->isValid === false ) {
                 $ajax_response = array( 'success' => false , 'reason' => $response->Body->result->message );
-                echo wp_send_json( $ajax_response );
+                wp_send_json( $ajax_response );
                 wp_die();
             } else{
                 $ajax_response = array( 'success' => false , 'reason' => $response->Body->result->message );
-                echo wp_send_json( $ajax_response );
+                wp_send_json( $ajax_response );
                 wp_die();
             }
         }
@@ -616,7 +616,7 @@ class PropertyMoudle{
         
         if( empty($_POST['theAdThrough']) ){
             $ajax_response = array( 'success' => false , 'reason' => 'الحقل: الاعلان من خلال مطلوب' );
-            echo wp_send_json( $ajax_response );
+            wp_send_json( $ajax_response );
             wp_die();
         }
 
@@ -791,11 +791,11 @@ class PropertyMoudle{
                         'reason'  => 'تم نشر الاعلان بنجاح -> ' . $property_id . ' سوف يتم اعادة توجيهك الي الاعلان ... ',
                         'redir'   => $edit_link
                     );
-                    echo wp_send_json( $ajax_response );
+                    wp_send_json( $ajax_response );
                     wp_die();
                } else {
                     $ajax_response = array( 'success' => false , 'reason' => 'لم يتم اضافة العقار للاسباب الاتية : ' . $property_id );
-                    echo wp_send_json( $ajax_response );
+                    wp_send_json( $ajax_response );
                     wp_die();
                }
             }
@@ -804,7 +804,7 @@ class PropertyMoudle{
 
   
         $ajax_response = array( 'success' => false , 'reason' => $reason );
-        echo wp_send_json( $ajax_response );
+        wp_send_json( $ajax_response );
         wp_die();
     }
 
@@ -1092,7 +1092,7 @@ class PropertyMoudle{
         return $prop_id;
     }
 
-    public function locations_number_name($str, $number = false, $taxonomy)
+    public function locations_number_name($str, $number, $taxonomy)
     {
         if( empty( $str ) ) {
             return;
