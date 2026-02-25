@@ -68,11 +68,11 @@ class RegaMoudle{
         
         $operation = 'تواصل غير معروف مع هيئة العقار';
         if (stripos($endpoint, 'AdvertisementValidator') !== false) {
-            $operation = 'استعلام عن حالة الإعلان من هيئة العقار';
+            $operation = 'سحب بيانات العقار من الهيئة العقارية';
         } elseif (stripos($endpoint, 'PlatformCompliance') !== false) {
-            $operation = 'إرسال / تحديث بيانات الإعلان في هيئة العقار';
-        } elseif (stripos($endpoint, 'Feedback') !== false) {
             $operation = 'إرسال تغذية راجعة للهيئة حول الإعلان';
+        } elseif (stripos($endpoint, 'Feedback') !== false) { // Expired end point return 404
+            $operation = '';
         } elseif (stripos($endpoint, 'CreateADLicense') !== false) {
             $operation = 'إنشاء ترخيص إعلان جديد في هيئة العقار';
         } elseif (stripos($endpoint, 'SendAttachment') !== false) {
@@ -342,7 +342,7 @@ class RegaMoudle{
             "westLimitName": "شارع"
         }
         ';
-        $data = json_encode($bodyData);
+        $data = is_string( $bodyData ) ? $bodyData : json_encode( $bodyData );
         $response = $this->do_request(
             '',
             'POST',

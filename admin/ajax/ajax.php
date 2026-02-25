@@ -373,6 +373,8 @@ function removeLeadingZero($string) {
 add_action('wp_ajax_sync_properties', 'handle_sync_properties');
 
 function handle_sync_properties() {
+    require_once AG_DIR . 'helpers/property-sync-helper.php';
+
     $offset = isset($_POST['offset']) ? intval($_POST['offset']) : 0;
     $batch_size = 10;
 
@@ -382,54 +384,52 @@ function handle_sync_properties() {
         'offset'         => $offset,
         'meta_key'       => 'advertisement_response',
         'meta_compare'   => 'EXISTS',
-        'post_status'    => 'publish'
+        'post_status'    => 'publish',
+        'fields'         => 'ids',
     ));
 
-    $total_properties = count($properties);
-
-    $processed = 0;
     $log = [];
 
-    foreach ($properties as $property) {
-        $prop_id = $property->ID;
+    foreach ($properties as $prop_id) {
         $property_name = get_the_title($prop_id);
 
-        // Prepare the form data for each property
-        $formDataArray = [
-            'prop_price' => get_post_meta($prop_id, 'fave_property_price', true),
-            // Add more fields as necessary
-        ];
+        try {
+            $result = process_single_property_sync( $prop_id );
 
-        // Serialize the form data
-        $serializedData = http_build_query($formDataArray);
-
-        // Mimic the $_POST array
-        $_POST['propID'] = $prop_id;
-        $_POST['formData'] = $serializedData;
-
-        // Call the function
-        $output = PlatformCompliance_property('UpdateAd');
-
-        // Decode the response
-        $response = json_decode($output, true);
+            $success = is_array( $result ) && isset( $result['success'] ) ? (bool) $result['success'] : false;
+            $message = is_array( $result ) && isset( $result['message'] ) ? $result['message'] : 'Unknown response from sync process';
+        } catch ( \Throwable $e ) {
+            $success = false;
+            $message = 'Exception during sync: ' . $e->getMessage();
+        }
 
         $log[] = [
-            'ID' => $prop_id,
+            'ID'       => $prop_id,
             'Property' => wp_trim_words($property_name, 10, '...'),
-            'Status' => $response['success'] ? 'Success' : 'Failed',
-            'Message' => $response['reason']
+            'Status'   => $success ? 'Success' : 'Failed',
+            'Message'  => $message,
         ];
-        $processed++;
     }
 
-    $remaining_properties = wp_count_posts('property')->publish - ($offset + $batch_size);
-    $progress = round((($offset + $batch_size) / wp_count_posts('property')->publish) * 100);
+    $count_query = new WP_Query(array(
+        'post_type'      => 'property',
+        'posts_per_page' => -1,
+        'meta_key'       => 'advertisement_response',
+        'meta_compare'   => 'EXISTS',
+        'post_status'    => 'publish',
+        'fields'         => 'ids',
+    ));
+
+    $total_syncable = $count_query->found_posts;
+    $processed_total = min( $offset + $batch_size, $total_syncable );
+    $remaining_properties = max( $total_syncable - $processed_total, 0 );
+    $progress = $total_syncable > 0 ? round( ( $processed_total / $total_syncable ) * 100 ) : 100;
 
     echo json_encode(array(
-        'progress' => $progress,
-        'message' => $remaining_properties > 0 ? 'Synchronizing...' : 'All properties have been synchronized successfully!',
-        'log' => $log,
-        'next_offset' => $remaining_properties > 0 ? $offset + $batch_size : null
+        'progress'    => $progress,
+        'message'     => $remaining_properties > 0 ? 'Synchronizing...' : 'All properties have been synchronized successfully!',
+        'log'         => $log,
+        'next_offset' => $remaining_properties > 0 ? $offset + $batch_size : null,
     ));
     wp_die();
 }
