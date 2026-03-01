@@ -220,11 +220,28 @@ class PropertyMoudle{
         // $response = json_decode( $response );
 
         if( $response->Body->result->isValid == true ){
+            $advertisement = $response->Body->result->advertisement;
+
+            // 1. Prevent adding if the end date is in the past (today or before)
+            if ( !empty($advertisement->endDate) ) {
+                $dt = DateTime::createFromFormat('d/m/Y', trim($advertisement->endDate), new DateTimeZone('UTC'));
+                if ($dt === false) {
+                    try { $dt = new DateTime(trim($advertisement->endDate), new DateTimeZone('UTC')); } catch (Exception $e) {}
+                }
+                if ( $dt !== false && $dt->getTimestamp() < time() ) {
+                    $ajax_response = array(
+                        'success' => false,
+                        'reason'  => 'هذا الإعلان منتهي الصلاحية منذ ' . $advertisement->endDate . ' ولا يمكن نشره بناءً على تعليمات الهيئة.'
+                    );
+                    wp_send_json( $ajax_response );
+                    wp_die();
+                }
+            }
             
             // في حالة رقم العلن موجود بالفعل اظهار رسالة بذلك
             $repeat_prop = get_option( '_repeat_prop' );
             if( $repeat_prop != 'yes' ) {
-                $deedNumber = $response->Body->result->advertisement->deedNumber;
+                $deedNumber = $advertisement->deedNumber;
                 $search_deedNumber_property = $this->search_deedNumber_property($deedNumber);
     
                 if( $search_deedNumber_property ) {
@@ -232,11 +249,10 @@ class PropertyMoudle{
                     wp_send_json( $ajax_response );
                     wp_die(); 
                 }
-                
             }
 
             // اضافة الاعلان
-            $property_id = $this->add_property_advertisement($response->Body->result->advertisement);
+            $property_id = $this->add_property_advertisement($advertisement);
             if( $property_id > 0 ) {
                 $submit_link   = houzez_dashboard_add_listing();
                 $edit_link     = add_query_arg( 'edit_property', $property_id, $submit_link );

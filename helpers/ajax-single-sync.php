@@ -17,7 +17,7 @@ function ajax_search_properties() {
         "post_type" => "property",
         "posts_per_page" => $per_page,
         "paged" => $page,
-        "post_status" => array( "publish", "pending", "draft" ),
+        "post_status" => array( "publish", "pending", "draft","expired" ),
         "orderby" => "date",
         "order" => "DESC",
     );

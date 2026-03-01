@@ -354,6 +354,25 @@ function process_single_property_sync( $post_id ) {
         $save_result = save_rega_property_data( $post_id, $data );
 
         if ( $save_result ) {
+            // Verify directly that the expiry date has not passed the current time
+            if ( !empty($data->endDate) ) {
+                $dt = DateTime::createFromFormat('d/m/Y', trim($data->endDate), new DateTimeZone('UTC'));
+                if ($dt === false) {
+                    try { $dt = new DateTime(trim($data->endDate), new DateTimeZone('UTC')); } catch (Exception $e) {}
+                }
+                if ( $dt !== false && $dt->getTimestamp() < time() ) {
+                    wp_update_post( array( 'ID' => $post_id, 'post_status' => 'expired' ) );
+                    if ( function_exists( 'houzez_listing_expire_meta' ) ) {
+                        houzez_listing_expire_meta( $post_id );
+                    }
+                    return array(
+                        'success' => true,
+                        'message' => 'تم إيقاف الإعلان لانتهاء صلاحيته بناءً على بيانات المزامنة: ' . $data->endDate,
+                        'expired' => true
+                    );
+                }
+            }
+
             // If property is published, notify the authority (PlatformCompliance) so REGA logs "إرسال/تحديث بيانات الإعلان"
             if ( get_post_status( $post_id ) === 'publish' ) {
                 $compliance_body = build_platform_compliance_body_for_sync( $post_id );

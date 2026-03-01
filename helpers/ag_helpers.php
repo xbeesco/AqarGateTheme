@@ -4055,25 +4055,46 @@ function save_rega_property_data($property_id, $data) {
 
     update_post_meta($property_id, 'endDate', $data->endDate);
     /* ----------------------- //تاريخ انتهاء رخصة الاعلان ---------------------- */
-    update_post_meta($property_id, 'fave_d8aad8a7d8b1d98ad8ae-d8a7d986d8aad987d8a7d8a1-d8b1d8aed8b5d8a9-d8a7d984d8a5d8b9d984d8a7d986', $data->creationDate);
+    update_post_meta($property_id, 'fave_d8aad8a7d8b1d98ad8ae-d8a7d986d8aad987d8a7d8a1-d8b1d8aed8b5d8a9-d8a7d984d8a5d8b9d984d8a7d986', $data->endDate);
 
     update_post_meta($property_id, 'houzez_manual_expire', 'checked');
 
-    // Schedule/Update Expiration
-    $options = [];
-    $options['id'] = $property_id;
-    $datetime = DateTime::createFromFormat('d/m/Y', $data->endDate);
-    $timestamp = $datetime->getTimestamp();
-
-    if (wp_next_scheduled('houzez_property_expirator_expire', [$property_id]) !== false) {
-        wp_clear_scheduled_hook('houzez_property_expirator_expire', [$property_id]); //Remove any existing hooks
+    // Parse endDate to Timestamp manually to avoid external helpers dependencies
+    $timestamp = false;
+    if (!empty($data->endDate)) {
+        $dt = DateTime::createFromFormat('d/m/Y', trim($data->endDate), new DateTimeZone('UTC'));
+        if ($dt === false) {
+            try { $dt = new DateTime(trim($data->endDate), new DateTimeZone('UTC')); } catch (Exception $e) {}
+        }
+        if ($dt !== false) {
+            $timestamp = $dt->getTimestamp();
+        }
     }
 
-    wp_schedule_single_event($timestamp, 'houzez_property_expirator_expire', [$property_id]);
+    if ($timestamp !== false) {
+        // If the expiry date has passed, it will be stopped immediately and we will not wait for the Cron
+        if ($timestamp < time()) {
+            wp_update_post(array('ID' => $property_id, 'post_status' => 'expired'));
+            if (function_exists('houzez_listing_expire_meta')) {
+                houzez_listing_expire_meta($property_id);
+            }
+        }
 
-    // Update Post Meta
-    update_post_meta($property_id, '_houzez_expiration_date', $timestamp);
-    update_post_meta($property_id, '_houzez_expiration_date_options', $options);
+        // Schedule/Update Expiration
+        $options = [];
+        $options['id'] = $property_id;
+
+        if (wp_next_scheduled('houzez_property_expirator_expire', [$property_id]) !== false) {
+            wp_clear_scheduled_hook('houzez_property_expirator_expire', [$property_id]); //Remove any existing hooks
+        }
+
+        wp_schedule_single_event($timestamp, 'houzez_property_expirator_expire', [$property_id]);
+
+        // Update Post Meta
+        update_post_meta($property_id, '_houzez_expiration_date', $timestamp);
+        update_post_meta($property_id, '_houzez_expiration_date_options', $options);
+    }
+
 
     /*---------------------------------------------------------------------------------*
     * End expiration meta
@@ -4129,4 +4150,49 @@ function save_rega_property_data($property_id, $data) {
     }
 
     return true;
+}
+
+/*
+|----------------------------------------------------------------------------------------------------------------------------
+| This action prevents the display of expired properties even if the Cron system is delayed in permanently stopping them.
+|----------------------------------------------------------------------------------------------------------------------------
+*/
+add_action( 'pre_get_posts', 'ag_hide_expired_properties_runtime' );
+function ag_hide_expired_properties_runtime( $query ) {
+
+    if ( is_admin() ) {
+        return;
+    }
+
+    // if post type is property only
+    if ( isset( $query->query_vars['post_type'] ) ) {
+        $post_type = $query->query_vars['post_type'];
+        if ( $post_type !== 'property' && ( is_array( $post_type ) && ! in_array( 'property', $post_type ) ) ) {
+            return;
+        }
+    }
+
+    if ( $query->is_main_query() || ( isset( $query->query_vars['post_type'] ) && $query->query_vars['post_type'] === 'property' ) ) {
+        $meta_query = $query->get( 'meta_query' );
+        if ( ! is_array( $meta_query ) ) {
+            $meta_query = array();
+        }
+
+        $current_time = time();
+        $meta_query[] = array(
+            'relation' => 'OR',
+            array(
+                'key'     => '_houzez_expiration_date',
+                'compare' => 'NOT EXISTS',
+            ),
+            array(
+                'key'     => '_houzez_expiration_date',
+                'value'   => $current_time,
+                'compare' => '>=',
+                'type'    => 'NUMERIC'
+            )
+        );
+
+        $query->set( 'meta_query', $meta_query );
+    }
 }
