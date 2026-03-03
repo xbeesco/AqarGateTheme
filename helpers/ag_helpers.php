@@ -4196,3 +4196,26 @@ function ag_hide_expired_properties_runtime( $query ) {
         $query->set( 'meta_query', $meta_query );
     }
 }
+/*
+|-----------------------------------------------------------------------------------------
+| prevent direct access to draft properties
+|-----------------------------------------------------------------------------------------
+*/
+add_action('template_redirect', function () {
+
+    if ( is_singular('property') ) { // if post type is property
+
+        global $post;
+
+        // if status not publish
+        if ( get_post_status($post->ID) !== 'publish' ) {
+
+            global $wp_query;
+            $wp_query->set_404();
+            status_header(404);
+            nocache_headers();
+            include( get_query_template('404') );
+            exit;
+        }
+    }
+});

@@ -185,8 +185,17 @@ if ( !function_exists( 'aqar_cancel_property' ) ) {
             'بيع' => 'Sell',
         ];
 
-        $property_status = get_term_by( 'id', $_POST['prop_status'][0], 'property_status' );
-        $property_statusName = $property_status->name;
+        $property_statusName = 'Sell'; 
+
+        $term_id = isset($_POST['prop_status'][0]) ? intval($_POST['prop_status'][0]) : 0;
+
+        if ($term_id) {
+            $property_status = get_term_by( 'id', $term_id, 'property_status' );
+
+            if ($property_status && !is_wp_error($property_status)) {
+                $property_statusName = $property_status->name;
+            }
+        }
         $property_statusName  = isset($advertisementTypeMapping[$property_statusName]) ? $advertisementTypeMapping[$property_statusName] : 'Sell';
  
         $user_title             =   get_the_author_meta( 'fave_author_title' , $userID );
@@ -342,7 +351,24 @@ if ( !function_exists( 'aqar_cancel_property' ) ) {
             require_once ( AG_DIR . 'module/class-rega-module.php' );
     
             $RegaMoudle = new RegaMoudle();
-    
+            // ************* Test ***************
+            // Mock response for testing
+            // $response = json_decode('{
+            //     "Body": {
+            //         "result": {
+            //             "response": true,
+            //             "operationType": "CancelAd",
+            //             "message": "Simulation only"
+            //         }
+            //     }
+            // }');
+            // Debug logging
+            // error_log('=== SIMULATION START ===');
+            // error_log('PROPERTY ID: ' . $propID);
+            // error_log('USER ID: ' . $userID);
+            // error_log('OPERATION TYPE: ' . $response->Body->result->operationType);
+            // error_log('CURRENT STATUS: ' . get_post_status($propID));
+            // ************* End Test ***************
             $response = $RegaMoudle->PlatformCompliance($advertisement_request);
             $response = json_decode( $response );
 
@@ -359,6 +385,47 @@ if ( !function_exists( 'aqar_cancel_property' ) ) {
                     );
                     wp_update_post($post);
                 } 
+// ===================== Write Rega Log for cancel advertisement =====================
+                // Determine the status dynamically
+                $status = 'Failed';
+                $message = 'فشل ارسال الغاء الاعلان الي الهيئة العقارية';
+
+                if ( isset($response->Body) 
+                    && isset($response->Body->result) 
+                    && $response->Body->result->response === true ) {
+
+                    $status = 'Success';
+                    $message = $response->Body->result->message ?? 
+                            'تم ارسال الغاء الاعلان بنجاح الي الهيئة العقارية';
+                }
+
+                // Details
+                $details = [
+                    'property' => [
+                        'prop_id' => $propID,
+                        'post_status_before' => $post_status,
+                        'post_status_after'  => 'draft',
+                        'adverst_can_edit'   => 0,
+                        'reason'             => $_REQUEST['content']
+                    ],
+                    'rega_response' => $response
+                ];
+
+                // Write Log
+                $regaLog = new RegaLogDB();
+                $regaLog->log([
+                    'user_id'           => $userID,
+                    'ad_license_number' => $adLicenseNumber,
+                    'operation'         => 'إلغاء الإعلان من المنصة',
+                    'status'            => $status,
+                    'message'           => $message,
+                    'status_code'       => 200,
+                    'details' => [
+                        'request'  => json_decode($advertisement_request, true),
+                        'response' => $response
+                    ]
+                ]);
+// ==================================================================================
     
                 echo json_encode(['success' => true, 'reason' => 'تم ارسال الغاء الاعلان بنجاح الي الهيئة العقارية']);
                 wp_die();
